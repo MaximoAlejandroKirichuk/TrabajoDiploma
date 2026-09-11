@@ -32,6 +32,21 @@ namespace Service
                 return result.ToString();
             }
         }
+
+        public string CalcularHashIntegridad(string texto)
+        {
+            // usa utf-16 le para coincidir con sql server hashbytes('sha2_256', ...)
+            // que opera sobre columnas nvarchar (unicode)
+            using (SHA256 sha256 = SHA256.Create())
+            {
+                byte[] bytes = Encoding.Unicode.GetBytes(texto);
+                byte[] hash = sha256.ComputeHash(bytes);
+                var result = new StringBuilder(64);
+                foreach (byte b in hash)
+                    result.Append(b.ToString("x2"));
+                return result.ToString();
+            }
+        }
     }
 }
 

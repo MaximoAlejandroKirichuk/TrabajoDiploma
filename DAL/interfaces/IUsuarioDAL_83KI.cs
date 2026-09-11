@@ -15,6 +15,7 @@ namespace DAL.interfaces
         void CrearUsuario(Usuario_83KI usuario);
         void ModificarUsuario(int dni, string email, Rol_83KI rol);
         void ActualizarContrasena(Usuario_83KI usuario);
+        void ActualizarIdioma(int dni, string idiomaId);
         bool ExisteDni(int dni);
         bool ExisteEmail(string email);
         bool ExisteEmailParaOtroUsuario(string email, int dni);

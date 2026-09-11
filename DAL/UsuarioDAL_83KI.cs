@@ -1,6 +1,7 @@
 ﻿using Service.Entidades;
 using DAL.DAL;
 using DAL.interfaces;
+using Service;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -15,6 +16,7 @@ namespace DAL
     public class UsuarioDAL_83KI : IUsuarioDAL_83KI
     {
         private AccesoDAL_83KI _accesoDAL = new AccesoDAL_83KI();
+        private IntegridadDAL_83KI _integridadDAL = new IntegridadDAL_83KI(new Encriptador_83KI());
 
         public Usuario_83KI ObtenerPorDni(int dni)
         {
@@ -38,66 +40,100 @@ namespace DAL
 
         public void BloquearUsuario(Usuario_83KI usuario)
         {
-            string consulta = "UPDATE Usuarios SET Bloqueado = 1, IntentosRealizados = @intentosRealizados, FechaUltimoIntento = @fechaUltimoIntento WHERE DNI = @dni";
-
-            List<SqlParameter> parametros = new List<SqlParameter>
+            _accesoDAL.EjecutarTransaccion((conn, tran) =>
             {
-                new SqlParameter("@dni", usuario.DNI),
-                new SqlParameter("@intentosRealizados", usuario.IntentosRealizados),
-                new SqlParameter("@fechaUltimoIntento", (object)usuario.FechaUltimoIntento ?? DBNull.Value)
-            };
+                string consulta = "UPDATE Usuarios SET Bloqueado = 1, IntentosRealizados = @intentosRealizados, FechaUltimoIntento = @fechaUltimoIntento WHERE DNI = @dni";
 
-            _accesoDAL.Escribir(consulta, parametros);
+                List<SqlParameter> parametros = new List<SqlParameter>
+                {
+                    new SqlParameter("@dni", usuario.DNI),
+                    new SqlParameter("@intentosRealizados", usuario.IntentosRealizados),
+                    new SqlParameter("@fechaUltimoIntento", (object)usuario.FechaUltimoIntento ?? DBNull.Value)
+                };
+
+                AccesoDAL_83KI.EscribirTransaccional(conn, tran, consulta, parametros);
+                RecomputarIntegridadUsuario(usuario.DNI, conn, tran);
+            });
         }
 
         public void CrearUsuario(Usuario_83KI usuario)
         {
-            string consulta = @"INSERT INTO Usuarios (Username, Nombre, Apellido, DNI, Email, CodigoRol, Contrasena, Activo, Bloqueado, IntentosRealizados, FechaUltimoIntento) 
-                        VALUES (@userName ,@nombre, @apellido, @dni, @email, @codigoRol, @pass, @activo, @bloqueado, @intentosRealizados, @fechaUltimoIntento)";
-
-            List<SqlParameter> parametros = new List<SqlParameter>
+            _accesoDAL.EjecutarTransaccion((conn, tran) =>
             {
-                new SqlParameter("@username", usuario.UserName),
-                new SqlParameter("@nombre", usuario.Nombre),
-                new SqlParameter("@apellido", usuario.Apellido),
-                new SqlParameter("@dni",usuario.DNI),
-                new SqlParameter("@email", usuario.Email),
-                new SqlParameter("@codigoRol", usuario.Rol.CodigoRol),
-                new SqlParameter("@pass", usuario.Contrasena),
-                new SqlParameter("@activo", usuario.Activo),
-                new SqlParameter("@bloqueado", usuario.Bloqueado),
-                new SqlParameter("@intentosRealizados", usuario.IntentosRealizados),
-                new SqlParameter("@fechaUltimoIntento", (object)usuario.FechaUltimoIntento ?? DBNull.Value)
-            };
+                string consulta = @"INSERT INTO Usuarios (Username, Nombre, Apellido, DNI, Email, CodigoRol, Contrasena, Activo, Bloqueado, IntentosRealizados, FechaUltimoIntento, IdiomaId) 
+                            VALUES (@userName ,@nombre, @apellido, @dni, @email, @codigoRol, @pass, @activo, @bloqueado, @intentosRealizados, @fechaUltimoIntento, @idiomaId)";
 
-            _accesoDAL.Escribir(consulta, parametros);
+                List<SqlParameter> parametros = new List<SqlParameter>
+                {
+                    new SqlParameter("@username", usuario.UserName),
+                    new SqlParameter("@nombre", usuario.Nombre),
+                    new SqlParameter("@apellido", usuario.Apellido),
+                    new SqlParameter("@dni",usuario.DNI),
+                    new SqlParameter("@email", usuario.Email),
+                    new SqlParameter("@codigoRol", usuario.Rol.CodigoRol),
+                    new SqlParameter("@pass", usuario.Contrasena),
+                    new SqlParameter("@activo", usuario.Activo),
+                    new SqlParameter("@bloqueado", usuario.Bloqueado),
+                    new SqlParameter("@intentosRealizados", usuario.IntentosRealizados),
+                    new SqlParameter("@fechaUltimoIntento", (object)usuario.FechaUltimoIntento ?? DBNull.Value),
+                    new SqlParameter("@idiomaId", usuario.IdiomaId)
+                };
+
+                AccesoDAL_83KI.EscribirTransaccional(conn, tran, consulta, parametros);
+                RecomputarIntegridadUsuario(usuario.DNI, conn, tran);
+            });
         }
 
         public void ModificarUsuario(int dni, string email, Rol_83KI rol)
         {
-            string consulta = "UPDATE Usuarios SET Email = @email, CodigoRol = @codigoRol WHERE DNI = @dni";
-
-            List<SqlParameter> parametros = new List<SqlParameter>
+            _accesoDAL.EjecutarTransaccion((conn, tran) =>
             {
-                new SqlParameter("@dni", dni),
-                new SqlParameter("@email", email),
-                new SqlParameter("@codigoRol", rol.CodigoRol)
-            };
+                string consulta = "UPDATE Usuarios SET Email = @email, CodigoRol = @codigoRol WHERE DNI = @dni";
 
-            _accesoDAL.Escribir(consulta, parametros);
+                List<SqlParameter> parametros = new List<SqlParameter>
+                {
+                    new SqlParameter("@dni", dni),
+                    new SqlParameter("@email", email),
+                    new SqlParameter("@codigoRol", rol.CodigoRol)
+                };
+
+                AccesoDAL_83KI.EscribirTransaccional(conn, tran, consulta, parametros);
+                RecomputarIntegridadUsuario(dni, conn, tran);
+            });
         }
 
         public void ActualizarContrasena(Usuario_83KI usuario)
         {
-            string consulta = "UPDATE Usuarios SET Contrasena = @contrasena WHERE DNI = @dni";
-
-            List<SqlParameter> parametros = new List<SqlParameter>
+            _accesoDAL.EjecutarTransaccion((conn, tran) =>
             {
-                new SqlParameter("@dni", usuario.DNI),
-                new SqlParameter("@contrasena", usuario.Contrasena)
-            };
+                string consulta = "UPDATE Usuarios SET Contrasena = @contrasena WHERE DNI = @dni";
 
-            _accesoDAL.Escribir(consulta, parametros);
+                List<SqlParameter> parametros = new List<SqlParameter>
+                {
+                    new SqlParameter("@dni", usuario.DNI),
+                    new SqlParameter("@contrasena", usuario.Contrasena)
+                };
+
+                AccesoDAL_83KI.EscribirTransaccional(conn, tran, consulta, parametros);
+                RecomputarIntegridadUsuario(usuario.DNI, conn, tran);
+            });
+        }
+
+        public void ActualizarIdioma(int dni, string idiomaId)
+        {
+            _accesoDAL.EjecutarTransaccion((conn, tran) =>
+            {
+                string consulta = "UPDATE Usuarios SET IdiomaId = @idiomaId WHERE DNI = @dni";
+
+                List<SqlParameter> parametros = new List<SqlParameter>
+                {
+                    new SqlParameter("@dni", dni),
+                    new SqlParameter("@idiomaId", idiomaId)
+                };
+
+                AccesoDAL_83KI.EscribirTransaccional(conn, tran, consulta, parametros);
+                RecomputarIntegridadUsuario(dni, conn, tran);
+            });
         }
 
         public bool ExisteDni(int dni)
@@ -180,58 +216,75 @@ namespace DAL
 
         public void DesbloquearCuenta(Usuario_83KI usuario)
         {
-            string consulta = @"UPDATE Usuarios
-                                SET Bloqueado = 0,
-                                    Contrasena = @contrasena,
-                                    IntentosRealizados = 0,
-                                    FechaUltimoIntento = NULL
-                                WHERE DNI = @dni";
-
-            List<SqlParameter> parametros = new List<SqlParameter>
+            _accesoDAL.EjecutarTransaccion((conn, tran) =>
             {
-                new SqlParameter("@dni", usuario.DNI),
-                new SqlParameter("@contrasena", usuario.Contrasena)
-            }; 
-            _accesoDAL.Escribir(consulta, parametros);
+                string consulta = @"UPDATE Usuarios
+                                    SET Bloqueado = 0,
+                                        Contrasena = @contrasena,
+                                        IntentosRealizados = 0,
+                                        FechaUltimoIntento = NULL
+                                    WHERE DNI = @dni";
+
+                List<SqlParameter> parametros = new List<SqlParameter>
+                {
+                    new SqlParameter("@dni", usuario.DNI),
+                    new SqlParameter("@contrasena", usuario.Contrasena)
+                };
+
+                AccesoDAL_83KI.EscribirTransaccional(conn, tran, consulta, parametros);
+                RecomputarIntegridadUsuario(usuario.DNI, conn, tran);
+            });
         }
 
         public void ActualizarIntentosFallidos(Usuario_83KI usuario)
         {
-            string consulta = "UPDATE Usuarios SET IntentosRealizados = @intentosRealizados, FechaUltimoIntento = @fechaUltimoIntento WHERE DNI = @dni";
-
-            List<SqlParameter> parametros = new List<SqlParameter>
+            _accesoDAL.EjecutarTransaccion((conn, tran) =>
             {
-                new SqlParameter("@dni", usuario.DNI),
-                new SqlParameter("@intentosRealizados", usuario.IntentosRealizados),
-                new SqlParameter("@fechaUltimoIntento", (object)usuario.FechaUltimoIntento ?? DBNull.Value)
-            };
+                string consulta = "UPDATE Usuarios SET IntentosRealizados = @intentosRealizados, FechaUltimoIntento = @fechaUltimoIntento WHERE DNI = @dni";
 
-            _accesoDAL.Escribir(consulta, parametros);
+                List<SqlParameter> parametros = new List<SqlParameter>
+                {
+                    new SqlParameter("@dni", usuario.DNI),
+                    new SqlParameter("@intentosRealizados", usuario.IntentosRealizados),
+                    new SqlParameter("@fechaUltimoIntento", (object)usuario.FechaUltimoIntento ?? DBNull.Value)
+                };
+
+                AccesoDAL_83KI.EscribirTransaccional(conn, tran, consulta, parametros);
+                RecomputarIntegridadUsuario(usuario.DNI, conn, tran);
+            });
         }
 
         public void ReiniciarIntentosFallidos(Usuario_83KI usuario)
         {
-            string consulta = "UPDATE Usuarios SET IntentosRealizados = 0, FechaUltimoIntento = NULL WHERE DNI = @dni";
-
-            List<SqlParameter> parametros = new List<SqlParameter>
+            _accesoDAL.EjecutarTransaccion((conn, tran) =>
             {
-                new SqlParameter("@dni", usuario.DNI)
-            };
+                string consulta = "UPDATE Usuarios SET IntentosRealizados = 0, FechaUltimoIntento = NULL WHERE DNI = @dni";
 
-            _accesoDAL.Escribir(consulta, parametros);
+                List<SqlParameter> parametros = new List<SqlParameter>
+                {
+                    new SqlParameter("@dni", usuario.DNI)
+                };
+
+                AccesoDAL_83KI.EscribirTransaccional(conn, tran, consulta, parametros);
+                RecomputarIntegridadUsuario(usuario.DNI, conn, tran);
+            });
         }
 
         public void ActualizarEstadoActivo(int dni, bool activo)
         {
-            string consulta = "UPDATE Usuarios SET Activo = @activo WHERE DNI = @dni";
-
-            List<SqlParameter> parametros = new List<SqlParameter>
+            _accesoDAL.EjecutarTransaccion((conn, tran) =>
             {
-                new SqlParameter("@dni", dni),
-                new SqlParameter("@activo", activo)
-            };
+                string consulta = "UPDATE Usuarios SET Activo = @activo WHERE DNI = @dni";
 
-            _accesoDAL.Escribir(consulta, parametros);
+                List<SqlParameter> parametros = new List<SqlParameter>
+                {
+                    new SqlParameter("@dni", dni),
+                    new SqlParameter("@activo", activo)
+                };
+
+                AccesoDAL_83KI.EscribirTransaccional(conn, tran, consulta, parametros);
+                RecomputarIntegridadUsuario(dni, conn, tran);
+            });
         }
 
         public bool EstaBloqueado(int dni)
@@ -265,6 +318,7 @@ namespace DAL
                             u.Bloqueado,
                             u.IntentosRealizados,
                             u.FechaUltimoIntento,
+                            u.IdiomaId,
                             u.CodigoRol,
                             r.Nombre AS NombreRol
                      FROM Usuarios u
@@ -292,6 +346,7 @@ namespace DAL
                 MapearRolDesdeUsuario(row),
                 Convert.ToBoolean(row["Activo"]),
                 Convert.ToBoolean(row["Bloqueado"]),
+                ObtenerTexto(row, "IdiomaId"),
                 ObtenerEntero(row, "IntentosRealizados"),
                 ObtenerFechaNullable(row, "FechaUltimoIntento")
             );
@@ -333,6 +388,25 @@ namespace DAL
             }
 
             return Convert.ToDateTime(row[columna]);
+        }
+
+        /// <summary>
+        /// lee la fila actual de usuarios y recalcula su dvh + dvv de tabla
+        /// dentro de la transaccion dada.
+        /// </summary>
+        private void RecomputarIntegridadUsuario(int dni, SqlConnection conn, SqlTransaction tran)
+        {
+            var valores = IntegridadDAL_83KI.LeerFilaTransaccional(
+                "Usuarios",
+                "DNI = @dni",
+                new List<SqlParameter> { new SqlParameter("@dni", dni) },
+                conn,
+                tran);
+
+            if (valores.Count > 0)
+            {
+                _integridadDAL.RecomputarIntegridadFila("Usuarios", valores, conn, tran);
+            }
         }
     }
 }

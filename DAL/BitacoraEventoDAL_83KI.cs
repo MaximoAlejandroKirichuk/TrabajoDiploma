@@ -64,9 +64,12 @@ namespace DAL
                 new SqlParameter("@modulo", modulo.ToString())
             };
 
-            return ConsultarConParametros(
-                "SELECT * FROM BitacoraEventos WHERE Fecha BETWEEN @desde AND @hasta AND Modulo = @modulo",
-                parametros);
+            // Incluir valores historicos (0=Usuarios, 1=Admin, Seguridad=Admin) para no perder filas viejas
+            string consulta = modulo == Modulo.Admin
+                ? "SELECT * FROM BitacoraEventos WHERE Fecha BETWEEN @desde AND @hasta AND Modulo IN (@modulo, '1', 'Seguridad')"
+                : "SELECT * FROM BitacoraEventos WHERE Fecha BETWEEN @desde AND @hasta AND Modulo IN (@modulo, '0')";
+
+            return ConsultarConParametros(consulta, parametros);
         }
 
         public IEnumerable<BitacoraEvento_83KI> ConsultarPorCriticidad(DateTime desde, DateTime hasta, Criticidad criticidad)
@@ -108,9 +111,12 @@ namespace DAL
                 new SqlParameter("@criticidad", (int)criticidad)
             };
 
-            return ConsultarConParametros(
-                "SELECT * FROM BitacoraEventos WHERE Fecha BETWEEN @desde AND @hasta AND Modulo = @modulo AND Criticidad = @criticidad",
-                parametros);
+            // Incluir valores historicos (0=Usuarios, 1=Admin, Seguridad=Admin) para no perder filas viejas
+            string consulta = modulo == Modulo.Admin
+                ? "SELECT * FROM BitacoraEventos WHERE Fecha BETWEEN @desde AND @hasta AND Modulo IN (@modulo, '1', 'Seguridad') AND Criticidad = @criticidad"
+                : "SELECT * FROM BitacoraEventos WHERE Fecha BETWEEN @desde AND @hasta AND Modulo IN (@modulo, '0') AND Criticidad = @criticidad";
+
+            return ConsultarConParametros(consulta, parametros);
         }
 
         private IEnumerable<BitacoraEvento_83KI> ConsultarConParametros(string consulta, List<SqlParameter> parametros)
@@ -144,10 +150,36 @@ namespace DAL
 
         private Modulo ParsearModulo(object valorModulo)
         {
-            if (valorModulo != null && valorModulo != DBNull.Value && Enum.TryParse(valorModulo.ToString(), true, out Modulo modulo))
+            if (valorModulo == null || valorModulo == DBNull.Value)
+            {
+                return Modulo.Usuarios;
+            }
+
+            string valor = valorModulo.ToString().Trim();
+
+            // Mapeos numericos historicos
+            if (valor == "0")
+            {
+                return Modulo.Usuarios;
+            }
+            if (valor == "1")
+            {
+                return Modulo.Admin;
+            }
+
+            // Mapeo historico por texto: filas "Seguridad" -> Admin
+            if (string.Equals(valor, "Seguridad", StringComparison.OrdinalIgnoreCase))
+            {
+                return Modulo.Admin;
+            }
+
+            // Parseo normal
+            if (Enum.TryParse(valor, true, out Modulo modulo))
             {
                 return modulo;
             }
+
+            // Valores desconocidos -> valor seguro por defecto
             return Modulo.Usuarios;
         }
 

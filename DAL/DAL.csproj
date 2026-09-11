@@ -43,8 +43,14 @@
   <ItemGroup>
     <Compile Include="AccesoDAL_83KI.cs" />
     <Compile Include="BitacoraEventoDAL_83KI.cs" />
+    <Compile Include="BootstrapBaseDatosDAL_83KI.cs" />
+    <Compile Include="IntegridadDAL_83KI.cs" />
     <Compile Include="interfaces\IBitacoraDAL_83KI.cs" />
+    <Compile Include="interfaces\IBootstrapBaseDatosDAL_83KI.cs" />
+    <Compile Include="interfaces\IIntegridadDAL_83KI.cs" />
+    <Compile Include="interfaces\IRecuperacionDAL_83KI.cs" />
     <Compile Include="interfaces\IRolDAL_83KI.cs" />
+    <Compile Include="RecuperacionDAL_83KI.cs" />
     <Compile Include="RolDAL_83KI.cs" />
     <Compile Include="UsuarioDAL_83KI.cs" />
     <Compile Include="interfaces\IUsuarioDAL_83KI.cs" />

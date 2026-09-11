@@ -47,81 +47,138 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Exportacion\BitacoraEventosPdfExporter_83KI.cs" />
-    <Compile Include="Exportacion\IBitacoraEventosExporter_83KI.cs" />
-    <Compile Include="FrmConfirmarEstadoUsuario.cs">
+    <Compile Include="Administracion\Auditoria\BitacoraEventosPdfExporter_83KI.cs" />
+    <Compile Include="Administracion\Auditoria\IBitacoraEventosExporter_83KI.cs" />
+    <Compile Include="Aplicacion\ProveedorConfiguracionBD_83KI.cs" />
+    <Compile Include="Configuracion\FrmConfiguracionBD_83KI.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FrmConfirmarEstadoUsuario.Designer.cs">
+    <Compile Include="Configuracion\FrmConfiguracionBD_83KI.Designer.cs">
+      <DependentUpon>FrmConfiguracionBD_83KI.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Integridad\FrmRecuperacionIntegridad_83KI.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Integridad\FrmRecuperacionIntegridad_83KI.Designer.cs">
+      <DependentUpon>FrmRecuperacionIntegridad_83KI.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Integridad\FrmRecuperacionIntegridadLogin_83KI.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Integridad\FrmRecuperacionIntegridadLogin_83KI.Designer.cs">
+      <DependentUpon>FrmRecuperacionIntegridadLogin_83KI.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Compartido\IdiomaUiHelper_83KI.cs" />
+    <Compile Include="Compartido\PermisosUi_83KI.cs" />
+    <Compile Include="Administracion\Usuarios\FrmConfirmarEstadoUsuario.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Administracion\Usuarios\FrmConfirmarEstadoUsuario.Designer.cs">
       <DependentUpon>FrmConfirmarEstadoUsuario.cs</DependentUpon>
     </Compile>
-    <Compile Include="FrmCrearUsuario.cs">
+    <Compile Include="Administracion\Usuarios\FrmCrearUsuario.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FrmCrearUsuario.Designer.cs">
+    <Compile Include="Administracion\Usuarios\FrmCrearUsuario.Designer.cs">
       <DependentUpon>FrmCrearUsuario.cs</DependentUpon>
     </Compile>
-    <Compile Include="FrmCambiarContrasena.cs">
+    <Compile Include="Autenticacion\FrmCambiarContrasena.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FrmCambiarContrasena.Designer.cs">
+    <Compile Include="Autenticacion\FrmCambiarContrasena.Designer.cs">
       <DependentUpon>FrmCambiarContrasena.cs</DependentUpon>
     </Compile>
-    <Compile Include="FrmBitacoraEventos.cs">
+    <Compile Include="Administracion\Auditoria\FrmBitacoraEventos.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FrmBitacoraEventos.Designer.cs">
+    <Compile Include="Administracion\Auditoria\FrmBitacoraEventos.Designer.cs">
       <DependentUpon>FrmBitacoraEventos.cs</DependentUpon>
     </Compile>
-    <Compile Include="FrmGestionUsuarios.cs">
+    <Compile Include="Administracion\Usuarios\FrmGestionUsuarios.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FrmGestionUsuarios.Designer.cs">
+    <Compile Include="Administracion\Usuarios\FrmGestionUsuarios.Designer.cs">
       <DependentUpon>FrmGestionUsuarios.cs</DependentUpon>
     </Compile>
-    <Compile Include="FrmModificarUsuario.cs">
+    <Compile Include="Administracion\Roles\FrmGestionFamilias_83KI.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FrmModificarUsuario.Designer.cs">
+    <Compile Include="Administracion\Roles\FrmGestionFamilias_83KI.Designer.cs">
+      <DependentUpon>FrmGestionFamilias_83KI.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Administracion\Roles\FrmGestionRoles_83KI.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Administracion\Roles\FrmGestionRoles_83KI.Designer.cs">
+      <DependentUpon>FrmGestionRoles_83KI.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Administracion\Usuarios\FrmModificarUsuario.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Administracion\Usuarios\FrmModificarUsuario.Designer.cs">
       <DependentUpon>FrmModificarUsuario.cs</DependentUpon>
     </Compile>
-    <Compile Include="FrmPrincipal.cs">
+    <Compile Include="Principal\FrmPrincipal.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FrmPrincipal.Designer.cs">
+    <Compile Include="Principal\FrmPrincipal.Designer.cs">
       <DependentUpon>FrmPrincipal.cs</DependentUpon>
     </Compile>
-    <Compile Include="Login.cs">
+    <Compile Include="Autenticacion\Login.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Login.Designer.cs">
+    <Compile Include="Autenticacion\Login.Designer.cs">
       <DependentUpon>Login.cs</DependentUpon>
     </Compile>
-    <Compile Include="Program.cs" />
+    <Compile Include="Aplicacion\Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="FrmBitacoraEventos.resx">
+    <EmbeddedResource Include="Configuracion\FrmConfiguracionBD_83KI.resx">
+      <DependentUpon>FrmConfiguracionBD_83KI.cs</DependentUpon>
+      <LogicalName>UI.FrmConfiguracionBD_83KI.resources</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Administracion\Auditoria\FrmBitacoraEventos.resx">
       <DependentUpon>FrmBitacoraEventos.cs</DependentUpon>
+      <LogicalName>UI.FrmBitacoraEventos.resources</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="FrmConfirmarEstadoUsuario.resx">
+    <EmbeddedResource Include="Administracion\Usuarios\FrmConfirmarEstadoUsuario.resx">
       <DependentUpon>FrmConfirmarEstadoUsuario.cs</DependentUpon>
+      <LogicalName>UI.FrmConfirmarEstadoUsuario.resources</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="FrmCrearUsuario.resx">
+    <EmbeddedResource Include="Administracion\Usuarios\FrmCrearUsuario.resx">
       <DependentUpon>FrmCrearUsuario.cs</DependentUpon>
+      <LogicalName>UI.FrmCrearUsuario.resources</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="FrmCambiarContrasena.resx">
+    <EmbeddedResource Include="Autenticacion\FrmCambiarContrasena.resx">
       <DependentUpon>FrmCambiarContrasena.cs</DependentUpon>
+      <LogicalName>UI.FrmCambiarContrasena.resources</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="FrmGestionUsuarios.resx">
+    <EmbeddedResource Include="Administracion\Roles\FrmGestionFamilias_83KI.resx">
+      <DependentUpon>FrmGestionFamilias_83KI.cs</DependentUpon>
+      <LogicalName>UI.FrmGestionFamilias_83KI.resources</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Administracion\Roles\FrmGestionRoles_83KI.resx">
+      <DependentUpon>FrmGestionRoles_83KI.cs</DependentUpon>
+      <LogicalName>UI.FrmGestionRoles_83KI.resources</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Administracion\Usuarios\FrmGestionUsuarios.resx">
       <DependentUpon>FrmGestionUsuarios.cs</DependentUpon>
+      <LogicalName>UI.FrmGestionUsuarios.resources</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="FrmModificarUsuario.resx">
+    <EmbeddedResource Include="Administracion\Usuarios\FrmModificarUsuario.resx">
       <DependentUpon>FrmModificarUsuario.cs</DependentUpon>
+      <LogicalName>UI.FrmModificarUsuario.resources</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="FrmPrincipal.resx">
+    <EmbeddedResource Include="Principal\FrmPrincipal.resx">
       <DependentUpon>FrmPrincipal.cs</DependentUpon>
+      <LogicalName>UI.FrmPrincipal.resources</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Login.resx">
+    <EmbeddedResource Include="Integridad\FrmRecuperacionIntegridad_83KI.resx">
+      <DependentUpon>FrmRecuperacionIntegridad_83KI.cs</DependentUpon>
+      <LogicalName>UI.FrmRecuperacionIntegridad_83KI.resources</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Autenticacion\Login.resx">
       <DependentUpon>Login.cs</DependentUpon>
+      <LogicalName>UI.Login.resources</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -158,6 +215,22 @@
       <Project>{e4575579-3219-49c0-aedf-7d9d8f9e59e4}</Project>
       <Name>Service</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\Scripts\Sql\EsquemaCompleto.sql">
+      <Link>Scripts\Sql\EsquemaCompleto.sql</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="scriptBaseDatos-CON-DATOS-LIMPIO.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Modulos\Maestros\" />
+    <Folder Include="Modulos\PlanificacionAcademica\" />
+    <Folder Include="Modulos\CobrosMorosidadActas\" />
+    <Folder Include="Modulos\Reportes\" />
+    <Folder Include="Modulos\Ayuda\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

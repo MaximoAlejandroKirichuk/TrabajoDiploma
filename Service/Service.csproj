@@ -31,6 +31,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -42,9 +43,19 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DTOs\BitacoraEventoVista_83KI.cs" />
+    <Compile Include="DTOs\ResultadoBootstrap_83KI.cs" />
+    <Compile Include="DTOs\ConfiguracionConexionBD_83KI.cs" />
     <Compile Include="DTOs\FiltroBitacoraEventos_83KI.cs" />
+    <Compile Include="DTOs\IntegridadFilaInconsistencia_83KI.cs" />
+    <Compile Include="DTOs\IntegridadSistemaEstado_83KI.cs" />
+    <Compile Include="DTOs\IntegridadTablaConfig_83KI.cs" />
+    <Compile Include="DTOs\IntegridadTablaEstado_83KI.cs" />
     <Compile Include="Entidades\BitacoraEvento_83KI.cs" />
+    <Compile Include="Entidades\ComponentePermiso_83KI.cs" />
     <Compile Include="Entidades\EventoBitacoraCatalogo_83KI.cs" />
+    <Compile Include="Entidades\Familia_83KI.cs" />
+    <Compile Include="Entidades\Idioma_83KI.cs" />
+    <Compile Include="Entidades\Patente_83KI.cs" />
     <Compile Include="Entidades\Rol_83KI.cs" />
     <Compile Include="Encriptador_83KI.cs" />
     <Compile Include="Enums\Enums.cs" />
@@ -52,20 +63,39 @@
     <Compile Include="Excepciones\CambiarContrasenaUsuario\UsuarioNoAutenticadoException_83KI.cs" />
     <Compile Include="Excepciones\CrearUsuario\DniRegistradoException_83KI.cs" />
     <Compile Include="Excepciones\CrearUsuario\EmailRegistradoException_83KI.cs" />
+    <Compile Include="Excepciones\Idioma\ArchivoIdiomaNoEncontradoException_83KI.cs" />
     <Compile Include="Excepciones\Login\ContrasenaInvalidaException_83KI.cs" />
+    <Compile Include="Excepciones\Login\IntegridadComprometidaException_83KI.cs" />
     <Compile Include="Excepciones\Login\UsuarioActivoActualmenteException_83KI.cs" />
     <Compile Include="Excepciones\Login\UsuarioBloqueadoException_83KI.cs" />
     <Compile Include="Excepciones\Login\UsuarioDeshabilitadoException_83KI.cs" />
     <Compile Include="Excepciones\Login\UsuarioNoExisteException_83KI.cs" />
     <Compile Include="Interfaces\IBitacoraManager_83KI.cs" />
+    <Compile Include="Interfaces\IProveedorConfiguracionConexion_83KI.cs" />
     <Compile Include="Interfaces\IConsultaBitacoraEventos_83KI.cs" />
+    <Compile Include="Interfaces\IBootstrapBaseDatosService_83KI.cs" />
     <Compile Include="Interfaces\IEncriptador_83KI.cs" />
+    <Compile Include="Interfaces\IIntegridadDatosService_83KI.cs" />
+    <Compile Include="Interfaces\IRecuperacionBaseDatosService_83KI.cs" />
+    <Compile Include="Interfaces\observer\IGestorIdioma_83KI.cs" />
     <Compile Include="Interfaces\IGestorRol_83KI.cs" />
     <Compile Include="Interfaces\IGestorUsuario_83KI.cs" />
+    <Compile Include="Interfaces\observer\IIdioma.cs" />
+    <Compile Include="Interfaces\observer\IObservadorIdioma.cs" />
     <Compile Include="Interfaces\ISessionManager_83KI.cs" />
+    <Compile Include="Interfaces\observer\ISujetoIdioma.cs" />
+    <Compile Include="GestorIdioma_83KI.cs" />
     <Compile Include="SessionManager_83KI.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Entidades\Usuario_83KI.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Idiomas\en-US.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Idiomas\es-AR.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

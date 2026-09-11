@@ -1,4 +1,5 @@
 using Service.DTOs;
+using Service;
 using Service.Entidades;
 using Service.Interfaces;
 using System;
@@ -11,15 +12,28 @@ namespace BLL
     {
         private readonly IGestorUsuario_83KI _gestorUsuario;
         private readonly IBitacoraManager_83KI _bitacoraManager;
+        private readonly ISessionManager_83KI _sessionManager;
 
         public ConsultaBitacoraEventos_83KI(IGestorUsuario_83KI gestorUsuario, IBitacoraManager_83KI bitacoraManager)
+            : this(gestorUsuario, bitacoraManager, SessionManager_83KI.Instancia)
+        {
+        }
+
+        public ConsultaBitacoraEventos_83KI(IGestorUsuario_83KI gestorUsuario, IBitacoraManager_83KI bitacoraManager, ISessionManager_83KI sessionManager)
         {
             _gestorUsuario = gestorUsuario;
             _bitacoraManager = bitacoraManager;
+            _sessionManager = sessionManager;
         }
 
         public IEnumerable<BitacoraEventoVista_83KI> Consultar(FiltroBitacoraEventos_83KI filtro)
         {
+            if (!_sessionManager.TienePermiso(PermisoSistema_83KI.VerBitacoraEventos)
+                && !_sessionManager.TienePermiso(PermisoSistema_83KI.ConsultarBitacoraEventos))
+            {
+                throw new InvalidOperationException("No tiene permisos para realizar esta accion.");
+            }
+
             if (filtro == null)
             {
                 throw new ArgumentNullException(nameof(filtro));
@@ -57,8 +71,30 @@ namespace BLL
                 && Contiene(evento.Apellido, filtro.Apellido)
                 && Contiene(evento.Username, filtro.Username)
                 && EventoBitacoraCatalogo_83KI.CoincideConEvento(evento.Evento, filtro.Evento)
-                && (!filtro.Modulo.HasValue || evento.Modulo.Equals(filtro.Modulo.Value))
+                && CoincideConModulo(evento, filtro.Modulo)
                 && (!filtro.Criticidad.HasValue || evento.Criticidad.Equals(filtro.Criticidad.Value));
+        }
+
+        private bool CoincideConModulo(BitacoraEventoVista_83KI evento, Modulo? moduloFiltro)
+        {
+            if (!moduloFiltro.HasValue)
+            {
+                return true;
+            }
+
+            if (evento.Modulo.Equals(moduloFiltro.Value))
+            {
+                return true;
+            }
+
+            string nombreCanonico = EventoBitacoraCatalogo_83KI.ResolverNombre(evento.Evento);
+            if (string.IsNullOrWhiteSpace(nombreCanonico))
+            {
+                return false;
+            }
+
+            return EventoBitacoraCatalogo_83KI.ObtenerPorModulo(moduloFiltro.Value)
+                .Any(opcion => string.Equals(opcion.Nombre, nombreCanonico, StringComparison.OrdinalIgnoreCase));
         }
 
         private bool Contiene(string valor, string filtro)
@@ -69,6 +105,14 @@ namespace BLL
             }
 
             return (valor ?? string.Empty).IndexOf(filtro.Trim(), StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private void ValidarPermiso(PermisoSistema_83KI permiso)
+        {
+            if (!_sessionManager.TienePermiso(permiso))
+            {
+                throw new InvalidOperationException("No tiene permisos para realizar esta accion.");
+            }
         }
     }
 }

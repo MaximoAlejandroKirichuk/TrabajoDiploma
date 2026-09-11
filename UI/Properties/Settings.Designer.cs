@@ -26,5 +26,35 @@ namespace UI.Properties
                 return defaultInstance;
             }
         }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string DatabaseServerInstance
+        {
+            get
+            {
+                return ((string)(this["DatabaseServerInstance"]));
+            }
+            set
+            {
+                this["DatabaseServerInstance"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string DatabaseName
+        {
+            get
+            {
+                return ((string)(this["DatabaseName"]));
+            }
+            set
+            {
+                this["DatabaseName"] = value;
+            }
+        }
     }
 }
