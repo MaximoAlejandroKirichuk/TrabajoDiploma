@@ -76,6 +76,10 @@ namespace UI
             gestionDeFamiliasToolStripMenuItem.Text = Texto("FrmPrincipal.GestionFamilias");
             gestionDeRolesToolStripMenuItem.Text = Texto("FrmPrincipal.GestionRoles");
             bitacoraEventosToolStripMenuItem.Text = Texto("FrmPrincipal.BitacoraEventos");
+            maestrosToolStripMenuItem.Text = Texto("FrmPrincipal.Maestros");
+            planificacionAcademicaToolStripMenuItem.Text = Texto("FrmPrincipal.PlanificacionAcademica");
+            cobrosMorosidadActasToolStripMenuItem.Text = Texto("FrmPrincipal.CobrosMorosidadActas");
+            reportesToolStripMenuItem.Text = Texto("FrmPrincipal.Reportes");
             reToolStripMenuItem.Text = Texto("FrmPrincipal.Ayuda");
             menuIdioma.Text = Texto("FrmPrincipal.Idioma");
             espanolToolStripMenuItem.Text = Texto("FrmPrincipal.Espanol");
