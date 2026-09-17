@@ -9,13 +9,19 @@ namespace UI
     /// </summary>
     public class ProveedorConfiguracionBD_83KI : IProveedorConfiguracionConexion_83KI
     {
+        private const string DefaultServerInstance = @"(localdb)\ProjectModels";
+        private const string DefaultDatabaseName = "TrabajoDiploma9/13";
+
         public ConfiguracionConexionBD_83KI Cargar()
         {
             var server = Properties.Settings.Default.DatabaseServerInstance;
             var database = Properties.Settings.Default.DatabaseName;
 
-            if (string.IsNullOrWhiteSpace(server) && string.IsNullOrWhiteSpace(database))
-                return null;
+            if (string.IsNullOrWhiteSpace(server))
+                server = DefaultServerInstance;
+
+            if (string.IsNullOrWhiteSpace(database))
+                database = DefaultDatabaseName;
 
             return new ConfiguracionConexionBD_83KI
             {

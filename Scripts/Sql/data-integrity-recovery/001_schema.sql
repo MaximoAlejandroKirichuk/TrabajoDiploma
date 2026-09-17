@@ -98,6 +98,57 @@ BEGIN
 END
 GO
 
+IF OBJECT_ID(N'dbo.Profesor', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Profesor
+    (
+        IdProfesor INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_Profesor PRIMARY KEY,
+        DNI NVARCHAR(20) NOT NULL CONSTRAINT UQ_Profesor_DNI UNIQUE,
+        Nombre NVARCHAR(100) NOT NULL,
+        Apellido NVARCHAR(100) NOT NULL,
+        Email NVARCHAR(255) NOT NULL,
+        EstadoActivo BIT NOT NULL CONSTRAINT DF_Profesor_EstadoActivo DEFAULT 1,
+        DVH VARCHAR(64) NOT NULL CONSTRAINT DF_Profesor_DVH DEFAULT ''
+    );
+END
+GO
+
+IF OBJECT_ID(N'dbo.Curso', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Curso
+    (
+        IdCurso INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_Curso PRIMARY KEY,
+        Nombre NVARCHAR(100) NOT NULL CONSTRAINT UQ_Curso_Nombre UNIQUE,
+        Descripcion NVARCHAR(500) NOT NULL CONSTRAINT DF_Curso_Descripcion DEFAULT '',
+        CargaHoraria INT NOT NULL,
+        EstadoActivo BIT NOT NULL CONSTRAINT DF_Curso_EstadoActivo DEFAULT 1,
+        DVH VARCHAR(64) NOT NULL CONSTRAINT DF_Curso_DVH DEFAULT '',
+        CONSTRAINT CK_Curso_CargaHoraria CHECK (CargaHoraria > 0)
+    );
+END
+GO
+
+IF OBJECT_ID(N'dbo.Curso', N'U') IS NOT NULL AND COL_LENGTH('dbo.Curso', 'Descripcion') IS NULL
+BEGIN
+    ALTER TABLE dbo.Curso ADD Descripcion NVARCHAR(500) NOT NULL CONSTRAINT DF_Curso_Descripcion DEFAULT '';
+END
+GO
+
+IF OBJECT_ID(N'dbo.CursoProfesor', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.CursoProfesor
+    (
+        IdCurso INT NOT NULL,
+        IdProfesor INT NOT NULL,
+        EstadoActivo BIT NOT NULL CONSTRAINT DF_CursoProfesor_EstadoActivo DEFAULT 1,
+        DVH VARCHAR(64) NOT NULL CONSTRAINT DF_CursoProfesor_DVH DEFAULT '',
+        CONSTRAINT PK_CursoProfesor PRIMARY KEY (IdCurso, IdProfesor),
+        CONSTRAINT FK_CursoProfesor_Curso FOREIGN KEY (IdCurso) REFERENCES dbo.Curso(IdCurso),
+        CONSTRAINT FK_CursoProfesor_Profesor FOREIGN KEY (IdProfesor) REFERENCES dbo.Profesor(IdProfesor)
+    );
+END
+GO
+
 -- ---------------------------------------------------------------------------
 -- 2. tabla de control DigitoVerificador
 -- ---------------------------------------------------------------------------
@@ -116,5 +167,5 @@ END
 GO
 
 -- verifica que el esquema se aplico correctamente
-PRINT '001_schema.sql aplicado: 8 columnas DVH + tabla DigitoVerificador_83KI creadas.';
+PRINT '001_schema.sql aplicado: tablas protegidas base + Profesor/Curso/CursoProfesor + tabla DigitoVerificador_83KI creadas.';
 GO

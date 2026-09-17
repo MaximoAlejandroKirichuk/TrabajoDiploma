@@ -36,7 +36,7 @@ namespace DAL
                     if (settings != null && !string.IsNullOrWhiteSpace(settings.NombreBaseDatos))
                         return settings.NombreBaseDatos;
                 }
-                return "GestionUsuarios";
+                return "InstitutoVisionEnAccion";
             }
         }
 

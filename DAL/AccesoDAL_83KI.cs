@@ -16,7 +16,7 @@ namespace DAL
         {
             private readonly IProveedorConfiguracionConexion_83KI _settingsProvider;
 
-            private readonly string _stringConnection = "Data Source=MK\\MSSQLSERVER02;Initial Catalog=GestionUsuarios;Integrated Security=True;";
+            private readonly string _stringConnection = "Data Source=(localdb)\\ProjectModels;Initial Catalog=TrabajoDiploma9/13;Integrated Security=True;";
 
             /// <summary>
             /// proveedor global de configuracion de conexion establecido desde la capa de aplicacion (BLL/UI).

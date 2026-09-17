@@ -156,6 +156,50 @@ SELECT N'Usuarios',
 WHERE NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'Usuarios');
 GO
 
+UPDATE dbo.Profesor
+SET DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+    N'Apellido=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Apellido), N'∅'))), N'|',
+    N'DNI=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), DNI), N'∅'))), N'|',
+    N'Email=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Email), N'∅'))), N'|',
+    N'EstadoActivo=', CASE WHEN EstadoActivo = 1 THEN N'1' ELSE N'0' END, N'|',
+    N'IdProfesor=', CONVERT(NVARCHAR(128), IdProfesor), N'|',
+    N'Nombre=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Nombre), N'∅')))
+)), 2));
+GO
+
+INSERT INTO dbo.DigitoVerificador_83KI (NombreTabla, DVV, FechaActualizacion)
+SELECT N'Profesor', LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.Profesor ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)), GETDATE()
+WHERE NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'Profesor');
+GO
+
+UPDATE dbo.Curso
+SET DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+    N'CargaHoraria=', CONVERT(NVARCHAR(128), CargaHoraria), N'|',
+    N'Descripcion=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Descripcion), N'∅'))), N'|',
+    N'EstadoActivo=', CASE WHEN EstadoActivo = 1 THEN N'1' ELSE N'0' END, N'|',
+    N'IdCurso=', CONVERT(NVARCHAR(128), IdCurso), N'|',
+    N'Nombre=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Nombre), N'∅')))
+)), 2));
+GO
+
+INSERT INTO dbo.DigitoVerificador_83KI (NombreTabla, DVV, FechaActualizacion)
+SELECT N'Curso', LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.Curso ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)), GETDATE()
+WHERE NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'Curso');
+GO
+
+UPDATE dbo.CursoProfesor
+SET DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+    N'EstadoActivo=', CASE WHEN EstadoActivo = 1 THEN N'1' ELSE N'0' END, N'|',
+    N'IdCurso=', CONVERT(NVARCHAR(128), IdCurso), N'|',
+    N'IdProfesor=', CONVERT(NVARCHAR(128), IdProfesor)
+)), 2));
+GO
+
+INSERT INTO dbo.DigitoVerificador_83KI (NombreTabla, DVV, FechaActualizacion)
+SELECT N'CursoProfesor', LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.CursoProfesor ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)), GETDATE()
+WHERE NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'CursoProfesor');
+GO
+
 -- Roles DVV
 INSERT INTO dbo.DigitoVerificador_83KI (NombreTabla, DVV, FechaActualizacion)
 SELECT N'Roles',

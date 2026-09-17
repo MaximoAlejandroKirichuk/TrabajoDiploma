@@ -57,6 +57,15 @@ namespace Service.DTOs
 
                 new IntegridadTablaConfig_83KI("FamiliaFamilia",
                     "CodigoFamiliaHija", "CodigoFamiliaPadre"),
+
+                new IntegridadTablaConfig_83KI("Profesor",
+                    "Apellido", "DNI", "Email", "EstadoActivo", "IdProfesor", "Nombre"),
+
+                new IntegridadTablaConfig_83KI("Curso",
+                    "CargaHoraria", "Descripcion", "EstadoActivo", "IdCurso", "Nombre"),
+
+                new IntegridadTablaConfig_83KI("CursoProfesor",
+                    "EstadoActivo", "IdCurso", "IdProfesor"),
             };
 
         /// <summary>

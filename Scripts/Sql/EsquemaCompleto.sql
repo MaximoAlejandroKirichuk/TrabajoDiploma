@@ -1,81 +1,81 @@
 ﻿USE [master]
 GO
-/****** Object:  Database [GestionUsuarios]    Script Date: 7/7/2026 2:34:54 AM ******/
-CREATE DATABASE [GestionUsuarios]
+/****** Object:  Database [InstitutoVisionEnAccion]    Script Date: 7/7/2026 2:34:54 AM ******/
+CREATE DATABASE [InstitutoVisionEnAccion]
  CONTAINMENT = NONE
 ;
 GO
 IF (1 = FULLTEXTSERVICEPROPERTY('IsFullTextInstalled'))
 begin
-EXEC [GestionUsuarios].[dbo].[sp_fulltext_database] @action = 'enable'
+EXEC [InstitutoVisionEnAccion].[dbo].[sp_fulltext_database] @action = 'enable'
 end
 GO
-ALTER DATABASE [GestionUsuarios] SET ANSI_NULL_DEFAULT OFF 
+ALTER DATABASE [InstitutoVisionEnAccion] SET ANSI_NULL_DEFAULT OFF 
 GO
-ALTER DATABASE [GestionUsuarios] SET ANSI_NULLS OFF 
+ALTER DATABASE [InstitutoVisionEnAccion] SET ANSI_NULLS OFF 
 GO
-ALTER DATABASE [GestionUsuarios] SET ANSI_PADDING OFF 
+ALTER DATABASE [InstitutoVisionEnAccion] SET ANSI_PADDING OFF 
 GO
-ALTER DATABASE [GestionUsuarios] SET ANSI_WARNINGS OFF 
+ALTER DATABASE [InstitutoVisionEnAccion] SET ANSI_WARNINGS OFF 
 GO
-ALTER DATABASE [GestionUsuarios] SET ARITHABORT OFF 
+ALTER DATABASE [InstitutoVisionEnAccion] SET ARITHABORT OFF 
 GO
-ALTER DATABASE [GestionUsuarios] SET AUTO_CLOSE ON 
+ALTER DATABASE [InstitutoVisionEnAccion] SET AUTO_CLOSE ON 
 GO
-ALTER DATABASE [GestionUsuarios] SET AUTO_SHRINK OFF 
+ALTER DATABASE [InstitutoVisionEnAccion] SET AUTO_SHRINK OFF 
 GO
-ALTER DATABASE [GestionUsuarios] SET AUTO_UPDATE_STATISTICS ON 
+ALTER DATABASE [InstitutoVisionEnAccion] SET AUTO_UPDATE_STATISTICS ON 
 GO
-ALTER DATABASE [GestionUsuarios] SET CURSOR_CLOSE_ON_COMMIT OFF 
+ALTER DATABASE [InstitutoVisionEnAccion] SET CURSOR_CLOSE_ON_COMMIT OFF 
 GO
-ALTER DATABASE [GestionUsuarios] SET CURSOR_DEFAULT  GLOBAL 
+ALTER DATABASE [InstitutoVisionEnAccion] SET CURSOR_DEFAULT  GLOBAL 
 GO
-ALTER DATABASE [GestionUsuarios] SET CONCAT_NULL_YIELDS_NULL OFF 
+ALTER DATABASE [InstitutoVisionEnAccion] SET CONCAT_NULL_YIELDS_NULL OFF 
 GO
-ALTER DATABASE [GestionUsuarios] SET NUMERIC_ROUNDABORT OFF 
+ALTER DATABASE [InstitutoVisionEnAccion] SET NUMERIC_ROUNDABORT OFF 
 GO
-ALTER DATABASE [GestionUsuarios] SET QUOTED_IDENTIFIER OFF 
+ALTER DATABASE [InstitutoVisionEnAccion] SET QUOTED_IDENTIFIER OFF 
 GO
-ALTER DATABASE [GestionUsuarios] SET RECURSIVE_TRIGGERS OFF 
+ALTER DATABASE [InstitutoVisionEnAccion] SET RECURSIVE_TRIGGERS OFF 
 GO
-ALTER DATABASE [GestionUsuarios] SET  DISABLE_BROKER 
+ALTER DATABASE [InstitutoVisionEnAccion] SET  DISABLE_BROKER 
 GO
-ALTER DATABASE [GestionUsuarios] SET AUTO_UPDATE_STATISTICS_ASYNC OFF 
+ALTER DATABASE [InstitutoVisionEnAccion] SET AUTO_UPDATE_STATISTICS_ASYNC OFF 
 GO
-ALTER DATABASE [GestionUsuarios] SET DATE_CORRELATION_OPTIMIZATION OFF 
+ALTER DATABASE [InstitutoVisionEnAccion] SET DATE_CORRELATION_OPTIMIZATION OFF 
 GO
-ALTER DATABASE [GestionUsuarios] SET TRUSTWORTHY OFF 
+ALTER DATABASE [InstitutoVisionEnAccion] SET TRUSTWORTHY OFF 
 GO
-ALTER DATABASE [GestionUsuarios] SET ALLOW_SNAPSHOT_ISOLATION OFF 
+ALTER DATABASE [InstitutoVisionEnAccion] SET ALLOW_SNAPSHOT_ISOLATION OFF 
 GO
-ALTER DATABASE [GestionUsuarios] SET PARAMETERIZATION SIMPLE 
+ALTER DATABASE [InstitutoVisionEnAccion] SET PARAMETERIZATION SIMPLE 
 GO
-ALTER DATABASE [GestionUsuarios] SET READ_COMMITTED_SNAPSHOT OFF 
+ALTER DATABASE [InstitutoVisionEnAccion] SET READ_COMMITTED_SNAPSHOT OFF 
 GO
-ALTER DATABASE [GestionUsuarios] SET HONOR_BROKER_PRIORITY OFF 
+ALTER DATABASE [InstitutoVisionEnAccion] SET HONOR_BROKER_PRIORITY OFF 
 GO
-ALTER DATABASE [GestionUsuarios] SET RECOVERY SIMPLE 
+ALTER DATABASE [InstitutoVisionEnAccion] SET RECOVERY SIMPLE 
 GO
-ALTER DATABASE [GestionUsuarios] SET  MULTI_USER 
+ALTER DATABASE [InstitutoVisionEnAccion] SET  MULTI_USER 
 GO
-ALTER DATABASE [GestionUsuarios] SET PAGE_VERIFY CHECKSUM  
+ALTER DATABASE [InstitutoVisionEnAccion] SET PAGE_VERIFY CHECKSUM  
 GO
-ALTER DATABASE [GestionUsuarios] SET DB_CHAINING OFF 
+ALTER DATABASE [InstitutoVisionEnAccion] SET DB_CHAINING OFF 
 GO
-ALTER DATABASE [GestionUsuarios] SET FILESTREAM( NON_TRANSACTED_ACCESS = OFF ) 
+ALTER DATABASE [InstitutoVisionEnAccion] SET FILESTREAM( NON_TRANSACTED_ACCESS = OFF ) 
 GO
-ALTER DATABASE [GestionUsuarios] SET TARGET_RECOVERY_TIME = 60 SECONDS 
+ALTER DATABASE [InstitutoVisionEnAccion] SET TARGET_RECOVERY_TIME = 60 SECONDS 
 GO
-ALTER DATABASE [GestionUsuarios] SET DELAYED_DURABILITY = DISABLED 
+ALTER DATABASE [InstitutoVisionEnAccion] SET DELAYED_DURABILITY = DISABLED 
 GO
-ALTER DATABASE [GestionUsuarios] SET ACCELERATED_DATABASE_RECOVERY = OFF  
+ALTER DATABASE [InstitutoVisionEnAccion] SET ACCELERATED_DATABASE_RECOVERY = OFF  
 GO
-EXEC sys.sp_db_vardecimal_storage_format N'GestionUsuarios', N'ON'
+EXEC sys.sp_db_vardecimal_storage_format N'InstitutoVisionEnAccion', N'ON'
 GO
-ALTER DATABASE [GestionUsuarios] SET QUERY_STORE = ON
+ALTER DATABASE [InstitutoVisionEnAccion] SET QUERY_STORE = ON
 GO
 GO
-USE [GestionUsuarios]
+USE [InstitutoVisionEnAccion]
 GO
 /****** Object:  Table [dbo].[BitacoraEventos]    Script Date: 7/7/2026 2:34:57 AM ******/
 SET ANSI_NULLS ON
@@ -1095,5 +1095,164 @@ ALTER TABLE [dbo].[FamiliaFamilia] CHECK CONSTRAINT [CK_FamiliaFamilia_NoAutoRef
 GO
 USE [master]
 GO
-ALTER DATABASE [GestionUsuarios] SET  READ_WRITE 
+ALTER DATABASE [InstitutoVisionEnAccion] SET  READ_WRITE 
+GO
+USE [InstitutoVisionEnAccion]
+GO
+IF OBJECT_ID(N'[dbo].[Profesor]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [dbo].[Profesor](
+        [IdProfesor] INT IDENTITY(1,1) NOT NULL,
+        [DNI] NVARCHAR(20) NOT NULL,
+        [Nombre] NVARCHAR(100) NOT NULL,
+        [Apellido] NVARCHAR(100) NOT NULL,
+        [Email] NVARCHAR(255) NOT NULL,
+        [EstadoActivo] BIT NOT NULL CONSTRAINT [DF_Profesor_EstadoActivo] DEFAULT (1),
+        [DVH] VARCHAR(64) NOT NULL CONSTRAINT [DF_Profesor_DVH] DEFAULT (''),
+        CONSTRAINT [PK_Profesor] PRIMARY KEY CLUSTERED ([IdProfesor] ASC),
+        CONSTRAINT [UQ_Profesor_DNI] UNIQUE ([DNI])
+    );
+END
+GO
+
+IF OBJECT_ID(N'[dbo].[Curso]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [dbo].[Curso](
+        [IdCurso] INT IDENTITY(1,1) NOT NULL,
+        [Nombre] NVARCHAR(100) NOT NULL,
+        [Descripcion] NVARCHAR(500) NOT NULL CONSTRAINT [DF_Curso_Descripcion] DEFAULT (''),
+        [CargaHoraria] INT NOT NULL,
+        [EstadoActivo] BIT NOT NULL CONSTRAINT [DF_Curso_EstadoActivo] DEFAULT (1),
+        [DVH] VARCHAR(64) NOT NULL CONSTRAINT [DF_Curso_DVH] DEFAULT (''),
+        CONSTRAINT [PK_Curso] PRIMARY KEY CLUSTERED ([IdCurso] ASC),
+        CONSTRAINT [UQ_Curso_Nombre] UNIQUE ([Nombre]),
+        CONSTRAINT [CK_Curso_CargaHoraria] CHECK ([CargaHoraria] > 0)
+    );
+END
+GO
+
+IF OBJECT_ID(N'[dbo].[Curso]', N'U') IS NOT NULL AND COL_LENGTH('dbo.Curso', 'Descripcion') IS NULL
+BEGIN
+    ALTER TABLE [dbo].[Curso] ADD [Descripcion] NVARCHAR(500) NOT NULL CONSTRAINT [DF_Curso_Descripcion] DEFAULT ('');
+END
+GO
+
+IF OBJECT_ID(N'[dbo].[CursoProfesor]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [dbo].[CursoProfesor](
+        [IdCurso] INT NOT NULL,
+        [IdProfesor] INT NOT NULL,
+        [EstadoActivo] BIT NOT NULL CONSTRAINT [DF_CursoProfesor_EstadoActivo] DEFAULT (1),
+        [DVH] VARCHAR(64) NOT NULL CONSTRAINT [DF_CursoProfesor_DVH] DEFAULT (''),
+        CONSTRAINT [PK_CursoProfesor] PRIMARY KEY CLUSTERED ([IdCurso] ASC, [IdProfesor] ASC),
+        CONSTRAINT [FK_CursoProfesor_Curso] FOREIGN KEY ([IdCurso]) REFERENCES [dbo].[Curso]([IdCurso]),
+        CONSTRAINT [FK_CursoProfesor_Profesor] FOREIGN KEY ([IdProfesor]) REFERENCES [dbo].[Profesor]([IdProfesor])
+    );
+END
+GO
+
+SET IDENTITY_INSERT [dbo].[Patentes] ON
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.Patentes WHERE CodigoPatente = 41)
+BEGIN
+    INSERT INTO dbo.Patentes (CodigoPatente, Nombre, DVH) VALUES
+    (41, N'Gestion de profesores', ''), (42, N'Ver profesores', ''),
+    (43, N'Crear profesor', ''), (44, N'Modificar profesor', ''),
+    (45, N'Activar profesor', ''), (46, N'Desactivar profesor', '');
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.Patentes WHERE CodigoPatente = 47)
+BEGIN
+    INSERT INTO dbo.Patentes (CodigoPatente, Nombre, DVH) VALUES
+    (47, N'Gestion de cursos', ''), (48, N'Ver cursos', ''),
+    (49, N'Crear curso', ''), (50, N'Modificar curso', ''),
+    (51, N'Activar curso', ''), (52, N'Desactivar curso', '');
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.Patentes WHERE CodigoPatente = 53)
+BEGIN
+    INSERT INTO dbo.Patentes (CodigoPatente, Nombre, DVH) VALUES
+    (53, N'Gestion de curso-profesor', ''), (54, N'Ver curso-profesor', ''),
+    (55, N'Habilitar curso-profesor', ''), (56, N'Deshabilitar curso-profesor', '');
+END
+GO
+
+SET IDENTITY_INSERT [dbo].[Patentes] OFF
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.RolPatente WHERE CodigoRol = 1 AND CodigoPatente = 41)
+BEGIN
+    INSERT INTO dbo.RolPatente (CodigoRol, CodigoPatente, DVH)
+    SELECT 1, CodigoPatente, '' FROM dbo.Patentes WHERE CodigoPatente BETWEEN 41 AND 46;
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.RolPatente WHERE CodigoRol = 1 AND CodigoPatente = 47)
+BEGIN
+    INSERT INTO dbo.RolPatente (CodigoRol, CodigoPatente, DVH)
+    SELECT 1, CodigoPatente, '' FROM dbo.Patentes WHERE CodigoPatente BETWEEN 47 AND 52;
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.RolPatente WHERE CodigoRol = 1 AND CodigoPatente = 53)
+BEGIN
+    INSERT INTO dbo.RolPatente (CodigoRol, CodigoPatente, DVH)
+    SELECT 1, CodigoPatente, '' FROM dbo.Patentes WHERE CodigoPatente BETWEEN 53 AND 56;
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'Profesor')
+BEGIN
+    INSERT INTO dbo.DigitoVerificador_83KI (NombreTabla, DVV, FechaActualizacion) VALUES (N'Profesor', '', GETDATE());
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'Curso')
+BEGIN
+    INSERT INTO dbo.DigitoVerificador_83KI (NombreTabla, DVV, FechaActualizacion) VALUES (N'Curso', '', GETDATE());
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'CursoProfesor')
+BEGIN
+    INSERT INTO dbo.DigitoVerificador_83KI (NombreTabla, DVV, FechaActualizacion) VALUES (N'CursoProfesor', '', GETDATE());
+END
+GO
+
+UPDATE dbo.Patentes
+SET DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+    N'CodigoPatente=', CONVERT(NVARCHAR(128), CodigoPatente), N'|',
+    N'Nombre=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Nombre), N'∅')))
+)), 2));
+GO
+UPDATE dbo.RolPatente
+SET DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+    N'CodigoPatente=', CONVERT(NVARCHAR(128), CodigoPatente), N'|',
+    N'CodigoRol=', CONVERT(NVARCHAR(128), CodigoRol)
+)), 2));
+GO
+UPDATE dbo.Curso
+SET DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+    N'CargaHoraria=', CONVERT(NVARCHAR(128), CargaHoraria), N'|',
+    N'Descripcion=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Descripcion), N'∅'))), N'|',
+    N'EstadoActivo=', CASE WHEN EstadoActivo = 1 THEN N'1' ELSE N'0' END, N'|',
+    N'IdCurso=', CONVERT(NVARCHAR(128), IdCurso), N'|',
+    N'Nombre=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Nombre), N'∅')))
+)), 2));
+GO
+UPDATE dbo.CursoProfesor
+SET DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+    N'EstadoActivo=', CASE WHEN EstadoActivo = 1 THEN N'1' ELSE N'0' END, N'|',
+    N'IdCurso=', CONVERT(NVARCHAR(128), IdCurso), N'|',
+    N'IdProfesor=', CONVERT(NVARCHAR(128), IdProfesor)
+)), 2));
+GO
+UPDATE dbo.DigitoVerificador_83KI SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.Patentes ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)), FechaActualizacion = GETDATE() WHERE NombreTabla = N'Patentes';
+UPDATE dbo.DigitoVerificador_83KI SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.RolPatente ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)), FechaActualizacion = GETDATE() WHERE NombreTabla = N'RolPatente';
+UPDATE dbo.DigitoVerificador_83KI SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.Profesor ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)), FechaActualizacion = GETDATE() WHERE NombreTabla = N'Profesor';
+UPDATE dbo.DigitoVerificador_83KI SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.Curso ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)), FechaActualizacion = GETDATE() WHERE NombreTabla = N'Curso';
+UPDATE dbo.DigitoVerificador_83KI SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.CursoProfesor ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)), FechaActualizacion = GETDATE() WHERE NombreTabla = N'CursoProfesor';
 GO

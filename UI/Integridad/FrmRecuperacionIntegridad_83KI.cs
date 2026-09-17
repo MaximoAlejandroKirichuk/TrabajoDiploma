@@ -1,5 +1,6 @@
-using Service;
+﻿using Service;
 using Service.DTOs;
+using BE.Entidades;
 using Service.Entidades;
 using Service.Interfaces;
 using System;
@@ -19,8 +20,6 @@ namespace UI
     {
         private readonly IIntegridadDatosService_83KI _integridadService;
         private readonly IRecuperacionBaseDatosService_83KI _recuperacionService;
-        private bool _recalculoExitoso;
-
         public FrmRecuperacionIntegridad_83KI()
         {
             InitializeComponent();
@@ -32,10 +31,7 @@ namespace UI
         /// true cuando el admin recalculo hashes exitosamente durante esta sesion.
         /// los llamadores pueden usar esto para decidir si limpiar el estado de recuperacion.
         /// </summary>
-        public bool RecalculoExitoso
-        {
-            get { return _recalculoExitoso; }
-        }
+        public bool RecalculoExitoso { get; private set; }
 
         private void FrmRecuperacionIntegridad_Load(object sender, EventArgs e)
         {

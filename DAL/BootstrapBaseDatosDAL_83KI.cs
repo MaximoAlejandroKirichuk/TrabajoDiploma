@@ -20,6 +20,8 @@ namespace DAL
     /// </summary>
     public class BootstrapBaseDatosDAL_83KI : IBootstrapBaseDatosDAL_83KI
     {
+        private const string ScriptDefaultDatabaseName = "InstitutoVisionEnAccion";
+
         public IReadOnlyList<string> DescubrirInstancias()
         {
             var instances = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -185,8 +187,8 @@ namespace DAL
                 return (false, $"Error al leer el script de instalacion: {ex.Message}");
             }
 
-            // Reemplazar el nombre de base de datos fijo por el provisto por el usuario
-            scriptContent = scriptContent.Replace("GestionUsuarios", databaseName);
+            // Reemplazar el nombre de base de datos del script por el provisto por el usuario.
+            scriptContent = scriptContent.Replace(ScriptDefaultDatabaseName, databaseName);
 
             // Dividir por separadores de lote GO (lineas que contienen solo "GO")
             string[] batches = Regex.Split(

@@ -19,6 +19,56 @@ GO
 PRINT '=== Verificacion DVH por fila (datos vivos vs DVH almacenado) ===';
 GO
 
+SELECT N'Profesor' AS Tabla, IdProfesor AS PK, DVH AS DVHAlmacenado,
+    LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+        N'Apellido=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Apellido), N'∅'))), N'|',
+        N'DNI=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), DNI), N'∅'))), N'|',
+        N'Email=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Email), N'∅'))), N'|',
+        N'EstadoActivo=', CASE WHEN EstadoActivo = 1 THEN N'1' ELSE N'0' END, N'|',
+        N'IdProfesor=', CONVERT(NVARCHAR(128), IdProfesor), N'|',
+        N'Nombre=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Nombre), N'∅')))
+    )), 2)) AS DVHCalculado,
+    CASE WHEN DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+        N'Apellido=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Apellido), N'∅'))), N'|',
+        N'DNI=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), DNI), N'∅'))), N'|',
+        N'Email=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Email), N'∅'))), N'|',
+        N'EstadoActivo=', CASE WHEN EstadoActivo = 1 THEN N'1' ELSE N'0' END, N'|',
+        N'IdProfesor=', CONVERT(NVARCHAR(128), IdProfesor), N'|',
+        N'Nombre=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Nombre), N'∅')))
+    )), 2)) THEN 'PASS' ELSE 'FAIL' END AS Estado
+FROM dbo.Profesor;
+GO
+
+SELECT N'Curso' AS Tabla, IdCurso AS PK, DVH AS DVHAlmacenado,
+    LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+        N'CargaHoraria=', CONVERT(NVARCHAR(128), CargaHoraria), N'|',
+        N'EstadoActivo=', CASE WHEN EstadoActivo = 1 THEN N'1' ELSE N'0' END, N'|',
+        N'IdCurso=', CONVERT(NVARCHAR(128), IdCurso), N'|',
+        N'Nombre=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Nombre), N'∅')))
+    )), 2)) AS DVHCalculado,
+    CASE WHEN DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+        N'CargaHoraria=', CONVERT(NVARCHAR(128), CargaHoraria), N'|',
+        N'EstadoActivo=', CASE WHEN EstadoActivo = 1 THEN N'1' ELSE N'0' END, N'|',
+        N'IdCurso=', CONVERT(NVARCHAR(128), IdCurso), N'|',
+        N'Nombre=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Nombre), N'∅')))
+    )), 2)) THEN 'PASS' ELSE 'FAIL' END AS Estado
+FROM dbo.Curso;
+GO
+
+SELECT N'CursoProfesor' AS Tabla, CONCAT(IdCurso, N'-', IdProfesor) AS PK, DVH AS DVHAlmacenado,
+    LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+        N'EstadoActivo=', CASE WHEN EstadoActivo = 1 THEN N'1' ELSE N'0' END, N'|',
+        N'IdCurso=', CONVERT(NVARCHAR(128), IdCurso), N'|',
+        N'IdProfesor=', CONVERT(NVARCHAR(128), IdProfesor)
+    )), 2)) AS DVHCalculado,
+    CASE WHEN DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+        N'EstadoActivo=', CASE WHEN EstadoActivo = 1 THEN N'1' ELSE N'0' END, N'|',
+        N'IdCurso=', CONVERT(NVARCHAR(128), IdCurso), N'|',
+        N'IdProfesor=', CONVERT(NVARCHAR(128), IdProfesor)
+    )), 2)) THEN 'PASS' ELSE 'FAIL' END AS Estado
+FROM dbo.CursoProfesor;
+GO
+
 -- Usuarios ----------------------------------------------------------------
 SELECT N'Usuarios' AS Tabla, DNI AS PK, DVH AS DVHAlmacenado,
     LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256',
@@ -302,6 +352,32 @@ FamiliaFamiliaDVH AS (
     SELECT LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256',
         CONCAT(N'CodigoFamiliaHija=', CONVERT(NVARCHAR(128), CodigoFamiliaHija), N'|', N'CodigoFamiliaPadre=', CONVERT(NVARCHAR(128), CodigoFamiliaPadre))
     ), 2)) AS DVH FROM dbo.FamiliaFamilia
+),
+ProfesorDVH AS (
+    SELECT LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+        N'Apellido=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Apellido), N'∅'))), N'|',
+        N'DNI=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), DNI), N'∅'))), N'|',
+        N'Email=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Email), N'∅'))), N'|',
+        N'EstadoActivo=', CASE WHEN EstadoActivo = 1 THEN N'1' ELSE N'0' END, N'|',
+        N'IdProfesor=', CONVERT(NVARCHAR(128), IdProfesor), N'|',
+        N'Nombre=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Nombre), N'∅')))
+    )), 2)) AS DVH FROM dbo.Profesor
+),
+CursoDVH AS (
+    SELECT LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+        N'CargaHoraria=', CONVERT(NVARCHAR(128), CargaHoraria), N'|',
+        N'Descripcion=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Descripcion), N'∅'))), N'|',
+        N'EstadoActivo=', CASE WHEN EstadoActivo = 1 THEN N'1' ELSE N'0' END, N'|',
+        N'IdCurso=', CONVERT(NVARCHAR(128), IdCurso), N'|',
+        N'Nombre=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Nombre), N'∅')))
+    )), 2)) AS DVH FROM dbo.Curso
+),
+CursoProfesorDVH AS (
+    SELECT LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+        N'EstadoActivo=', CASE WHEN EstadoActivo = 1 THEN N'1' ELSE N'0' END, N'|',
+        N'IdCurso=', CONVERT(NVARCHAR(128), IdCurso), N'|',
+        N'IdProfesor=', CONVERT(NVARCHAR(128), IdProfesor)
+    )), 2)) AS DVH FROM dbo.CursoProfesor
 )
 SELECT NombreTabla, DVVCalculado, DVVAlmacenado,
     CASE
@@ -357,6 +433,24 @@ FROM (
             ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM FamiliaFamiliaDVH ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')
         ), 2)),
         (SELECT DVV FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'FamiliaFamilia')
+    UNION ALL
+    SELECT N'Profesor',
+        LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256',
+            ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM ProfesorDVH ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')
+        ), 2)),
+        (SELECT DVV FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'Profesor')
+    UNION ALL
+    SELECT N'Curso',
+        LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256',
+            ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM CursoDVH ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')
+        ), 2)),
+        (SELECT DVV FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'Curso')
+    UNION ALL
+    SELECT N'CursoProfesor',
+        LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256',
+            ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM CursoProfesorDVH ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')
+        ), 2)),
+        (SELECT DVV FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'CursoProfesor')
 ) AS Resultados
 ORDER BY NombreTabla;
 GO
