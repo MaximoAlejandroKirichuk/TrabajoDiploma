@@ -1,6 +1,7 @@
-using System;
+﻿using System;
 using DAL.interfaces;
 using Service;
+using BE.Entidades;
 using Service.Entidades;
 using Service.Interfaces;
 

@@ -1,4 +1,6 @@
-using BE;
+﻿using BE;
+using BE.Entidades;
+using Service.Entidades;
 using BLL.Excepciones;
 using BLL.Excepciones.CrearUsuario;
 using BLL.Excepciones.Login;

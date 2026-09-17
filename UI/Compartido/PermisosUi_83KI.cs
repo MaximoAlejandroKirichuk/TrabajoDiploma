@@ -1,4 +1,5 @@
-using Service;
+﻿using Service;
+using BE.Entidades;
 using Service.Entidades;
 using System.Linq;
 using System.Windows.Forms;
@@ -15,6 +16,15 @@ namespace UI
         public static bool TieneAlguno(params PermisoSistema_83KI[] permisos)
         {
             return permisos.Any(Tiene);
+        }
+
+        public static bool TienePermisoMaestros()
+        {
+            int permisoDesde = (int)PermisoSistema_83KI.GestionProfesores;
+            int permisoHasta = (int)PermisoSistema_83KI.DeshabilitarCursoProfesor;
+
+            return SessionManager_83KI.Instancia.ObtenerPermisos()
+                .Any(p => p.CodigoPatente >= permisoDesde && p.CodigoPatente <= permisoHasta);
         }
 
         public static void AplicarVisible(Control control, PermisoSistema_83KI permiso)

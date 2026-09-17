@@ -1,5 +1,6 @@
 ﻿
 using DAL.interfaces;
+using BE.Entidades;
 using Service.Entidades;
 using Service.Interfaces;
 using System;

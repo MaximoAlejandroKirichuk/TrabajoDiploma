@@ -1,4 +1,3 @@
-using Service.Interfaces;
 using System.Collections.Generic;
 
 namespace Service.Entidades

@@ -1,4 +1,5 @@
-using Service.DTOs;
+﻿using Service.DTOs;
+using BE.Entidades;
 using Service.Entidades;
 using Service.Interfaces;
 using System;

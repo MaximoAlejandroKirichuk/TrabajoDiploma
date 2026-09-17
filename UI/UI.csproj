@@ -70,6 +70,28 @@
     </Compile>
     <Compile Include="Compartido\IdiomaUiHelper_83KI.cs" />
     <Compile Include="Compartido\PermisosUi_83KI.cs" />
+    <Compile Include="Modulos\Maestros\ComposicionMaestros_83KI.cs" />
+    <Compile Include="Modulos\Maestros\FrmGestionCursos_83KI.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Modulos\Maestros\FrmGestionCursoProfesor_83KI.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Modulos\Maestros\FrmCrearCurso_83KI.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Modulos\Maestros\FrmCrearProfesor_83KI.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Modulos\Maestros\FrmGestionProfesores_83KI.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Modulos\Maestros\FrmModificarCurso_83KI.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Modulos\Maestros\FrmModificarProfesor_83KI.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Administracion\Usuarios\FrmConfirmarEstadoUsuario.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -211,6 +233,10 @@
       <Project>{80f97d28-0cca-4999-ae9a-2c7d39563b51}</Project>
       <Name>BLL</Name>
     </ProjectReference>
+    <ProjectReference Include="..\DAL\DAL.csproj">
+      <Project>{f2b240cb-f9bf-4d5b-8e03-33a327a00234}</Project>
+      <Name>DAL</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Service\Service.csproj">
       <Project>{e4575579-3219-49c0-aedf-7d9d8f9e59e4}</Project>
       <Name>Service</Name>
@@ -220,9 +246,6 @@
     <Content Include="..\Scripts\Sql\EsquemaCompleto.sql">
       <Link>Scripts\Sql\EsquemaCompleto.sql</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="scriptBaseDatos-CON-DATOS-LIMPIO.sql">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup>

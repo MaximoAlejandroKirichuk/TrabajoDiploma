@@ -1,4 +1,4 @@
-namespace Service.Interfaces
+namespace Service.Entidades
 {
     public interface IIdioma
     {

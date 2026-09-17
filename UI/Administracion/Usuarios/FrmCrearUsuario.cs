@@ -1,4 +1,5 @@
-﻿using Service.Entidades;
+﻿using BE.Entidades;
+using Service.Entidades;
 using Service.Excepciones.CrearUsuario;
 using Service.Interfaces;
 using System;

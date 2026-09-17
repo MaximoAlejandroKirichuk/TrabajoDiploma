@@ -1,10 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using DAL;
 using DAL.interfaces;
 using Service;
 using Service.DTOs;
+using BE.Entidades;
 using Service.Entidades;
 using Service.Excepciones;
 using Service.Excepciones.CrearUsuario;

@@ -1,4 +1,6 @@
-using Service.Excepciones.Login;
+﻿using Service.Excepciones.Login;
+using BE.Entidades;
+using Service.Entidades;
 using Service.Interfaces;
 using System;
 using System.Windows.Forms;

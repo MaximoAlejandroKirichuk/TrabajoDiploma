@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Drawing.Drawing2D;
+using BE.Entidades;
 using Service.Entidades;
 using Service.Excepciones.Login;
 using Service.Interfaces;

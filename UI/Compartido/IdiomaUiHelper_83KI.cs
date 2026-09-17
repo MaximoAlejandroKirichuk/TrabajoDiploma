@@ -1,4 +1,5 @@
-using Service;
+﻿using Service;
+using BE.Entidades;
 using Service.Entidades;
 using Service.Excepciones;
 using Service.Excepciones.CambiarContrasenaUsuario;
@@ -155,6 +156,11 @@ namespace UI
                 string argsRaw = mensaje.Substring(pipeIndex + 1);
                 string[] args = argsRaw.Split('|');
                 return Texto(claveTraduccion, (object[])args);
+            }
+
+            if (mensaje.StartsWith("Errores.", StringComparison.OrdinalIgnoreCase))
+            {
+                return Texto(mensaje);
             }
 
             if (mensaje.StartsWith("El usuario seleccionado ", StringComparison.OrdinalIgnoreCase))

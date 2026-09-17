@@ -50,15 +50,17 @@
     <Compile Include="DTOs\IntegridadSistemaEstado_83KI.cs" />
     <Compile Include="DTOs\IntegridadTablaConfig_83KI.cs" />
     <Compile Include="DTOs\IntegridadTablaEstado_83KI.cs" />
+    <Compile Include="Encriptador_83KI.cs" />
     <Compile Include="Entidades\BitacoraEvento_83KI.cs" />
     <Compile Include="Entidades\ComponentePermiso_83KI.cs" />
+    <Compile Include="Entidades\Enums.cs" />
     <Compile Include="Entidades\EventoBitacoraCatalogo_83KI.cs" />
     <Compile Include="Entidades\Familia_83KI.cs" />
     <Compile Include="Entidades\Idioma_83KI.cs" />
+    <Compile Include="Entidades\IIdioma.cs" />
     <Compile Include="Entidades\Patente_83KI.cs" />
     <Compile Include="Entidades\Rol_83KI.cs" />
-    <Compile Include="Encriptador_83KI.cs" />
-    <Compile Include="Enums\Enums.cs" />
+    <Compile Include="Entidades\Usuario_83KI.cs" />
     <Compile Include="Excepciones\CambiarContrasenaUsuario\Coincidir_Actual_Nueva_ContrasenaException.cs" />
     <Compile Include="Excepciones\CambiarContrasenaUsuario\UsuarioNoAutenticadoException_83KI.cs" />
     <Compile Include="Excepciones\CrearUsuario\DniRegistradoException_83KI.cs" />
@@ -70,6 +72,11 @@
     <Compile Include="Excepciones\Login\UsuarioBloqueadoException_83KI.cs" />
     <Compile Include="Excepciones\Login\UsuarioDeshabilitadoException_83KI.cs" />
     <Compile Include="Excepciones\Login\UsuarioNoExisteException_83KI.cs" />
+    <Compile Include="Excepciones\Maestros\CursoNoEncontradoException_83KI.cs" />
+    <Compile Include="Excepciones\Maestros\DniProfesorDuplicadoException_83KI.cs" />
+    <Compile Include="Excepciones\Maestros\NombreCursoDuplicadoException_83KI.cs" />
+    <Compile Include="Excepciones\Maestros\ProfesorNoEncontradoException_83KI.cs" />
+    <Compile Include="Excepciones\Maestros\RelacionCursoProfesorNoEncontradaException_83KI.cs" />
     <Compile Include="Interfaces\IBitacoraManager_83KI.cs" />
     <Compile Include="Interfaces\IProveedorConfiguracionConexion_83KI.cs" />
     <Compile Include="Interfaces\IConsultaBitacoraEventos_83KI.cs" />
@@ -78,16 +85,17 @@
     <Compile Include="Interfaces\IIntegridadDatosService_83KI.cs" />
     <Compile Include="Interfaces\IRecuperacionBaseDatosService_83KI.cs" />
     <Compile Include="Interfaces\observer\IGestorIdioma_83KI.cs" />
+    <Compile Include="Interfaces\IGestorCursoProfesor_83KI.cs" />
+    <Compile Include="Interfaces\IGestorCurso_83KI.cs" />
+    <Compile Include="Interfaces\IGestorProfesor_83KI.cs" />
     <Compile Include="Interfaces\IGestorRol_83KI.cs" />
     <Compile Include="Interfaces\IGestorUsuario_83KI.cs" />
-    <Compile Include="Interfaces\observer\IIdioma.cs" />
     <Compile Include="Interfaces\observer\IObservadorIdioma.cs" />
     <Compile Include="Interfaces\ISessionManager_83KI.cs" />
     <Compile Include="Interfaces\observer\ISujetoIdioma.cs" />
     <Compile Include="GestorIdioma_83KI.cs" />
     <Compile Include="SessionManager_83KI.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Entidades\Usuario_83KI.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Idiomas\en-US.json">
@@ -96,6 +104,12 @@
     <Content Include="Idiomas\es-AR.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BE\BE.csproj">
+      <Project>{9102c2e0-46ed-4c66-b302-44604b73f7c3}</Project>
+      <Name>BE</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

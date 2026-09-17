@@ -1,4 +1,5 @@
 ﻿using Service.Interfaces;
+using BE.Entidades;
 using Service.Entidades;
 using System;
 using System.Collections.Generic;

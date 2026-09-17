@@ -1,3 +1,4 @@
+﻿using BE.Entidades;
 using Service.Entidades;
 using System;
 

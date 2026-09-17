@@ -1,4 +1,5 @@
-using BLL.Interfaces;
+﻿using BLL.Interfaces;
+using BE.Entidades;
 using Service.Entidades;
 using Service.Interfaces;
 using System;

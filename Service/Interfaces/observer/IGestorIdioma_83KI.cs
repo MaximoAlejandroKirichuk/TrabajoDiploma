@@ -1,3 +1,5 @@
+﻿using BE.Entidades;
+using Service.Entidades;
 using System.Collections.Generic;
 
 namespace Service.Interfaces

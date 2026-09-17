@@ -1,4 +1,5 @@
 ﻿using Service;
+using BE.Entidades;
 using Service.Entidades;
 using Service.Interfaces;
 using System;
@@ -10,6 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using UI.Modulos.Maestros;
 
 namespace UI
 {
@@ -62,6 +64,16 @@ namespace UI
             cambiarContraseñaToolStripMenuItem.Visible = PermisosUi_83KI.Tiene(PermisoSistema_83KI.CambiarContrasena);
             reToolStripMenuItem.Visible = PermisosUi_83KI.Tiene(PermisoSistema_83KI.Ayuda);
             menuIdioma.Visible = PermisosUi_83KI.Tiene(PermisoSistema_83KI.CambiarIdioma);
+            gestionProfesoresToolStripMenuItem.Visible = PermisosUi_83KI.TieneAlguno(
+                PermisoSistema_83KI.GestionProfesores,
+                PermisoSistema_83KI.VerProfesores);
+            gestionCursosToolStripMenuItem.Visible = PermisosUi_83KI.TieneAlguno(
+                PermisoSistema_83KI.GestionCursos,
+                PermisoSistema_83KI.VerCursos);
+            gestionCursoProfesorToolStripMenuItem.Visible = PermisosUi_83KI.TieneAlguno(
+                PermisoSistema_83KI.GestionCursoProfesor,
+                PermisoSistema_83KI.VerCursoProfesor);
+            maestrosToolStripMenuItem.Visible = PermisosUi_83KI.TienePermisoMaestros();
         }
 
         public void ActualizarIdioma(IIdioma idioma)
@@ -77,6 +89,9 @@ namespace UI
             gestionDeRolesToolStripMenuItem.Text = Texto("FrmPrincipal.GestionRoles");
             bitacoraEventosToolStripMenuItem.Text = Texto("FrmPrincipal.BitacoraEventos");
             maestrosToolStripMenuItem.Text = Texto("FrmPrincipal.Maestros");
+            gestionCursosToolStripMenuItem.Text = Texto("FrmPrincipal.GestionCursos");
+            gestionProfesoresToolStripMenuItem.Text = Texto("FrmPrincipal.GestionProfesores");
+            gestionCursoProfesorToolStripMenuItem.Text = Texto("FrmPrincipal.GestionCursoProfesor");
             planificacionAcademicaToolStripMenuItem.Text = Texto("FrmPrincipal.PlanificacionAcademica");
             cobrosMorosidadActasToolStripMenuItem.Text = Texto("FrmPrincipal.CobrosMorosidadActas");
             reportesToolStripMenuItem.Text = Texto("FrmPrincipal.Reportes");
@@ -276,6 +291,35 @@ namespace UI
                     AplicarPermisos();
                 }
             }
+        }
+
+        private void gestionProfesoresToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (var gestion = new FrmGestionProfesores_83KI(ComposicionMaestros_83KI.CrearGestorProfesor()))
+            {
+                gestion.ShowDialog(this);
+            }
+        }
+
+        private void gestionCursosToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (var gestion = new FrmGestionCursos_83KI(ComposicionMaestros_83KI.CrearGestorCurso()))
+            {
+                gestion.ShowDialog(this);
+            }
+        }
+
+        private void gestionCursoProfesorToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (var gestion = new FrmGestionCursoProfesor_83KI(ComposicionMaestros_83KI.CrearGestorCursoProfesor()))
+            {
+                gestion.ShowDialog(this);
+            }
+        }
+
+        private void planificacionAcademicaToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

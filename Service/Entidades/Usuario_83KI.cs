@@ -7,6 +7,7 @@ namespace Service.Entidades
     {
         private const int DniMinimoValido = 1000000;
         private const string PatronEmail = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
+        private const string IdiomaPorDefecto = "es-AR";
 
         //pk
         public int DNI { get; private set; }
@@ -39,7 +40,7 @@ namespace Service.Entidades
                 Contrasena = ValidarContrasena(contrasenaHash),
                 Activo = true,
                 Bloqueado = false,
-                IdiomaId = GestorIdioma_83KI.IdiomaPorDefecto,
+                IdiomaId = IdiomaPorDefecto,
                 IntentosRealizados = 0,
                 FechaUltimoIntento = null,
             };

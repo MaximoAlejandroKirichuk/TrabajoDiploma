@@ -1,6 +1,7 @@
-using DAL.DAL;
+﻿using DAL.DAL;
 using DAL.interfaces;
 using Service;
+using BE.Entidades;
 using Service.Entidades;
 using System;
 using System.Collections.Generic;

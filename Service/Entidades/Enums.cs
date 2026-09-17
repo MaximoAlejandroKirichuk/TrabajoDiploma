@@ -57,6 +57,22 @@ namespace Service.Entidades
         CambiarIdioma = 37,
         EjecutarBackup = 38,
         EjecutarRestore = 39,
-        RecalcularHashes = 40
+        RecalcularHashes = 40,
+        GestionProfesores = 41,
+        VerProfesores = 42,
+        CrearProfesor = 43,
+        ModificarProfesor = 44,
+        ActivarProfesor = 45,
+        DesactivarProfesor = 46,
+        GestionCursos = 47,
+        VerCursos = 48,
+        CrearCurso = 49,
+        ModificarCurso = 50,
+        ActivarCurso = 51,
+        DesactivarCurso = 52,
+        GestionCursoProfesor = 53,
+        VerCursoProfesor = 54,
+        HabilitarCursoProfesor = 55,
+        DeshabilitarCursoProfesor = 56
     }
 }

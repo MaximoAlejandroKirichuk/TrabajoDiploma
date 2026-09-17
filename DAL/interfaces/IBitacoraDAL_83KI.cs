@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using BE.Entidades;
 using Service.Entidades;
 namespace DAL.interfaces
 {

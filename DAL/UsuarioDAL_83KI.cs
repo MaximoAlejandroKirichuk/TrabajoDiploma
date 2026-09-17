@@ -1,4 +1,5 @@
-﻿using Service.Entidades;
+﻿using BE.Entidades;
+using Service.Entidades;
 using DAL.DAL;
 using DAL.interfaces;
 using Service;
