@@ -1,4 +1,6 @@
-﻿using Service;
+﻿using BLL;
+using DAL;
+using Service;
 using BE.Entidades;
 using Service.Entidades;
 using Service.Interfaces;
@@ -12,6 +14,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using UI.Modulos.Maestros;
+using UI.Modulos.PlanificacionAcademica;
 
 namespace UI
 {
@@ -73,6 +76,9 @@ namespace UI
             gestionCursoProfesorToolStripMenuItem.Visible = PermisosUi_83KI.TieneAlguno(
                 PermisoSistema_83KI.GestionCursoProfesor,
                 PermisoSistema_83KI.VerCursoProfesor);
+            bool puedePlanificacionAcademica = PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarPreaperturaComision);
+            registrarPreaperturaComisionToolStripMenuItem.Visible = puedePlanificacionAcademica;
+            planificacionAcademicaToolStripMenuItem.Visible = puedePlanificacionAcademica;
             maestrosToolStripMenuItem.Visible = PermisosUi_83KI.TienePermisoMaestros();
         }
 
@@ -93,6 +99,7 @@ namespace UI
             gestionProfesoresToolStripMenuItem.Text = Texto("FrmPrincipal.GestionProfesores");
             gestionCursoProfesorToolStripMenuItem.Text = Texto("FrmPrincipal.GestionCursoProfesor");
             planificacionAcademicaToolStripMenuItem.Text = Texto("FrmPrincipal.PlanificacionAcademica");
+            registrarPreaperturaComisionToolStripMenuItem.Text = Texto("FrmPrincipal.RegistrarPreaperturaComision");
             cobrosMorosidadActasToolStripMenuItem.Text = Texto("FrmPrincipal.CobrosMorosidadActas");
             reportesToolStripMenuItem.Text = Texto("FrmPrincipal.Reportes");
             reToolStripMenuItem.Text = Texto("FrmPrincipal.Ayuda");
@@ -320,6 +327,24 @@ namespace UI
         private void planificacionAcademicaToolStripMenuItem_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void registrarPreaperturaComisionToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarPreaperturaComision))
+            {
+                IdiomaUiHelper_83KI.MostrarAdvertencia(this, "Errores.SinPermisos", "Comun.Seguridad");
+                return;
+            }
+
+            using (var formulario = new FrmRegistrarPreaperturaComision_83KI(
+                new GestorComisionBLL_83KI(
+                    new ComisionDAL_83KI(),
+                    SessionManager_83KI.Instancia,
+                    new BitacoraBLL_83KI(new BitacoraEventoDAL_83KI()))))
+            {
+                formulario.ShowDialog(this);
+            }
         }
     }
 }

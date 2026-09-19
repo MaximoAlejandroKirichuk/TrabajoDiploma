@@ -78,6 +78,8 @@
     <Compile Include="Excepciones\Maestros\ProfesorNoEncontradoException_83KI.cs" />
     <Compile Include="Excepciones\Maestros\RelacionCursoProfesorNoEncontradaException_83KI.cs" />
     <Compile Include="Interfaces\IBitacoraManager_83KI.cs" />
+    <Compile Include="Interfaces\IComisionDAL_83KI.cs" />
+    <Compile Include="Interfaces\IDisponibilidadProfesorDAL_83KI.cs" />
     <Compile Include="Interfaces\IProveedorConfiguracionConexion_83KI.cs" />
     <Compile Include="Interfaces\IConsultaBitacoraEventos_83KI.cs" />
     <Compile Include="Interfaces\IBootstrapBaseDatosService_83KI.cs" />
@@ -85,6 +87,7 @@
     <Compile Include="Interfaces\IIntegridadDatosService_83KI.cs" />
     <Compile Include="Interfaces\IRecuperacionBaseDatosService_83KI.cs" />
     <Compile Include="Interfaces\observer\IGestorIdioma_83KI.cs" />
+    <Compile Include="Interfaces\IGestorComision_83KI.cs" />
     <Compile Include="Interfaces\IGestorCursoProfesor_83KI.cs" />
     <Compile Include="Interfaces\IGestorCurso_83KI.cs" />
     <Compile Include="Interfaces\IGestorProfesor_83KI.cs" />

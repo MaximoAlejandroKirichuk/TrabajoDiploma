@@ -269,6 +269,59 @@ namespace DAL
                 }
                 return ds;
             }
+
+            public DataSet LeerStoredProcedure(string procedimiento, List<SqlParameter> parametros = null)
+            {
+                DataSet ds = new DataSet();
+                using (SqlConnection conn = new SqlConnection(ResolvedConnectionString))
+                using (SqlCommand cmd = new SqlCommand(procedimiento, conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    if (parametros != null) cmd.Parameters.AddRange(parametros.ToArray());
+                    using (SqlDataAdapter da = new SqlDataAdapter(cmd))
+                    {
+                        da.Fill(ds);
+                    }
+                }
+                return ds;
+            }
+
+            public object LeerEscalarStoredProcedure(string procedimiento, List<SqlParameter> parametros = null)
+            {
+                using (SqlConnection conn = new SqlConnection(ResolvedConnectionString))
+                using (SqlCommand cmd = new SqlCommand(procedimiento, conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    if (parametros != null) cmd.Parameters.AddRange(parametros.ToArray());
+                    conn.Open();
+                    return cmd.ExecuteScalar();
+                }
+            }
+
+            internal static DataSet LeerStoredProcedureTransaccional(SqlConnection conn, SqlTransaction tran, string procedimiento, List<SqlParameter> parametros = null)
+            {
+                DataSet ds = new DataSet();
+                using (SqlCommand cmd = new SqlCommand(procedimiento, conn, tran))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    if (parametros != null) cmd.Parameters.AddRange(parametros.ToArray());
+                    using (SqlDataAdapter da = new SqlDataAdapter(cmd))
+                    {
+                        da.Fill(ds);
+                    }
+                }
+                return ds;
+            }
+
+            internal static int EscribirStoredProcedureTransaccional(SqlConnection conn, SqlTransaction tran, string procedimiento, List<SqlParameter> parametros = null)
+            {
+                using (SqlCommand cmd = new SqlCommand(procedimiento, conn, tran))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    if (parametros != null) cmd.Parameters.AddRange(parametros.ToArray());
+                    return cmd.ExecuteNonQuery();
+                }
+            }
         }
     }
 }

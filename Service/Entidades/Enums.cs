@@ -9,7 +9,8 @@ namespace Service.Entidades
     public enum Modulo
     {
         Usuarios,
-        Admin
+        Admin,
+        PlanificacionAcademica
     }
 
     public enum Criticidad
@@ -73,6 +74,7 @@ namespace Service.Entidades
         GestionCursoProfesor = 53,
         VerCursoProfesor = 54,
         HabilitarCursoProfesor = 55,
-        DeshabilitarCursoProfesor = 56
+        DeshabilitarCursoProfesor = 56,
+        RegistrarPreaperturaComision = 57
     }
 }

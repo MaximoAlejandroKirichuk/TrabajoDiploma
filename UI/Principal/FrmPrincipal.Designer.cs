@@ -44,6 +44,7 @@
             this.gestionProfesoresToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.gestionCursoProfesorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.planificacionAcademicaToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.registrarPreaperturaComisionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.cobrosMorosidadActasToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.reportesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuIdioma = new System.Windows.Forms.ToolStripMenuItem();
@@ -184,10 +185,19 @@
             // 
             // planificacionAcademicaToolStripMenuItem
             // 
+            this.planificacionAcademicaToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.registrarPreaperturaComisionToolStripMenuItem});
             this.planificacionAcademicaToolStripMenuItem.Name = "planificacionAcademicaToolStripMenuItem";
             this.planificacionAcademicaToolStripMenuItem.Size = new System.Drawing.Size(189, 24);
             this.planificacionAcademicaToolStripMenuItem.Text = "Planificación Académica";
             this.planificacionAcademicaToolStripMenuItem.Click += new System.EventHandler(this.planificacionAcademicaToolStripMenuItem_Click);
+            // 
+            // registrarPreaperturaComisionToolStripMenuItem
+            // 
+            this.registrarPreaperturaComisionToolStripMenuItem.Name = "registrarPreaperturaComisionToolStripMenuItem";
+            this.registrarPreaperturaComisionToolStripMenuItem.Size = new System.Drawing.Size(304, 24);
+            this.registrarPreaperturaComisionToolStripMenuItem.Text = "Registro de preapertura de comisión";
+            this.registrarPreaperturaComisionToolStripMenuItem.Click += new System.EventHandler(this.registrarPreaperturaComisionToolStripMenuItem_Click);
             // 
             // cobrosMorosidadActasToolStripMenuItem
             // 
@@ -274,5 +284,6 @@
         private System.Windows.Forms.ToolStripMenuItem gestionProfesoresToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem gestionCursosToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem gestionCursoProfesorToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem registrarPreaperturaComisionToolStripMenuItem;
     }
 }

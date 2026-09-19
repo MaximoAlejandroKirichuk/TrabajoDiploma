@@ -71,6 +71,12 @@
     <Compile Include="Compartido\IdiomaUiHelper_83KI.cs" />
     <Compile Include="Compartido\PermisosUi_83KI.cs" />
     <Compile Include="Modulos\Maestros\ComposicionMaestros_83KI.cs" />
+    <Compile Include="Modulos\PlanificacionAcademica\FrmRegistrarPreaperturaComision_83KI.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Modulos\PlanificacionAcademica\FrmRegistrarPreaperturaComision_83KI.Designer.cs">
+      <DependentUpon>FrmRegistrarPreaperturaComision_83KI.cs</DependentUpon>
+    </Compile>
     <Compile Include="Modulos\Maestros\FrmGestionCursos_83KI.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -190,6 +196,9 @@
       <DependentUpon>FrmModificarUsuario.cs</DependentUpon>
       <LogicalName>UI.FrmModificarUsuario.resources</LogicalName>
     </EmbeddedResource>
+    <EmbeddedResource Include="Modulos\PlanificacionAcademica\FrmRegistrarPreaperturaComision_83KI.resx">
+      <DependentUpon>FrmRegistrarPreaperturaComision_83KI.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Principal\FrmPrincipal.resx">
       <DependentUpon>FrmPrincipal.cs</DependentUpon>
       <LogicalName>UI.FrmPrincipal.resources</LogicalName>
@@ -249,11 +258,9 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Modulos\Maestros\" />
-    <Folder Include="Modulos\PlanificacionAcademica\" />
+    <Folder Include="Modulos\Ayuda\" />
     <Folder Include="Modulos\CobrosMorosidadActas\" />
     <Folder Include="Modulos\Reportes\" />
-    <Folder Include="Modulos\Ayuda\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

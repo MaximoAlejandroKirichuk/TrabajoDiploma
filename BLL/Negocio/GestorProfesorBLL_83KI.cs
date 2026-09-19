@@ -11,12 +11,19 @@ namespace BLL
     public class GestorProfesorBLL_83KI : IGestorProfesor_83KI
     {
         private readonly IProfesorDAL_83KI _dal;
+        private readonly IDisponibilidadProfesorDAL_83KI _disponibilidadDal;
         private readonly ISessionManager_83KI _sessionManager;
         private readonly IBitacoraManager_83KI _bitacora;
 
         public GestorProfesorBLL_83KI(IProfesorDAL_83KI dal, ISessionManager_83KI sessionManager, IBitacoraManager_83KI bitacora)
+            : this(dal, new DAL.DisponibilidadProfesorDAL_83KI(), sessionManager, bitacora)
+        {
+        }
+
+        public GestorProfesorBLL_83KI(IProfesorDAL_83KI dal, IDisponibilidadProfesorDAL_83KI disponibilidadDal, ISessionManager_83KI sessionManager, IBitacoraManager_83KI bitacora)
         {
             _dal = dal;
+            _disponibilidadDal = disponibilidadDal;
             _sessionManager = sessionManager;
             _bitacora = bitacora;
         }
@@ -60,6 +67,43 @@ namespace BLL
         public void ActivarProfesor(int idProfesor) { CambiarEstado(idProfesor, true); }
         public void DesactivarProfesor(int idProfesor) { CambiarEstado(idProfesor, false); }
 
+        public IEnumerable<DisponibilidadProfesor_83KI> ObtenerDisponibilidades(int idProfesor)
+        {
+            ValidarPermisoLectura();
+            ValidarProfesorExistente(idProfesor);
+            return _disponibilidadDal.ObtenerPorProfesor(idProfesor);
+        }
+
+        public void AgregarDisponibilidad(int idProfesor, DayOfWeek diaSemana, TimeSpan horaInicio, TimeSpan horaFin)
+        {
+            ValidarPermiso(PermisoSistema_83KI.ModificarProfesor);
+            ValidarProfesorExistente(idProfesor);
+            var disponibilidad = DisponibilidadProfesor_83KI.CrearNueva(idProfesor, diaSemana, horaInicio, horaFin);
+            ValidarDisponibilidadActivaNoDuplicada(disponibilidad);
+            int id = _disponibilidadDal.Insertar(disponibilidad);
+            RegistrarAuditoriaSegura($"Disponibilidad de profesor creada. IdProfesor: {idProfesor}. IdDisponibilidad: {id}. Actor: {UsuarioActual}", Criticidad.Alto, UsuarioActual);
+        }
+
+        public void ModificarDisponibilidad(int idDisponibilidadProfesor, int idProfesor, DayOfWeek diaSemana, TimeSpan horaInicio, TimeSpan horaFin)
+        {
+            ValidarPermiso(PermisoSistema_83KI.ModificarProfesor);
+            var disponibilidad = ObtenerDisponibilidadRequerida(idDisponibilidadProfesor, idProfesor);
+            disponibilidad.ModificarHorario(diaSemana, horaInicio, horaFin);
+            ValidarDisponibilidadActivaNoDuplicada(disponibilidad);
+            _disponibilidadDal.Actualizar(disponibilidad);
+            RegistrarAuditoriaSegura($"Disponibilidad de profesor modificada. IdProfesor: {idProfesor}. IdDisponibilidad: {idDisponibilidadProfesor}. Actor: {UsuarioActual}", Criticidad.Alto, UsuarioActual);
+        }
+
+        public void ActivarDisponibilidad(int idDisponibilidadProfesor, int idProfesor)
+        {
+            CambiarEstadoDisponibilidad(idDisponibilidadProfesor, idProfesor, true);
+        }
+
+        public void DesactivarDisponibilidad(int idDisponibilidadProfesor, int idProfesor)
+        {
+            CambiarEstadoDisponibilidad(idDisponibilidadProfesor, idProfesor, false);
+        }
+
         private void CambiarEstado(int idProfesor, bool activo)
         {
             ValidarPermiso(activo ? PermisoSistema_83KI.ActivarProfesor : PermisoSistema_83KI.DesactivarProfesor);
@@ -71,6 +115,52 @@ namespace BLL
         }
 
         private string UsuarioActual => _sessionManager.UsuarioActivo != null ? _sessionManager.UsuarioActivo.UserName : "Sistema";
+
+        private void CambiarEstadoDisponibilidad(int idDisponibilidadProfesor, int idProfesor, bool activo)
+        {
+            ValidarPermiso(PermisoSistema_83KI.ModificarProfesor);
+            var disponibilidad = ObtenerDisponibilidadRequerida(idDisponibilidadProfesor, idProfesor);
+            if (activo) disponibilidad.Activar(); else disponibilidad.Desactivar();
+            ValidarDisponibilidadActivaNoDuplicada(disponibilidad);
+            _disponibilidadDal.Actualizar(disponibilidad);
+            RegistrarAuditoriaSegura($"Disponibilidad de profesor {(activo ? "activada" : "desactivada")}. IdProfesor: {idProfesor}. IdDisponibilidad: {idDisponibilidadProfesor}. Actor: {UsuarioActual}", Criticidad.Alto, UsuarioActual);
+        }
+
+        private void ValidarDisponibilidadActivaNoDuplicada(DisponibilidadProfesor_83KI disponibilidad)
+        {
+            if (disponibilidad == null || !disponibilidad.EstadoActivo) return;
+
+            foreach (var existente in _disponibilidadDal.ObtenerPorProfesor(disponibilidad.IdProfesor))
+            {
+                if (!existente.EstadoActivo) continue;
+                if (existente.IdDisponibilidadProfesor == disponibilidad.IdDisponibilidadProfesor) continue;
+
+                if (existente.DiaSemana == disponibilidad.DiaSemana
+                    && existente.HoraInicio == disponibilidad.HoraInicio
+                    && existente.HoraFin == disponibilidad.HoraFin)
+                {
+                    throw new InvalidOperationException("Errores.DisponibilidadProfesorDuplicada");
+                }
+            }
+        }
+
+        private DisponibilidadProfesor_83KI ObtenerDisponibilidadRequerida(int idDisponibilidadProfesor, int idProfesor)
+        {
+            ValidarProfesorExistente(idProfesor);
+            var disponibilidad = _disponibilidadDal.ObtenerPorProfesor(idProfesor);
+            foreach (var item in disponibilidad)
+            {
+                if (item.IdDisponibilidadProfesor == idDisponibilidadProfesor) return item;
+            }
+
+            throw new InvalidOperationException("Errores.DisponibilidadProfesorNoEncontrada");
+        }
+
+        private void ValidarProfesorExistente(int idProfesor)
+        {
+            if (idProfesor <= 0) throw new InvalidOperationException("Errores.ProfesorObligatorio");
+            if (_dal.ObtenerPorId(idProfesor) == null) throw new ProfesorNoEncontradoException_83KI();
+        }
 
         private void ValidarPermiso(PermisoSistema_83KI permiso)
         {

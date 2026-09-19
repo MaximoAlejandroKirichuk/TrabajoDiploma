@@ -14,26 +14,17 @@ namespace UI
 
         public ConfiguracionConexionBD_83KI Cargar()
         {
-            var server = Properties.Settings.Default.DatabaseServerInstance;
-            var database = Properties.Settings.Default.DatabaseName;
-
-            if (string.IsNullOrWhiteSpace(server))
-                server = DefaultServerInstance;
-
-            if (string.IsNullOrWhiteSpace(database))
-                database = DefaultDatabaseName;
-
             return new ConfiguracionConexionBD_83KI
             {
-                InstanciaServidor = server,
-                NombreBaseDatos = database
+                InstanciaServidor = DefaultServerInstance,
+                NombreBaseDatos = DefaultDatabaseName
             };
         }
 
         public void Guardar(ConfiguracionConexionBD_83KI settings)
         {
-            Properties.Settings.Default.DatabaseServerInstance = settings?.InstanciaServidor ?? string.Empty;
-            Properties.Settings.Default.DatabaseName = settings?.NombreBaseDatos ?? string.Empty;
+            Properties.Settings.Default.DatabaseServerInstance = DefaultServerInstance;
+            Properties.Settings.Default.DatabaseName = DefaultDatabaseName;
             Properties.Settings.Default.Save();
         }
     }

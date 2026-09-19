@@ -1,4 +1,5 @@
 using BE.Entidades;
+using System;
 using System.Collections.Generic;
 
 namespace Service.Interfaces
@@ -12,5 +13,10 @@ namespace Service.Interfaces
         void ModificarProfesor(int idProfesor, string nombre, string apellido, string email);
         void ActivarProfesor(int idProfesor);
         void DesactivarProfesor(int idProfesor);
+        IEnumerable<DisponibilidadProfesor_83KI> ObtenerDisponibilidades(int idProfesor);
+        void AgregarDisponibilidad(int idProfesor, DayOfWeek diaSemana, TimeSpan horaInicio, TimeSpan horaFin);
+        void ModificarDisponibilidad(int idDisponibilidadProfesor, int idProfesor, DayOfWeek diaSemana, TimeSpan horaInicio, TimeSpan horaFin);
+        void ActivarDisponibilidad(int idDisponibilidadProfesor, int idProfesor);
+        void DesactivarDisponibilidad(int idDisponibilidadProfesor, int idProfesor);
     }
 }

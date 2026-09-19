@@ -77,7 +77,10 @@ namespace Service.Entidades
             new EventoBitacoraOpcion_83KI(Modulo.Admin, "Integridad de datos comprometida", "Integridad de datos comprometida:"),
             new EventoBitacoraOpcion_83KI(Modulo.Admin, "Rec\u00e1lculo de hashes ejecutado", "Rec\u00e1lculo de hashes ejecutado:"),
             new EventoBitacoraOpcion_83KI(Modulo.Admin, "Backup de base de datos ejecutado", "Backup de base de datos ejecutado:"),
-            new EventoBitacoraOpcion_83KI(Modulo.Admin, "Restauraci\u00f3n de base de datos ejecutada", "Restauraci\u00f3n de base de datos ejecutada:")
+            new EventoBitacoraOpcion_83KI(Modulo.Admin, "Restauraci\u00f3n de base de datos ejecutada", "Restauraci\u00f3n de base de datos ejecutada:"),
+
+            // --- Planificacion Academica ---
+            new EventoBitacoraOpcion_83KI(Modulo.PlanificacionAcademica, "Registro de preapertura de comisión", "Registro de preapertura de comisión:")
         };
 
         public static IEnumerable<EventoBitacoraOpcion_83KI> ObtenerPorModulo(Modulo modulo)
