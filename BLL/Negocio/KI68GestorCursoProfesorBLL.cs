@@ -8,13 +8,13 @@ using System.Collections.Generic;
 
 namespace BLL
 {
-    public class GestorCursoProfesorBLL_83KI : IGestorCursoProfesor_83KI
+    public class KI68GestorCursoProfesorBLL : IGestorCursoProfesor_83KI
     {
         private readonly ICursoProfesorDAL_83KI _dal;
         private readonly ISessionManager_83KI _sessionManager;
         private readonly IBitacoraManager_83KI _bitacora;
 
-        public GestorCursoProfesorBLL_83KI(ICursoProfesorDAL_83KI dal, ISessionManager_83KI sessionManager, IBitacoraManager_83KI bitacora)
+        public KI68GestorCursoProfesorBLL(ICursoProfesorDAL_83KI dal, ISessionManager_83KI sessionManager, IBitacoraManager_83KI bitacora)
         {
             _dal = dal;
             _sessionManager = sessionManager;

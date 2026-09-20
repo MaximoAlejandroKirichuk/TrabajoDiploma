@@ -9,15 +9,15 @@ namespace UI.Modulos.Maestros
     {
         public static IGestorProfesor_83KI CrearGestorProfesor()
         {
-            return new GestorProfesorBLL_83KI(
-                new ProfesorDAL_83KI(),
+            return new KI68GestorProfesorBLL(
+                new KI68ProfesorDAL(),
                 SessionManager_83KI.Instancia,
                 new BitacoraBLL_83KI(new BitacoraEventoDAL_83KI()));
         }
 
         public static IGestorCurso_83KI CrearGestorCurso()
         {
-            return new GestorCursoBLL_83KI(
+            return new KI68GestorCursoBLL(
                 new CursoDAL_83KI(),
                 SessionManager_83KI.Instancia,
                 new BitacoraBLL_83KI(new BitacoraEventoDAL_83KI()));
@@ -25,8 +25,8 @@ namespace UI.Modulos.Maestros
 
         public static IGestorCursoProfesor_83KI CrearGestorCursoProfesor()
         {
-            return new GestorCursoProfesorBLL_83KI(
-                new CursoProfesorDAL_83KI(),
+            return new KI68GestorCursoProfesorBLL(
+                new KI68CursoProfesorDAL(),
                 SessionManager_83KI.Instancia,
                 new BitacoraBLL_83KI(new BitacoraEventoDAL_83KI()));
         }

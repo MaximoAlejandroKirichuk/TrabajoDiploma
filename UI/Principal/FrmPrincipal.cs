@@ -338,7 +338,7 @@ namespace UI
             }
 
             using (var formulario = new FrmRegistrarPreaperturaComision_83KI(
-                new GestorComisionBLL_83KI(
+                new KI68GestorComisionBLL(
                     new ComisionDAL_83KI(),
                     SessionManager_83KI.Instancia,
                     new BitacoraBLL_83KI(new BitacoraEventoDAL_83KI()))))

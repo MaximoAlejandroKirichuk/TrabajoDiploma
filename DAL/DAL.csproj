@@ -45,9 +45,9 @@
     <Compile Include="BitacoraEventoDAL_83KI.cs" />
     <Compile Include="BootstrapBaseDatosDAL_83KI.cs" />
     <Compile Include="ComisionDAL_83KI.cs" />
-    <Compile Include="CursoProfesorDAL_83KI.cs" />
+    <Compile Include="Negocio\KI68CursoProfesorDAL.cs" />
     <Compile Include="CursoDAL_83KI.cs" />
-    <Compile Include="DisponibilidadProfesorDAL_83KI.cs" />
+    <Compile Include="Negocio\KI68DisponibilidadProfesorDAL.cs" />
     <Compile Include="IntegridadDAL_83KI.cs" />
     <Compile Include="interfaces\IBitacoraDAL_83KI.cs" />
     <Compile Include="interfaces\IBootstrapBaseDatosDAL_83KI.cs" />
@@ -58,7 +58,7 @@
     <Compile Include="interfaces\IRecuperacionDAL_83KI.cs" />
     <Compile Include="interfaces\IRolDAL_83KI.cs" />
     <Compile Include="RecuperacionDAL_83KI.cs" />
-    <Compile Include="ProfesorDAL_83KI.cs" />
+    <Compile Include="Negocio\KI68ProfesorDAL.cs" />
     <Compile Include="RolDAL_83KI.cs" />
     <Compile Include="UsuarioDAL_83KI.cs" />
     <Compile Include="interfaces\IUsuarioDAL_83KI.cs" />

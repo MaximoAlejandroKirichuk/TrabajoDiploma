@@ -7,13 +7,13 @@ using System.Linq;
 
 namespace BLL
 {
-    public class GestorComisionBLL_83KI : IGestorComision_83KI
+    public class KI68GestorComisionBLL : IGestorComision_83KI
     {
         private readonly IComisionDAL_83KI _comisionDAL;
         private readonly ISessionManager_83KI _sessionManager;
         private readonly IBitacoraManager_83KI _bitacora;
 
-        public GestorComisionBLL_83KI(IComisionDAL_83KI comisionDAL, ISessionManager_83KI sessionManager, IBitacoraManager_83KI bitacora)
+        public KI68GestorComisionBLL(IComisionDAL_83KI comisionDAL, ISessionManager_83KI sessionManager, IBitacoraManager_83KI bitacora)
         {
             _comisionDAL = comisionDAL;
             _sessionManager = sessionManager;

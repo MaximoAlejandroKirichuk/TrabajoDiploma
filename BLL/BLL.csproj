@@ -44,11 +44,11 @@
     <Compile Include="BitacoraBLL_83KI.cs" />
     <Compile Include="ConsultaBitacoraEventos_83KI.cs" />
     <Compile Include="BootstrapBaseDatosBLL_83KI.cs" />
-    <Compile Include="Negocio\GestorComisionBLL_83KI.cs" />
-    <Compile Include="Negocio\GestorCursoProfesorBLL_83KI.cs" />
-    <Compile Include="Negocio\GestorCursoBLL_83KI.cs" />
+    <Compile Include="Negocio\KI68GestorComisionBLL.cs" />
+    <Compile Include="Negocio\KI68GestorCursoProfesorBLL.cs" />
+    <Compile Include="Negocio\KI68GestorCursoBLL.cs" />
     <Compile Include="GestorRolBLL_83KI.cs" />
-    <Compile Include="Negocio\GestorProfesorBLL_83KI.cs" />
+    <Compile Include="Negocio\KI68GestorProfesorBLL.cs" />
     <Compile Include="GestorUsuariosBLL_83KI.cs" />
     <Compile Include="IntegridadBLL_83KI.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

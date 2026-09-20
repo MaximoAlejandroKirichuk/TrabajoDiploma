@@ -8,19 +8,19 @@ using System.Collections.Generic;
 
 namespace BLL
 {
-    public class GestorProfesorBLL_83KI : IGestorProfesor_83KI
+    public class KI68GestorProfesorBLL : IGestorProfesor_83KI
     {
         private readonly IProfesorDAL_83KI _dal;
         private readonly IDisponibilidadProfesorDAL_83KI _disponibilidadDal;
         private readonly ISessionManager_83KI _sessionManager;
         private readonly IBitacoraManager_83KI _bitacora;
 
-        public GestorProfesorBLL_83KI(IProfesorDAL_83KI dal, ISessionManager_83KI sessionManager, IBitacoraManager_83KI bitacora)
-            : this(dal, new DAL.DisponibilidadProfesorDAL_83KI(), sessionManager, bitacora)
+        public KI68GestorProfesorBLL(IProfesorDAL_83KI dal, ISessionManager_83KI sessionManager, IBitacoraManager_83KI bitacora)
+            : this(dal, new DAL.KI68DisponibilidadProfesorDAL(), sessionManager, bitacora)
         {
         }
 
-        public GestorProfesorBLL_83KI(IProfesorDAL_83KI dal, IDisponibilidadProfesorDAL_83KI disponibilidadDal, ISessionManager_83KI sessionManager, IBitacoraManager_83KI bitacora)
+        public KI68GestorProfesorBLL(IProfesorDAL_83KI dal, IDisponibilidadProfesorDAL_83KI disponibilidadDal, ISessionManager_83KI sessionManager, IBitacoraManager_83KI bitacora)
         {
             _dal = dal;
             _disponibilidadDal = disponibilidadDal;
