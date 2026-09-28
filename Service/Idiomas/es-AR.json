@@ -102,6 +102,10 @@
     "Errores.CupoMaximoInvalido": "El cupo máximo debe ser mayor o igual al cupo mínimo.",
     "Errores.FechaLimitePagoInvalida": "La fecha límite de pago no puede ser anterior a hoy.",
     "Errores.ComisionNoRegistrada": "No se pudo registrar la preapertura de comisión.",
+    "Errores.ArancelBaseInvalido": "El arancel base debe ser mayor a cero.",
+    "Errores.PlanDePagoObligatorio": "Debe seleccionar un plan de pago del catálogo.",
+    "Errores.PlanDePagoNoDisponible": "El plan de pago seleccionado no está disponible.",
+    "Errores.RecargoPlanInvalido": "El recargo del plan de pago no puede ser negativo.",
     "Errores.DisponibilidadProfesorNoEncontrada": "La disponibilidad horaria seleccionada no existe.",
     "Errores.DisponibilidadProfesorDuplicada": "Ya existe una disponibilidad horaria activa para ese profesor con el mismo día y horario.",
 
@@ -266,6 +270,9 @@
     "FrmRegistrarPreaperturaComision.CupoMaximo": "Cupo máximo",
     "FrmRegistrarPreaperturaComision.FechaLimitePago": "Fecha límite de pago",
     "FrmRegistrarPreaperturaComision.Profesor": "Profesor",
+    "FrmRegistrarPreaperturaComision.ArancelBase": "Arancel base",
+    "FrmRegistrarPreaperturaComision.PlanDePago": "Plan de pago",
+    "FrmRegistrarPreaperturaComision.SinPlanesDisponibles": "No hay planes de pago disponibles.",
     "FrmRegistrarPreaperturaComision.Registrar": "Registrar preapertura",
 
     "FrmCrearUsuario.Titulo": "Crear usuario",

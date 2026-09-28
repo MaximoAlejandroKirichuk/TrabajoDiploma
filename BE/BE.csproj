@@ -42,6 +42,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Entidades\Comision_83KI.cs" />
+    <Compile Include="Entidades\PlanDePago_83KI.cs" />
     <Compile Include="Entidades\CursoProfesor_83KI.cs" />
     <Compile Include="Entidades\Curso_83KI.cs" />
     <Compile Include="Entidades\DisponibilidadProfesor_83KI.cs" />

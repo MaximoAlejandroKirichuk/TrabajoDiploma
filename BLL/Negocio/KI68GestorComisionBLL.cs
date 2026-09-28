@@ -33,10 +33,21 @@ namespace BLL
             return _comisionDAL.ObtenerProfesoresDisponibles(idCurso, diaSemana, horaInicio, horaFin);
         }
 
-        public string RegistrarPreapertura(int idCurso, int idProfesor, DayOfWeek diaSemana, TimeSpan horaInicio, TimeSpan horaFin, int cupoMinimo, int cupoMaximo, DateTime fechaLimitePago)
+        public IEnumerable<PlanDePago_83KI> ObtenerPlanesDePagoActivos()
         {
             ValidarPermiso();
-            var comision = Comision_83KI.CrearPreapertura(idCurso, idProfesor, diaSemana, horaInicio, horaFin, cupoMinimo, cupoMaximo, fechaLimitePago);
+            return _comisionDAL.ObtenerPlanesDePagoActivos();
+        }
+
+        public string RegistrarPreapertura(int idCurso, int idProfesor, DayOfWeek diaSemana, TimeSpan horaInicio, TimeSpan horaFin, int cupoMinimo, int cupoMaximo, DateTime fechaLimitePago, decimal arancelBase, int idPlanDePago, decimal recargoPlanSnapshot)
+        {
+            ValidarPermiso();
+            if (arancelBase <= 0) throw new ArgumentException("Errores.ArancelBaseInvalido", nameof(arancelBase));
+
+            var plan = _comisionDAL.ObtenerPlanesDePagoActivos().FirstOrDefault(p => p.IdPlanDePago == idPlanDePago);
+            if (plan == null) throw new InvalidOperationException("Errores.PlanDePagoNoDisponible");
+
+            var comision = Comision_83KI.CrearPreapertura(idCurso, idProfesor, diaSemana, horaInicio, horaFin, cupoMinimo, cupoMaximo, fechaLimitePago, arancelBase, idPlanDePago, plan.RecargoPorcentaje);
             if (!_comisionDAL.ValidarCursoProfesorDisponibilidad(idCurso, idProfesor, diaSemana, horaInicio, horaFin))
                 throw new InvalidOperationException("Errores.ProfesorNoDisponibleParaPreapertura");
 

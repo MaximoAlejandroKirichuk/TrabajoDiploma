@@ -14,6 +14,7 @@ namespace UI.Modulos.PlanificacionAcademica
         private readonly IGestorComision_83KI _gestor;
         private readonly IGestorIdioma_83KI _gestorIdioma;
         private bool _actualizandoProfesores;
+        private bool _actualizandoPlanes;
 
         public FrmRegistrarPreaperturaComision_83KI(IGestorComision_83KI gestor)
         {
@@ -22,6 +23,7 @@ namespace UI.Modulos.PlanificacionAcademica
             InitializeComponent();
             InicializarValoresPredeterminados();
             CargarCursos();
+            CargarPlanes();
             ConfigurarEventos();
             _gestorIdioma.Suscribir(this);
             ActualizarProfesoresDisponibles();
@@ -33,6 +35,8 @@ namespace UI.Modulos.PlanificacionAcademica
             dtpHoraInicio.Value = DateTime.Today.AddHours(18);
             dtpHoraFin.Value = DateTime.Today.AddHours(20);
             dtpFechaLimitePago.MinDate = DateTime.Today;
+            pnlArancel.Visible = true;
+            pnlPlanes.Visible = false;
         }
 
         private void CargarDias()
@@ -61,6 +65,70 @@ namespace UI.Modulos.PlanificacionAcademica
             dtpHoraInicio.ValueChanged += (s, e) => ActualizarProfesoresDisponibles();
             dtpHoraFin.ValueChanged += (s, e) => ActualizarProfesoresDisponibles();
             cmbProfesores.SelectedIndexChanged += (s, e) => ActualizarEstadoRegistrar();
+            nudArancelBase.Leave += (s, e) => ValidarArancelYActualizarPlanes();
+            nudArancelBase.Validated += (s, e) => ValidarArancelYActualizarPlanes();
+            clbPlanes.ItemCheck += clbPlanes_ItemCheck;
+        }
+
+        private void CargarPlanes()
+        {
+            _actualizandoPlanes = true;
+            try
+            {
+                var planes = _gestor.ObtenerPlanesDePagoActivos().ToList();
+                clbPlanes.DataSource = planes;
+                clbPlanes.DisplayMember = "NombreConRecargo";
+                if (planes.Count == 0)
+                {
+                    lblMensaje.Text = IdiomaUiHelper_83KI.Texto("FrmRegistrarPreaperturaComision.SinPlanesDisponibles");
+                }
+            }
+            catch (Exception ex)
+            {
+                lblMensaje.Text = IdiomaUiHelper_83KI.TraducirExcepcion(ex);
+            }
+            finally
+            {
+                _actualizandoPlanes = false;
+                ActualizarEstadoRegistrar();
+            }
+        }
+
+        private void ValidarArancelYActualizarPlanes()
+        {
+            bool arancelValido = ArancelBase > 0;
+            pnlPlanes.Visible = arancelValido;
+            if (!arancelValido)
+            {
+                DesmarcarPlanes();
+                MostrarValidacion("Errores.ArancelBaseInvalido");
+            }
+            else if (clbPlanes.Items.Count == 0)
+            {
+                lblMensaje.Text = IdiomaUiHelper_83KI.Texto("FrmRegistrarPreaperturaComision.SinPlanesDisponibles");
+            }
+            else
+            {
+                lblMensaje.Text = string.Empty;
+            }
+
+            ActualizarEstadoRegistrar();
+        }
+
+        private void clbPlanes_ItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            if (_actualizandoPlanes) return;
+            BeginInvoke(new Action(() =>
+            {
+                if (e.NewValue == CheckState.Checked)
+                {
+                    for (int i = 0; i < clbPlanes.Items.Count; i++)
+                    {
+                        if (i != e.Index) clbPlanes.SetItemChecked(i, false);
+                    }
+                }
+                ActualizarEstadoRegistrar();
+            }));
         }
 
         private void ActualizarProfesoresDisponibles()
@@ -124,7 +192,7 @@ namespace UI.Modulos.PlanificacionAcademica
 
         private void ActualizarEstadoRegistrar()
         {
-            btnRegistrar.Enabled = IdProfesorSeleccionado > 0;
+            btnRegistrar.Enabled = IdProfesorSeleccionado > 0 && ArancelBase > 0 && PlanSeleccionado != null;
         }
 
         private void btnRegistrar_Click(object sender, EventArgs e)
@@ -149,7 +217,20 @@ namespace UI.Modulos.PlanificacionAcademica
                     return;
                 }
 
-                string codigo = _gestor.RegistrarPreapertura(IdCursoSeleccionado, IdProfesorSeleccionado, DiaSeleccionado, HoraInicio, HoraFin, (int)nudCupoMinimo.Value, (int)nudCupoMaximo.Value, dtpFechaLimitePago.Value.Date);
+                if (ArancelBase <= 0)
+                {
+                    MostrarValidacion("Errores.ArancelBaseInvalido");
+                    return;
+                }
+
+                PlanDePago_83KI plan = PlanSeleccionado;
+                if (plan == null)
+                {
+                    MostrarValidacion("Errores.PlanDePagoObligatorio");
+                    return;
+                }
+
+                string codigo = _gestor.RegistrarPreapertura(IdCursoSeleccionado, IdProfesorSeleccionado, DiaSeleccionado, HoraInicio, HoraFin, (int)nudCupoMinimo.Value, (int)nudCupoMaximo.Value, dtpFechaLimitePago.Value.Date, ArancelBase, plan.IdPlanDePago, plan.RecargoPorcentaje);
 
                 MessageBox.Show(this, IdiomaUiHelper_83KI.Texto("FrmRegistrarPreaperturaComision.Registrada", codigo), IdiomaUiHelper_83KI.Texto("Comun.Informacion"), MessageBoxButtons.OK, MessageBoxIcon.Information);
                 DialogResult = DialogResult.OK;
@@ -163,6 +244,15 @@ namespace UI.Modulos.PlanificacionAcademica
 
         private int IdCursoSeleccionado { get { return cmbCursos.SelectedValue is int ? (int)cmbCursos.SelectedValue : 0; } }
         private int IdProfesorSeleccionado { get { return cmbProfesores.SelectedValue is int ? (int)cmbProfesores.SelectedValue : 0; } }
+        private decimal ArancelBase { get { return nudArancelBase.Value; } }
+
+        private PlanDePago_83KI PlanSeleccionado
+        {
+            get
+            {
+                return clbPlanes.CheckedItems.Count == 1 ? clbPlanes.CheckedItems[0] as PlanDePago_83KI : null;
+            }
+        }
 
         private DayOfWeek DiaSeleccionado
         {
@@ -198,8 +288,23 @@ namespace UI.Modulos.PlanificacionAcademica
             lblCupoMaximo.Text = IdiomaUiHelper_83KI.Texto("FrmRegistrarPreaperturaComision.CupoMaximo");
             lblFechaLimitePago.Text = IdiomaUiHelper_83KI.Texto("FrmRegistrarPreaperturaComision.FechaLimitePago");
             lblProfesor.Text = IdiomaUiHelper_83KI.Texto("FrmRegistrarPreaperturaComision.Profesor");
+            lblArancelBase.Text = IdiomaUiHelper_83KI.Texto("FrmRegistrarPreaperturaComision.ArancelBase");
+            lblPlanes.Text = IdiomaUiHelper_83KI.Texto("FrmRegistrarPreaperturaComision.PlanDePago");
             btnRegistrar.Text = IdiomaUiHelper_83KI.Texto("FrmRegistrarPreaperturaComision.Registrar");
             CargarDias();
+        }
+
+        private void DesmarcarPlanes()
+        {
+            _actualizandoPlanes = true;
+            try
+            {
+                for (int i = 0; i < clbPlanes.Items.Count; i++) clbPlanes.SetItemChecked(i, false);
+            }
+            finally
+            {
+                _actualizandoPlanes = false;
+            }
         }
 
         protected override void OnFormClosed(FormClosedEventArgs e)

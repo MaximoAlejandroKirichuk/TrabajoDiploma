@@ -1256,3 +1256,123 @@ UPDATE dbo.DigitoVerificador_83KI SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES
 UPDATE dbo.DigitoVerificador_83KI SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.Curso ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)), FechaActualizacion = GETDATE() WHERE NombreTabla = N'Curso';
 UPDATE dbo.DigitoVerificador_83KI SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.CursoProfesor ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)), FechaActualizacion = GETDATE() WHERE NombreTabla = N'CursoProfesor';
 GO
+
+IF OBJECT_ID(N'[dbo].[PlanesDePago]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [dbo].[PlanesDePago](
+        [IdPlanDePago] INT IDENTITY(1,1) NOT NULL,
+        [Nombre] NVARCHAR(100) NOT NULL,
+        [RecargoPorcentaje] DECIMAL(9,4) NOT NULL CONSTRAINT [DF_PlanesDePago_Recargo] DEFAULT (0),
+        [EstadoActivo] BIT NOT NULL CONSTRAINT [DF_PlanesDePago_EstadoActivo] DEFAULT (1),
+        CONSTRAINT [PK_PlanesDePago] PRIMARY KEY CLUSTERED ([IdPlanDePago] ASC),
+        CONSTRAINT [UQ_PlanesDePago_Nombre] UNIQUE ([Nombre]),
+        CONSTRAINT [CK_PlanesDePago_Recargo] CHECK ([RecargoPorcentaje] >= 0)
+    );
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.PlanesDePago)
+BEGIN
+    INSERT INTO dbo.PlanesDePago (Nombre, RecargoPorcentaje, EstadoActivo) VALUES
+    (N'Contado', 0.0000, 1),
+    (N'3 cuotas', 5.1250, 1),
+    (N'6 cuotas', 10.0000, 1);
+END
+GO
+
+IF OBJECT_ID(N'[dbo].[Comision]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [dbo].[Comision](
+        [IdComision] INT IDENTITY(1,1) NOT NULL,
+        [Codigo] NVARCHAR(30) NOT NULL,
+        [IdCurso] INT NOT NULL,
+        [IdProfesor] INT NOT NULL,
+        [DiaSemana] NVARCHAR(20) NOT NULL,
+        [HoraInicio] TIME NOT NULL,
+        [HoraFin] TIME NOT NULL,
+        [CupoMinimo] INT NOT NULL,
+        [CupoMaximo] INT NOT NULL,
+        [FechaLimitePago] DATE NOT NULL,
+        [ArancelBase] DECIMAL(18,2) NOT NULL,
+        [IdPlanDePago] INT NOT NULL,
+        [RecargoPlanSnapshot] DECIMAL(9,4) NOT NULL,
+        [Estado] NVARCHAR(30) NOT NULL CONSTRAINT [DF_Comision_Estado] DEFAULT (N'preapertura'),
+        [DVH] VARCHAR(64) NOT NULL CONSTRAINT [DF_Comision_DVH] DEFAULT (''),
+        CONSTRAINT [PK_Comision] PRIMARY KEY CLUSTERED ([IdComision] ASC),
+        CONSTRAINT [FK_Comision_Curso] FOREIGN KEY ([IdCurso]) REFERENCES [dbo].[Curso]([IdCurso]),
+        CONSTRAINT [FK_Comision_Profesor] FOREIGN KEY ([IdProfesor]) REFERENCES [dbo].[Profesor]([IdProfesor]),
+        CONSTRAINT [FK_Comision_PlanesDePago] FOREIGN KEY ([IdPlanDePago]) REFERENCES [dbo].[PlanesDePago]([IdPlanDePago]),
+        CONSTRAINT [CK_Comision_Cupos] CHECK ([CupoMinimo] > 0 AND [CupoMaximo] >= [CupoMinimo]),
+        CONSTRAINT [CK_Comision_Horario] CHECK ([HoraInicio] < [HoraFin]),
+        CONSTRAINT [CK_Comision_ArancelBase] CHECK ([ArancelBase] > 0),
+        CONSTRAINT [CK_Comision_RecargoPlan] CHECK ([RecargoPlanSnapshot] >= 0)
+    );
+END
+GO
+
+IF OBJECT_ID(N'[dbo].[Comision]', N'U') IS NOT NULL AND COL_LENGTH('dbo.Comision', 'ArancelBase') IS NULL
+BEGIN
+    ALTER TABLE [dbo].[Comision] ADD [ArancelBase] DECIMAL(18,2) NOT NULL CONSTRAINT [DF_Comision_ArancelBase] DEFAULT (0.01);
+END
+GO
+IF OBJECT_ID(N'[dbo].[Comision]', N'U') IS NOT NULL AND COL_LENGTH('dbo.Comision', 'IdPlanDePago') IS NULL
+BEGIN
+    ALTER TABLE [dbo].[Comision] ADD [IdPlanDePago] INT NULL;
+END
+GO
+IF OBJECT_ID(N'[dbo].[Comision]', N'U') IS NOT NULL AND COL_LENGTH('dbo.Comision', 'RecargoPlanSnapshot') IS NULL
+BEGIN
+    ALTER TABLE [dbo].[Comision] ADD [RecargoPlanSnapshot] DECIMAL(9,4) NOT NULL CONSTRAINT [DF_Comision_RecargoPlanSnapshot] DEFAULT (0);
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'Comision')
+BEGIN
+    INSERT INTO dbo.DigitoVerificador_83KI (NombreTabla, DVV, FechaActualizacion) VALUES (N'Comision', '', GETDATE());
+END
+GO
+
+CREATE OR ALTER PROCEDURE [dbo].[sp_CUN01_ListarPlanesDePagoActivos]
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT IdPlanDePago, Nombre, RecargoPorcentaje, EstadoActivo
+    FROM dbo.PlanesDePago
+    WHERE EstadoActivo = 1
+    ORDER BY Nombre;
+END
+GO
+
+CREATE OR ALTER PROCEDURE [dbo].[sp_CUN01_RegistrarPreaperturaComision]
+    @IdCurso INT,
+    @IdProfesor INT,
+    @DiaSemana NVARCHAR(20),
+    @HoraInicio TIME,
+    @HoraFin TIME,
+    @CupoMinimo INT,
+    @CupoMaximo INT,
+    @FechaLimitePago DATE,
+    @ArancelBase DECIMAL(18,2),
+    @IdPlanDePago INT,
+    @RecargoPlanSnapshot DECIMAL(9,4)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @IdComision INT;
+    DECLARE @Codigo NVARCHAR(30);
+
+    INSERT INTO dbo.Comision (Codigo, IdCurso, IdProfesor, DiaSemana, HoraInicio, HoraFin, CupoMinimo, CupoMaximo, FechaLimitePago, ArancelBase, IdPlanDePago, RecargoPlanSnapshot, Estado, DVH)
+    VALUES (N'', @IdCurso, @IdProfesor, @DiaSemana, @HoraInicio, @HoraFin, @CupoMinimo, @CupoMaximo, @FechaLimitePago, @ArancelBase, @IdPlanDePago, @RecargoPlanSnapshot, N'preapertura', N'');
+
+    SET @IdComision = SCOPE_IDENTITY();
+    SET @Codigo = CONCAT(N'COM-', RIGHT(CONCAT(N'000000', @IdComision), 6));
+
+    UPDATE dbo.Comision SET Codigo = @Codigo WHERE IdComision = @IdComision;
+
+    SELECT IdComision, Codigo, IdCurso, IdProfesor, DiaSemana, HoraInicio, HoraFin, CupoMinimo, CupoMaximo,
+           FechaLimitePago, ArancelBase, IdPlanDePago, RecargoPlanSnapshot, Estado, DVH
+    FROM dbo.Comision
+    WHERE IdComision = @IdComision;
+END
+GO

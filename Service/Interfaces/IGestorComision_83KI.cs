@@ -8,6 +8,7 @@ namespace Service.Interfaces
     {
         IEnumerable<Curso_83KI> ObtenerCursosActivosParaPreapertura();
         IEnumerable<Profesor_83KI> ObtenerProfesoresDisponibles(int idCurso, DayOfWeek diaSemana, TimeSpan horaInicio, TimeSpan horaFin);
-        string RegistrarPreapertura(int idCurso, int idProfesor, DayOfWeek diaSemana, TimeSpan horaInicio, TimeSpan horaFin, int cupoMinimo, int cupoMaximo, DateTime fechaLimitePago);
+        IEnumerable<PlanDePago_83KI> ObtenerPlanesDePagoActivos();
+        string RegistrarPreapertura(int idCurso, int idProfesor, DayOfWeek diaSemana, TimeSpan horaInicio, TimeSpan horaFin, int cupoMinimo, int cupoMaximo, DateTime fechaLimitePago, decimal arancelBase, int idPlanDePago, decimal recargoPlanSnapshot);
     }
 }

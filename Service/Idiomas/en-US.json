@@ -102,6 +102,10 @@
     "Errores.CupoMaximoInvalido": "The maximum capacity must be greater than or equal to the minimum capacity.",
     "Errores.FechaLimitePagoInvalida": "The payment deadline cannot be earlier than today.",
     "Errores.ComisionNoRegistrada": "The commission preapertura could not be registered.",
+    "Errores.ArancelBaseInvalido": "Base tuition must be greater than zero.",
+    "Errores.PlanDePagoObligatorio": "You must select a catalog payment plan.",
+    "Errores.PlanDePagoNoDisponible": "The selected payment plan is not available.",
+    "Errores.RecargoPlanInvalido": "The payment plan surcharge cannot be negative.",
     "Errores.DisponibilidadProfesorNoEncontrada": "The selected professor availability does not exist.",
     "Errores.DisponibilidadProfesorDuplicada": "An active schedule availability already exists for that professor with the same day and time range.",
 
@@ -266,6 +270,9 @@
     "FrmRegistrarPreaperturaComision.CupoMaximo": "Maximum capacity",
     "FrmRegistrarPreaperturaComision.FechaLimitePago": "Payment deadline",
     "FrmRegistrarPreaperturaComision.Profesor": "Professor",
+    "FrmRegistrarPreaperturaComision.ArancelBase": "Base tuition",
+    "FrmRegistrarPreaperturaComision.PlanDePago": "Payment plan",
+    "FrmRegistrarPreaperturaComision.SinPlanesDisponibles": "No payment plans are available.",
     "FrmRegistrarPreaperturaComision.Registrar": "Register preapertura",
 
     "FrmCrearUsuario.Titulo": "Create user",

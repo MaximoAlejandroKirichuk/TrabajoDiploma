@@ -8,6 +8,7 @@ namespace Service.Interfaces
     {
         IEnumerable<Curso_83KI> ObtenerCursosActivosParaPreapertura();
         IEnumerable<Profesor_83KI> ObtenerProfesoresDisponibles(int idCurso, DayOfWeek diaSemana, TimeSpan horaInicio, TimeSpan horaFin);
+        IEnumerable<PlanDePago_83KI> ObtenerPlanesDePagoActivos();
         bool ValidarCursoProfesorDisponibilidad(int idCurso, int idProfesor, DayOfWeek diaSemana, TimeSpan horaInicio, TimeSpan horaFin);
         Comision_83KI RegistrarPreapertura(Comision_83KI comision);
     }

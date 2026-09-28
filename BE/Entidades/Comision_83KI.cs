@@ -16,14 +16,17 @@ namespace BE.Entidades
         public int CupoMinimo { get; private set; }
         public int CupoMaximo { get; private set; }
         public DateTime FechaLimitePago { get; private set; }
+        public decimal ArancelBase { get; private set; }
+        public int IdPlanDePago { get; private set; }
+        public decimal RecargoPlanSnapshot { get; private set; }
         public string Estado { get; private set; }
         public string DVH { get; private set; }
 
         private Comision_83KI() { }
 
-        public static Comision_83KI CrearPreapertura(int idCurso, int idProfesor, DayOfWeek diaSemana, TimeSpan horaInicio, TimeSpan horaFin, int cupoMinimo, int cupoMaximo, DateTime fechaLimitePago)
+        public static Comision_83KI CrearPreapertura(int idCurso, int idProfesor, DayOfWeek diaSemana, TimeSpan horaInicio, TimeSpan horaFin, int cupoMinimo, int cupoMaximo, DateTime fechaLimitePago, decimal arancelBase, int idPlanDePago, decimal recargoPlanSnapshot)
         {
-            Validar(idCurso, idProfesor, horaInicio, horaFin, cupoMinimo, cupoMaximo, fechaLimitePago);
+            Validar(idCurso, idProfesor, horaInicio, horaFin, cupoMinimo, cupoMaximo, fechaLimitePago, arancelBase, idPlanDePago, recargoPlanSnapshot);
             return new Comision_83KI
             {
                 IdCurso = idCurso,
@@ -34,15 +37,18 @@ namespace BE.Entidades
                 CupoMinimo = cupoMinimo,
                 CupoMaximo = cupoMaximo,
                 FechaLimitePago = fechaLimitePago.Date,
+                ArancelBase = arancelBase,
+                IdPlanDePago = idPlanDePago,
+                RecargoPlanSnapshot = recargoPlanSnapshot,
                 Estado = EstadoPreapertura,
                 Codigo = string.Empty,
                 DVH = string.Empty
             };
         }
 
-        public static Comision_83KI ReconstruirDesdePersistencia(int idComision, string codigo, int idCurso, int idProfesor, DayOfWeek diaSemana, TimeSpan horaInicio, TimeSpan horaFin, int cupoMinimo, int cupoMaximo, DateTime fechaLimitePago, string estado, string dvh)
+        public static Comision_83KI ReconstruirDesdePersistencia(int idComision, string codigo, int idCurso, int idProfesor, DayOfWeek diaSemana, TimeSpan horaInicio, TimeSpan horaFin, int cupoMinimo, int cupoMaximo, DateTime fechaLimitePago, decimal arancelBase, int idPlanDePago, decimal recargoPlanSnapshot, string estado, string dvh)
         {
-            var comision = CrearPreapertura(idCurso, idProfesor, diaSemana, horaInicio, horaFin, cupoMinimo, cupoMaximo, fechaLimitePago);
+            var comision = CrearPreapertura(idCurso, idProfesor, diaSemana, horaInicio, horaFin, cupoMinimo, cupoMaximo, fechaLimitePago, arancelBase, idPlanDePago, recargoPlanSnapshot);
             comision.IdComision = idComision;
             comision.Codigo = codigo ?? string.Empty;
             comision.Estado = estado ?? EstadoPreapertura;
@@ -50,7 +56,7 @@ namespace BE.Entidades
             return comision;
         }
 
-        private static void Validar(int idCurso, int idProfesor, TimeSpan horaInicio, TimeSpan horaFin, int cupoMinimo, int cupoMaximo, DateTime fechaLimitePago)
+        private static void Validar(int idCurso, int idProfesor, TimeSpan horaInicio, TimeSpan horaFin, int cupoMinimo, int cupoMaximo, DateTime fechaLimitePago, decimal arancelBase, int idPlanDePago, decimal recargoPlanSnapshot)
         {
             if (idCurso <= 0) throw new ArgumentException("Errores.CursoObligatorio", nameof(idCurso));
             if (idProfesor <= 0) throw new ArgumentException("Errores.ProfesorObligatorio", nameof(idProfesor));
@@ -58,6 +64,9 @@ namespace BE.Entidades
             if (cupoMinimo <= 0) throw new ArgumentException("Errores.CupoMinimoInvalido", nameof(cupoMinimo));
             if (cupoMaximo < cupoMinimo) throw new ArgumentException("Errores.CupoMaximoInvalido", nameof(cupoMaximo));
             if (fechaLimitePago.Date < DateTime.Today) throw new ArgumentException("Errores.FechaLimitePagoInvalida", nameof(fechaLimitePago));
+            if (arancelBase <= 0) throw new ArgumentException("Errores.ArancelBaseInvalido", nameof(arancelBase));
+            if (idPlanDePago <= 0) throw new ArgumentException("Errores.PlanDePagoObligatorio", nameof(idPlanDePago));
+            if (recargoPlanSnapshot < 0) throw new ArgumentException("Errores.RecargoPlanInvalido", nameof(recargoPlanSnapshot));
         }
     }
 }

@@ -30,6 +30,11 @@ namespace DAL
             return Convert.ToInt32(resultado) > 0;
         }
 
+        public IEnumerable<PlanDePago_83KI> ObtenerPlanesDePagoActivos()
+        {
+            return MapearPlanes(_accesoDAL.LeerStoredProcedure("sp_CUN01_ListarPlanesDePagoActivos"));
+        }
+
         public Comision_83KI RegistrarPreapertura(Comision_83KI comision)
         {
             Comision_83KI registrada = null;
@@ -67,8 +72,20 @@ namespace DAL
                 new SqlParameter("@HoraFin", comision.HoraFin),
                 new SqlParameter("@CupoMinimo", comision.CupoMinimo),
                 new SqlParameter("@CupoMaximo", comision.CupoMaximo),
-                new SqlParameter("@FechaLimitePago", comision.FechaLimitePago)
+                new SqlParameter("@FechaLimitePago", comision.FechaLimitePago),
+                new SqlParameter("@ArancelBase", SqlDbType.Decimal) { Precision = 18, Scale = 2, Value = comision.ArancelBase },
+                new SqlParameter("@IdPlanDePago", comision.IdPlanDePago),
+                new SqlParameter("@RecargoPlanSnapshot", SqlDbType.Decimal) { Precision = 9, Scale = 4, Value = comision.RecargoPlanSnapshot }
             };
+        }
+
+        private static IEnumerable<PlanDePago_83KI> MapearPlanes(DataSet ds)
+        {
+            var planes = new List<PlanDePago_83KI>();
+            if (ds == null || ds.Tables.Count == 0) return planes;
+            foreach (DataRow row in ds.Tables[0].Rows)
+                planes.Add(PlanDePago_83KI.ReconstruirDesdePersistencia(Convert.ToInt32(row["IdPlanDePago"]), row["Nombre"].ToString(), Convert.ToBoolean(row["EstadoActivo"]), Convert.ToDecimal(row["RecargoPorcentaje"])));
+            return planes;
         }
 
         private static IEnumerable<Curso_83KI> MapearCursos(DataSet ds)
@@ -91,7 +108,7 @@ namespace DAL
 
         private static Comision_83KI MapearComision(DataRow row)
         {
-            return Comision_83KI.ReconstruirDesdePersistencia(Convert.ToInt32(row["IdComision"]), row["Codigo"].ToString(), Convert.ToInt32(row["IdCurso"]), Convert.ToInt32(row["IdProfesor"]), (DayOfWeek)Enum.Parse(typeof(DayOfWeek), row["DiaSemana"].ToString()), (TimeSpan)row["HoraInicio"], (TimeSpan)row["HoraFin"], Convert.ToInt32(row["CupoMinimo"]), Convert.ToInt32(row["CupoMaximo"]), Convert.ToDateTime(row["FechaLimitePago"]), row["Estado"].ToString(), row["DVH"].ToString());
+            return Comision_83KI.ReconstruirDesdePersistencia(Convert.ToInt32(row["IdComision"]), row["Codigo"].ToString(), Convert.ToInt32(row["IdCurso"]), Convert.ToInt32(row["IdProfesor"]), (DayOfWeek)Enum.Parse(typeof(DayOfWeek), row["DiaSemana"].ToString()), (TimeSpan)row["HoraInicio"], (TimeSpan)row["HoraFin"], Convert.ToInt32(row["CupoMinimo"]), Convert.ToInt32(row["CupoMaximo"]), Convert.ToDateTime(row["FechaLimitePago"]), Convert.ToDecimal(row["ArancelBase"]), Convert.ToInt32(row["IdPlanDePago"]), Convert.ToDecimal(row["RecargoPlanSnapshot"]), row["Estado"].ToString(), row["DVH"].ToString());
         }
 
         private void RecomputarIntegridadComision(int idComision, SqlConnection conn, SqlTransaction tran)
