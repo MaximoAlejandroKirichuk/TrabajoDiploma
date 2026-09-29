@@ -80,6 +80,12 @@
     <Compile Include="Modulos\PreInscripcion\FrmRegistrarConsultaLead_83KI.Designer.cs">
       <DependentUpon>FrmRegistrarConsultaLead_83KI.cs</DependentUpon>
     </Compile>
+    <Compile Include="Modulos\PreInscripcion\FrmRegistrarSolicitudInscripcion_83KI.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Modulos\PreInscripcion\FrmRegistrarSolicitudInscripcion_83KI.Designer.cs">
+      <DependentUpon>FrmRegistrarSolicitudInscripcion_83KI.cs</DependentUpon>
+    </Compile>
     <Compile Include="Modulos\PlanificacionAcademica\FrmGestionComisiones_83KI.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -219,6 +225,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Modulos\PreInscripcion\FrmRegistrarConsultaLead_83KI.resx">
       <DependentUpon>FrmRegistrarConsultaLead_83KI.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Modulos\PreInscripcion\FrmRegistrarSolicitudInscripcion_83KI.resx">
+      <DependentUpon>FrmRegistrarSolicitudInscripcion_83KI.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Modulos\PlanificacionAcademica\FrmGestionComisiones_83KI.resx">
       <DependentUpon>FrmGestionComisiones_83KI.cs</DependentUpon>

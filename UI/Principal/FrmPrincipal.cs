@@ -80,10 +80,12 @@ namespace UI
             bool puedeRegistrarPreapertura = PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarPreaperturaComision);
             bool puedeVerComisiones = PermisosUi_83KI.Tiene(PermisoSistema_83KI.VerComisiones);
             bool puedeRegistrarConsulta = PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarConsultaLead);
-            bool puedePlanificacionAcademica = puedeRegistrarPreapertura || puedeVerComisiones || puedeRegistrarConsulta;
+            bool puedeRegistrarSolicitudInscripcion = PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarSolicitudInscripcion);
+            bool puedePlanificacionAcademica = puedeRegistrarPreapertura || puedeVerComisiones || puedeRegistrarConsulta || puedeRegistrarSolicitudInscripcion;
             gestionComisionesToolStripMenuItem.Visible = puedeVerComisiones;
             registrarPreaperturaComisionToolStripMenuItem.Visible = puedeRegistrarPreapertura;
             registrarConsultaToolStripMenuItem.Visible = puedeRegistrarConsulta;
+            registrarSolicitudInscripcionToolStripMenuItem.Visible = puedeRegistrarSolicitudInscripcion;
             planificacionAcademicaToolStripMenuItem.Visible = puedePlanificacionAcademica;
             maestrosToolStripMenuItem.Visible = PermisosUi_83KI.TienePermisoMaestros();
         }
@@ -108,6 +110,7 @@ namespace UI
             gestionComisionesToolStripMenuItem.Text = Texto("FrmPrincipal.GestionComisiones");
             registrarPreaperturaComisionToolStripMenuItem.Text = Texto("FrmPrincipal.RegistrarPreaperturaComision");
             registrarConsultaToolStripMenuItem.Text = Texto("FrmPrincipal.RegistrarConsulta");
+            registrarSolicitudInscripcionToolStripMenuItem.Text = Texto("FrmPrincipal.RegistrarSolicitudInscripcion");
             cobrosMorosidadActasToolStripMenuItem.Text = Texto("FrmPrincipal.CobrosMorosidadActas");
             reportesToolStripMenuItem.Text = Texto("FrmPrincipal.Reportes");
             reToolStripMenuItem.Text = Texto("FrmPrincipal.Ayuda");
@@ -384,6 +387,27 @@ namespace UI
                     SessionManager_83KI.Instancia,
                     new BitacoraBLL_83KI(new BitacoraEventoDAL_83KI())),
                 comisionBLL))
+            {
+                formulario.ShowDialog(this);
+            }
+        }
+
+        private void registrarSolicitudInscripcionToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarSolicitudInscripcion))
+            {
+                IdiomaUiHelper_83KI.MostrarAdvertencia(this, "Errores.SinPermisos", "Comun.Seguridad");
+                return;
+            }
+
+            var comisionDal = new ComisionDAL_83KI();
+            using (var formulario = new FrmRegistrarSolicitudInscripcion_83KI(
+                new KI68InscripcionBLL(
+                    new InscripcionDAL_83KI(),
+                    comisionDal,
+                    new KI68CuotaBLL(),
+                    SessionManager_83KI.Instancia,
+                    new BitacoraBLL_83KI(new BitacoraEventoDAL_83KI()))))
             {
                 formulario.ShowDialog(this);
             }

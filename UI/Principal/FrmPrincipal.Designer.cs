@@ -47,6 +47,7 @@
             this.gestionComisionesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.registrarPreaperturaComisionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.registrarConsultaToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.registrarSolicitudInscripcionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.cobrosMorosidadActasToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.reportesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuIdioma = new System.Windows.Forms.ToolStripMenuItem();
@@ -190,7 +191,8 @@
             this.planificacionAcademicaToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.gestionComisionesToolStripMenuItem,
             this.registrarPreaperturaComisionToolStripMenuItem,
-            this.registrarConsultaToolStripMenuItem});
+            this.registrarConsultaToolStripMenuItem,
+            this.registrarSolicitudInscripcionToolStripMenuItem});
             this.planificacionAcademicaToolStripMenuItem.Name = "planificacionAcademicaToolStripMenuItem";
             this.planificacionAcademicaToolStripMenuItem.Size = new System.Drawing.Size(189, 24);
             this.planificacionAcademicaToolStripMenuItem.Text = "Planificación Académica";
@@ -216,6 +218,13 @@
             this.registrarConsultaToolStripMenuItem.Size = new System.Drawing.Size(304, 24);
             this.registrarConsultaToolStripMenuItem.Text = "Registrar consulta";
             this.registrarConsultaToolStripMenuItem.Click += new System.EventHandler(this.registrarConsultaToolStripMenuItem_Click);
+            //
+            // registrarSolicitudInscripcionToolStripMenuItem
+            //
+            this.registrarSolicitudInscripcionToolStripMenuItem.Name = "registrarSolicitudInscripcionToolStripMenuItem";
+            this.registrarSolicitudInscripcionToolStripMenuItem.Size = new System.Drawing.Size(304, 24);
+            this.registrarSolicitudInscripcionToolStripMenuItem.Text = "Registrar solicitud de inscripción";
+            this.registrarSolicitudInscripcionToolStripMenuItem.Click += new System.EventHandler(this.registrarSolicitudInscripcionToolStripMenuItem_Click);
             //
             // cobrosMorosidadActasToolStripMenuItem
             // 
@@ -305,5 +314,6 @@
         private System.Windows.Forms.ToolStripMenuItem gestionComisionesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem registrarPreaperturaComisionToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem registrarConsultaToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem registrarSolicitudInscripcionToolStripMenuItem;
     }
 }
