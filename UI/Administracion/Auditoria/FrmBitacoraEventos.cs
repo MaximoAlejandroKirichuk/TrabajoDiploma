@@ -100,8 +100,10 @@ namespace UI
             _cargandoCombos = true;
             cmbModulo.Items.Clear();
             cmbModulo.Items.Add(new ComboItemIdioma_83KI(OpcionTodos, IdiomaUiHelper_83KI.Texto("Comun.Todos")));
-            cmbModulo.Items.Add(new ComboItemIdioma_83KI(Modulo.Usuarios, IdiomaUiHelper_83KI.TraducirModulo(Modulo.Usuarios)));
-            cmbModulo.Items.Add(new ComboItemIdioma_83KI(Modulo.Admin, IdiomaUiHelper_83KI.TraducirModulo(Modulo.Admin)));
+            foreach (Modulo modulo in Enum.GetValues(typeof(Modulo)))
+            {
+                cmbModulo.Items.Add(new ComboItemIdioma_83KI(modulo, IdiomaUiHelper_83KI.TraducirModulo(modulo)));
+            }
             cmbModulo.SelectedIndex = 0;
             _cargandoCombos = false;
             CargarEventosPorModulo();

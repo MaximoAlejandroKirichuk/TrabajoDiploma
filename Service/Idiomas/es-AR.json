@@ -154,6 +154,7 @@
     "Dominio.EventoBitacora.Recalculodehashesejecutado": "Recálculo de hashes ejecutado",
     "Dominio.EventoBitacora.Backupdebasededatosejecutado": "Backup de base de datos ejecutado",
     "Dominio.EventoBitacora.Restauraciondebasededatosejecutada": "Restauración de base de datos ejecutada",
+    "Dominio.EventoBitacora.Registrodepreaperturadecomision": "Registro de preapertura de comisión",
 
     "Login.Titulo": "Login",
     "Login.Username": "Username",
