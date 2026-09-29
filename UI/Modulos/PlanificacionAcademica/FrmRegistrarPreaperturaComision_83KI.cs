@@ -35,6 +35,10 @@ namespace UI.Modulos.PlanificacionAcademica
             dtpHoraInicio.Value = DateTime.Today.AddHours(18);
             dtpHoraFin.Value = DateTime.Today.AddHours(20);
             dtpFechaLimitePago.MinDate = DateTime.Today;
+            dtpFechaInicio.MinDate = DateTime.Today;
+            dtpFechaFin.MinDate = DateTime.Today;
+            dtpFechaInicio.Value = DateTime.Today.AddDays(7);
+            dtpFechaFin.Value = DateTime.Today.AddMonths(4);
             pnlArancel.Visible = true;
             pnlPlanes.Visible = false;
         }
@@ -65,6 +69,8 @@ namespace UI.Modulos.PlanificacionAcademica
             dtpHoraInicio.ValueChanged += (s, e) => ActualizarProfesoresDisponibles();
             dtpHoraFin.ValueChanged += (s, e) => ActualizarProfesoresDisponibles();
             cmbProfesores.SelectedIndexChanged += (s, e) => ActualizarEstadoRegistrar();
+            nudArancelBase.ValueChanged += (s, e) => ValidarArancelYActualizarPlanes();
+            nudArancelBase.TextChanged += (s, e) => ValidarArancelYActualizarPlanes();
             nudArancelBase.Leave += (s, e) => ValidarArancelYActualizarPlanes();
             nudArancelBase.Validated += (s, e) => ValidarArancelYActualizarPlanes();
             clbPlanes.ItemCheck += clbPlanes_ItemCheck;
@@ -96,7 +102,7 @@ namespace UI.Modulos.PlanificacionAcademica
 
         private void ValidarArancelYActualizarPlanes()
         {
-            bool arancelValido = ArancelBase > 0;
+            bool arancelValido = ArancelBaseEditado > 0;
             pnlPlanes.Visible = arancelValido;
             if (!arancelValido)
             {
@@ -192,7 +198,7 @@ namespace UI.Modulos.PlanificacionAcademica
 
         private void ActualizarEstadoRegistrar()
         {
-            btnRegistrar.Enabled = IdProfesorSeleccionado > 0 && ArancelBase > 0 && PlanSeleccionado != null;
+            btnRegistrar.Enabled = IdProfesorSeleccionado > 0 && ArancelBaseEditado > 0 && PlanSeleccionado != null;
         }
 
         private void btnRegistrar_Click(object sender, EventArgs e)
@@ -223,6 +229,12 @@ namespace UI.Modulos.PlanificacionAcademica
                     return;
                 }
 
+                if (dtpFechaInicio.Value.Date > dtpFechaFin.Value.Date)
+                {
+                    MostrarValidacion("Errores.RangoFechasComisionInvalido");
+                    return;
+                }
+
                 PlanDePago_83KI plan = PlanSeleccionado;
                 if (plan == null)
                 {
@@ -230,7 +242,7 @@ namespace UI.Modulos.PlanificacionAcademica
                     return;
                 }
 
-                string codigo = _gestor.RegistrarPreapertura(IdCursoSeleccionado, IdProfesorSeleccionado, DiaSeleccionado, HoraInicio, HoraFin, (int)nudCupoMinimo.Value, (int)nudCupoMaximo.Value, dtpFechaLimitePago.Value.Date, ArancelBase, plan.IdPlanDePago, plan.RecargoPorcentaje);
+                string codigo = _gestor.RegistrarPreapertura(IdCursoSeleccionado, IdProfesorSeleccionado, DiaSeleccionado, HoraInicio, HoraFin, (int)nudCupoMinimo.Value, (int)nudCupoMaximo.Value, dtpFechaLimitePago.Value.Date, dtpFechaInicio.Value.Date, dtpFechaFin.Value.Date, ArancelBase, plan.IdPlanDePago, plan.RecargoPorcentaje);
 
                 MessageBox.Show(this, IdiomaUiHelper_83KI.Texto("FrmRegistrarPreaperturaComision.Registrada", codigo), IdiomaUiHelper_83KI.Texto("Comun.Informacion"), MessageBoxButtons.OK, MessageBoxIcon.Information);
                 DialogResult = DialogResult.OK;
@@ -245,6 +257,15 @@ namespace UI.Modulos.PlanificacionAcademica
         private int IdCursoSeleccionado { get { return cmbCursos.SelectedValue is int ? (int)cmbCursos.SelectedValue : 0; } }
         private int IdProfesorSeleccionado { get { return cmbProfesores.SelectedValue is int ? (int)cmbProfesores.SelectedValue : 0; } }
         private decimal ArancelBase { get { return nudArancelBase.Value; } }
+
+        private decimal ArancelBaseEditado
+        {
+            get
+            {
+                decimal arancel;
+                return decimal.TryParse(nudArancelBase.Text, out arancel) ? arancel : 0m;
+            }
+        }
 
         private PlanDePago_83KI PlanSeleccionado
         {
@@ -287,6 +308,8 @@ namespace UI.Modulos.PlanificacionAcademica
             lblCupoMinimo.Text = IdiomaUiHelper_83KI.Texto("FrmRegistrarPreaperturaComision.CupoMinimo");
             lblCupoMaximo.Text = IdiomaUiHelper_83KI.Texto("FrmRegistrarPreaperturaComision.CupoMaximo");
             lblFechaLimitePago.Text = IdiomaUiHelper_83KI.Texto("FrmRegistrarPreaperturaComision.FechaLimitePago");
+            lblFechaInicio.Text = IdiomaUiHelper_83KI.Texto("FrmRegistrarPreaperturaComision.FechaInicio");
+            lblFechaFin.Text = IdiomaUiHelper_83KI.Texto("FrmRegistrarPreaperturaComision.FechaFin");
             lblProfesor.Text = IdiomaUiHelper_83KI.Texto("FrmRegistrarPreaperturaComision.Profesor");
             lblArancelBase.Text = IdiomaUiHelper_83KI.Texto("FrmRegistrarPreaperturaComision.ArancelBase");
             lblPlanes.Text = IdiomaUiHelper_83KI.Texto("FrmRegistrarPreaperturaComision.PlanDePago");

@@ -6,7 +6,7 @@
 --   2. columnas Comision.ArancelBase / IdPlanDePago / RecargoPlanSnapshot + FK
 --   3. fila DVV de Comision en DigitoVerificador_83KI
 --   4. sp_CUN01_ListarPlanesDePagoActivos y sp_CUN01_RegistrarPreaperturaComision
---      con la firma extendida (11 parametros, decimales exactos)
+--      con la firma extendida (13 parametros, decimales exactos)
 --
 -- destino: base de desarrollo EXISTENTE que todavia no tiene este cambio, p.ej.
 --   (localdb)\ProjectModels / TrabajoDiploma9/13
@@ -142,6 +142,8 @@ CREATE OR ALTER PROCEDURE [dbo].[sp_CUN01_RegistrarPreaperturaComision]
     @CupoMinimo INT,
     @CupoMaximo INT,
     @FechaLimitePago DATE,
+    @FechaInicio DATE,
+    @FechaFin DATE,
     @ArancelBase DECIMAL(18,2),
     @IdPlanDePago INT,
     @RecargoPlanSnapshot DECIMAL(9,4)
@@ -154,11 +156,11 @@ BEGIN
 
     INSERT INTO dbo.Comision
         (Codigo, IdCurso, IdProfesor, DiaSemana, HoraInicio, HoraFin,
-         CupoMinimo, CupoMaximo, FechaLimitePago, ArancelBase, IdPlanDePago,
+         CupoMinimo, CupoMaximo, FechaLimitePago, FechaInicio, FechaFin, ArancelBase, IdPlanDePago,
          RecargoPlanSnapshot, Estado, DVH)
     VALUES
         (N'', @IdCurso, @IdProfesor, @DiaSemana, @HoraInicio, @HoraFin,
-         @CupoMinimo, @CupoMaximo, @FechaLimitePago, @ArancelBase, @IdPlanDePago,
+         @CupoMinimo, @CupoMaximo, @FechaLimitePago, @FechaInicio, @FechaFin, @ArancelBase, @IdPlanDePago,
          @RecargoPlanSnapshot, N'preapertura', N'');
 
     SET @IdComision = SCOPE_IDENTITY();
@@ -167,7 +169,7 @@ BEGIN
     UPDATE dbo.Comision SET Codigo = @Codigo WHERE IdComision = @IdComision;
 
     SELECT IdComision, Codigo, IdCurso, IdProfesor, DiaSemana, HoraInicio, HoraFin,
-           CupoMinimo, CupoMaximo, FechaLimitePago, ArancelBase, IdPlanDePago,
+           CupoMinimo, CupoMaximo, FechaLimitePago, FechaInicio, FechaFin, ArancelBase, IdPlanDePago,
            RecargoPlanSnapshot, Estado, DVH
     FROM dbo.Comision
     WHERE IdComision = @IdComision;

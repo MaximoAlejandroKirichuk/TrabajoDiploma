@@ -19,6 +19,8 @@ namespace UI.Modulos.PlanificacionAcademica
         private Label lblCupoMinimo;
         private Label lblCupoMaximo;
         private Label lblFechaLimitePago;
+        private Label lblFechaInicio;
+        private Label lblFechaFin;
         private Label lblProfesor;
         private Label lblArancelBase;
         private Label lblPlanes;
@@ -29,6 +31,8 @@ namespace UI.Modulos.PlanificacionAcademica
         private NumericUpDown nudCupoMinimo;
         private NumericUpDown nudCupoMaximo;
         private DateTimePicker dtpFechaLimitePago;
+        private DateTimePicker dtpFechaInicio;
+        private DateTimePicker dtpFechaFin;
         private ComboBox cmbProfesores;
         private NumericUpDown nudArancelBase;
         private CheckedListBox clbPlanes;
@@ -53,6 +57,8 @@ namespace UI.Modulos.PlanificacionAcademica
             this.lblCupoMinimo = new System.Windows.Forms.Label();
             this.lblCupoMaximo = new System.Windows.Forms.Label();
             this.lblFechaLimitePago = new System.Windows.Forms.Label();
+            this.lblFechaInicio = new System.Windows.Forms.Label();
+            this.lblFechaFin = new System.Windows.Forms.Label();
             this.lblProfesor = new System.Windows.Forms.Label();
             this.cmbCursos = new System.Windows.Forms.ComboBox();
             this.cmbDia = new System.Windows.Forms.ComboBox();
@@ -61,6 +67,8 @@ namespace UI.Modulos.PlanificacionAcademica
             this.nudCupoMinimo = new System.Windows.Forms.NumericUpDown();
             this.nudCupoMaximo = new System.Windows.Forms.NumericUpDown();
             this.dtpFechaLimitePago = new System.Windows.Forms.DateTimePicker();
+            this.dtpFechaInicio = new System.Windows.Forms.DateTimePicker();
+            this.dtpFechaFin = new System.Windows.Forms.DateTimePicker();
             this.cmbProfesores = new System.Windows.Forms.ComboBox();
             this.pnlArancel = new System.Windows.Forms.Panel();
             this.tblArancel = new System.Windows.Forms.TableLayoutPanel();
@@ -88,6 +96,7 @@ namespace UI.Modulos.PlanificacionAcademica
             // flpContenido
             // 
             this.flpContenido.AutoScroll = true;
+            this.flpContenido.AutoScrollMargin = new System.Drawing.Size(0, 16);
             this.flpContenido.Controls.Add(this.pnlDatosComision);
             this.flpContenido.Controls.Add(this.pnlArancel);
             this.flpContenido.Controls.Add(this.pnlPlanes);
@@ -98,7 +107,7 @@ namespace UI.Modulos.PlanificacionAcademica
             this.flpContenido.Location = new System.Drawing.Point(0, 0);
             this.flpContenido.Name = "flpContenido";
             this.flpContenido.Padding = new System.Windows.Forms.Padding(16);
-            this.flpContenido.Size = new System.Drawing.Size(704, 500);
+            this.flpContenido.Size = new System.Drawing.Size(704, 640);
             this.flpContenido.TabIndex = 0;
             this.flpContenido.WrapContents = false;
             // 
@@ -114,7 +123,9 @@ namespace UI.Modulos.PlanificacionAcademica
             this.pnlDatosComision.Controls.Add(this.lblCupoMinimo, 0, 4);
             this.pnlDatosComision.Controls.Add(this.lblCupoMaximo, 0, 5);
             this.pnlDatosComision.Controls.Add(this.lblFechaLimitePago, 0, 6);
-            this.pnlDatosComision.Controls.Add(this.lblProfesor, 0, 7);
+            this.pnlDatosComision.Controls.Add(this.lblFechaInicio, 0, 7);
+            this.pnlDatosComision.Controls.Add(this.lblFechaFin, 0, 8);
+            this.pnlDatosComision.Controls.Add(this.lblProfesor, 0, 9);
             this.pnlDatosComision.Controls.Add(this.cmbCursos, 1, 0);
             this.pnlDatosComision.Controls.Add(this.cmbDia, 1, 1);
             this.pnlDatosComision.Controls.Add(this.dtpHoraInicio, 1, 2);
@@ -122,12 +133,14 @@ namespace UI.Modulos.PlanificacionAcademica
             this.pnlDatosComision.Controls.Add(this.nudCupoMinimo, 1, 4);
             this.pnlDatosComision.Controls.Add(this.nudCupoMaximo, 1, 5);
             this.pnlDatosComision.Controls.Add(this.dtpFechaLimitePago, 1, 6);
-            this.pnlDatosComision.Controls.Add(this.cmbProfesores, 1, 7);
+            this.pnlDatosComision.Controls.Add(this.dtpFechaInicio, 1, 7);
+            this.pnlDatosComision.Controls.Add(this.dtpFechaFin, 1, 8);
+            this.pnlDatosComision.Controls.Add(this.cmbProfesores, 1, 9);
             this.pnlDatosComision.Location = new System.Drawing.Point(19, 19);
             this.pnlDatosComision.Name = "pnlDatosComision";
-            this.pnlDatosComision.RowCount = 8;
-            for (int i = 0; i < 8; i++) this.pnlDatosComision.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 38F));
-            this.pnlDatosComision.Size = new System.Drawing.Size(650, 304);
+            this.pnlDatosComision.RowCount = 10;
+            for (int i = 0; i < 10; i++) this.pnlDatosComision.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 38F));
+            this.pnlDatosComision.Size = new System.Drawing.Size(650, 380);
             this.pnlDatosComision.TabIndex = 0;
             // 
             // labels and scheduling controls
@@ -139,6 +152,8 @@ namespace UI.Modulos.PlanificacionAcademica
             this.lblCupoMinimo.Anchor = System.Windows.Forms.AnchorStyles.Left; this.lblCupoMinimo.AutoSize = true; this.lblCupoMinimo.Text = "Cupo mínimo";
             this.lblCupoMaximo.Anchor = System.Windows.Forms.AnchorStyles.Left; this.lblCupoMaximo.AutoSize = true; this.lblCupoMaximo.Text = "Cupo máximo";
             this.lblFechaLimitePago.Anchor = System.Windows.Forms.AnchorStyles.Left; this.lblFechaLimitePago.AutoSize = true; this.lblFechaLimitePago.Text = "Fecha límite de pago";
+            this.lblFechaInicio.Anchor = System.Windows.Forms.AnchorStyles.Left; this.lblFechaInicio.AutoSize = true; this.lblFechaInicio.Text = "Fecha inicio";
+            this.lblFechaFin.Anchor = System.Windows.Forms.AnchorStyles.Left; this.lblFechaFin.AutoSize = true; this.lblFechaFin.Text = "Fecha fin";
             this.lblProfesor.Anchor = System.Windows.Forms.AnchorStyles.Left; this.lblProfesor.AutoSize = true; this.lblProfesor.Text = "Profesor";
             this.cmbCursos.Dock = System.Windows.Forms.DockStyle.Fill; this.cmbCursos.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList; this.cmbCursos.FormattingEnabled = true;
             this.cmbDia.Dock = System.Windows.Forms.DockStyle.Fill; this.cmbDia.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList; this.cmbDia.FormattingEnabled = true;
@@ -147,12 +162,14 @@ namespace UI.Modulos.PlanificacionAcademica
             this.nudCupoMinimo.Dock = System.Windows.Forms.DockStyle.Left; this.nudCupoMinimo.Maximum = new decimal(new int[] { 999, 0, 0, 0 }); this.nudCupoMinimo.Minimum = new decimal(new int[] { 1, 0, 0, 0 }); this.nudCupoMinimo.Size = new System.Drawing.Size(120, 25); this.nudCupoMinimo.Value = new decimal(new int[] { 1, 0, 0, 0 });
             this.nudCupoMaximo.Dock = System.Windows.Forms.DockStyle.Left; this.nudCupoMaximo.Maximum = new decimal(new int[] { 999, 0, 0, 0 }); this.nudCupoMaximo.Minimum = new decimal(new int[] { 1, 0, 0, 0 }); this.nudCupoMaximo.Size = new System.Drawing.Size(120, 25); this.nudCupoMaximo.Value = new decimal(new int[] { 30, 0, 0, 0 });
             this.dtpFechaLimitePago.Dock = System.Windows.Forms.DockStyle.Left; this.dtpFechaLimitePago.Format = System.Windows.Forms.DateTimePickerFormat.Short; this.dtpFechaLimitePago.Size = new System.Drawing.Size(200, 25);
+            this.dtpFechaInicio.Dock = System.Windows.Forms.DockStyle.Left; this.dtpFechaInicio.Format = System.Windows.Forms.DateTimePickerFormat.Short; this.dtpFechaInicio.Size = new System.Drawing.Size(200, 25);
+            this.dtpFechaFin.Dock = System.Windows.Forms.DockStyle.Left; this.dtpFechaFin.Format = System.Windows.Forms.DateTimePickerFormat.Short; this.dtpFechaFin.Size = new System.Drawing.Size(200, 25);
             this.cmbProfesores.Dock = System.Windows.Forms.DockStyle.Fill; this.cmbProfesores.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList; this.cmbProfesores.FormattingEnabled = true;
             // 
             // pnlArancel
             // 
             this.pnlArancel.Controls.Add(this.tblArancel);
-            this.pnlArancel.Location = new System.Drawing.Point(19, 329);
+            this.pnlArancel.Location = new System.Drawing.Point(19, 405);
             this.pnlArancel.Name = "pnlArancel";
             this.pnlArancel.Size = new System.Drawing.Size(650, 44);
             this.pnlArancel.TabIndex = 1;
@@ -177,7 +194,7 @@ namespace UI.Modulos.PlanificacionAcademica
             // pnlPlanes
             // 
             this.pnlPlanes.Controls.Add(this.tblPlanes);
-            this.pnlPlanes.Location = new System.Drawing.Point(19, 379);
+            this.pnlPlanes.Location = new System.Drawing.Point(19, 455);
             this.pnlPlanes.Name = "pnlPlanes";
             this.pnlPlanes.Size = new System.Drawing.Size(650, 110);
             this.pnlPlanes.TabIndex = 2;
@@ -201,7 +218,7 @@ namespace UI.Modulos.PlanificacionAcademica
             // lblMensaje
             // 
             this.lblMensaje.ForeColor = System.Drawing.Color.DarkBlue;
-            this.lblMensaje.Location = new System.Drawing.Point(19, 492);
+            this.lblMensaje.Location = new System.Drawing.Point(19, 568);
             this.lblMensaje.Name = "lblMensaje";
             this.lblMensaje.Size = new System.Drawing.Size(650, 42);
             this.lblMensaje.TabIndex = 3;
@@ -210,7 +227,7 @@ namespace UI.Modulos.PlanificacionAcademica
             // 
             this.pnlAcciones.AutoSize = true;
             this.pnlAcciones.Controls.Add(this.btnRegistrar);
-            this.pnlAcciones.Location = new System.Drawing.Point(19, 537);
+            this.pnlAcciones.Location = new System.Drawing.Point(19, 613);
             this.pnlAcciones.Name = "pnlAcciones";
             this.pnlAcciones.Size = new System.Drawing.Size(650, 35);
             this.pnlAcciones.TabIndex = 4;
@@ -226,9 +243,10 @@ namespace UI.Modulos.PlanificacionAcademica
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(704, 500);
+            this.ClientSize = new System.Drawing.Size(704, 640);
             this.Controls.Add(this.flpContenido);
             this.Font = new System.Drawing.Font("Segoe UI", 10F);
+            this.MinimumSize = new System.Drawing.Size(720, 680);
             this.Name = "FrmRegistrarPreaperturaComision_83KI";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Registro de preapertura de comisión";

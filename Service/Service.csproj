@@ -43,9 +43,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DTOs\BitacoraEventoVista_83KI.cs" />
+    <Compile Include="DTOs\ComisionListado_83KI.cs" />
     <Compile Include="DTOs\ResultadoBootstrap_83KI.cs" />
     <Compile Include="DTOs\ConfiguracionConexionBD_83KI.cs" />
     <Compile Include="DTOs\FiltroBitacoraEventos_83KI.cs" />
+    <Compile Include="DTOs\FiltroComision_83KI.cs" />
     <Compile Include="DTOs\IntegridadFilaInconsistencia_83KI.cs" />
     <Compile Include="DTOs\IntegridadSistemaEstado_83KI.cs" />
     <Compile Include="DTOs\IntegridadTablaConfig_83KI.cs" />

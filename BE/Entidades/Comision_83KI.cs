@@ -5,6 +5,7 @@ namespace BE.Entidades
     public class Comision_83KI
     {
         public const string EstadoPreapertura = "preapertura";
+        public const string EstadoEliminada = "eliminada";
 
         public int IdComision { get; private set; }
         public string Codigo { get; private set; }
@@ -16,6 +17,8 @@ namespace BE.Entidades
         public int CupoMinimo { get; private set; }
         public int CupoMaximo { get; private set; }
         public DateTime FechaLimitePago { get; private set; }
+        public DateTime FechaInicio { get; private set; }
+        public DateTime FechaFin { get; private set; }
         public decimal ArancelBase { get; private set; }
         public int IdPlanDePago { get; private set; }
         public decimal RecargoPlanSnapshot { get; private set; }
@@ -24,9 +27,9 @@ namespace BE.Entidades
 
         private Comision_83KI() { }
 
-        public static Comision_83KI CrearPreapertura(int idCurso, int idProfesor, DayOfWeek diaSemana, TimeSpan horaInicio, TimeSpan horaFin, int cupoMinimo, int cupoMaximo, DateTime fechaLimitePago, decimal arancelBase, int idPlanDePago, decimal recargoPlanSnapshot)
+        public static Comision_83KI CrearPreapertura(int idCurso, int idProfesor, DayOfWeek diaSemana, TimeSpan horaInicio, TimeSpan horaFin, int cupoMinimo, int cupoMaximo, DateTime fechaLimitePago, DateTime fechaInicio, DateTime fechaFin, decimal arancelBase, int idPlanDePago, decimal recargoPlanSnapshot)
         {
-            Validar(idCurso, idProfesor, horaInicio, horaFin, cupoMinimo, cupoMaximo, fechaLimitePago, arancelBase, idPlanDePago, recargoPlanSnapshot);
+            Validar(idCurso, idProfesor, horaInicio, horaFin, cupoMinimo, cupoMaximo, fechaLimitePago, fechaInicio, fechaFin, arancelBase, idPlanDePago, recargoPlanSnapshot);
             return new Comision_83KI
             {
                 IdCurso = idCurso,
@@ -37,6 +40,8 @@ namespace BE.Entidades
                 CupoMinimo = cupoMinimo,
                 CupoMaximo = cupoMaximo,
                 FechaLimitePago = fechaLimitePago.Date,
+                FechaInicio = fechaInicio.Date,
+                FechaFin = fechaFin.Date,
                 ArancelBase = arancelBase,
                 IdPlanDePago = idPlanDePago,
                 RecargoPlanSnapshot = recargoPlanSnapshot,
@@ -46,9 +51,9 @@ namespace BE.Entidades
             };
         }
 
-        public static Comision_83KI ReconstruirDesdePersistencia(int idComision, string codigo, int idCurso, int idProfesor, DayOfWeek diaSemana, TimeSpan horaInicio, TimeSpan horaFin, int cupoMinimo, int cupoMaximo, DateTime fechaLimitePago, decimal arancelBase, int idPlanDePago, decimal recargoPlanSnapshot, string estado, string dvh)
+        public static Comision_83KI ReconstruirDesdePersistencia(int idComision, string codigo, int idCurso, int idProfesor, DayOfWeek diaSemana, TimeSpan horaInicio, TimeSpan horaFin, int cupoMinimo, int cupoMaximo, DateTime fechaLimitePago, DateTime fechaInicio, DateTime fechaFin, decimal arancelBase, int idPlanDePago, decimal recargoPlanSnapshot, string estado, string dvh)
         {
-            var comision = CrearPreapertura(idCurso, idProfesor, diaSemana, horaInicio, horaFin, cupoMinimo, cupoMaximo, fechaLimitePago, arancelBase, idPlanDePago, recargoPlanSnapshot);
+            var comision = CrearPreapertura(idCurso, idProfesor, diaSemana, horaInicio, horaFin, cupoMinimo, cupoMaximo, fechaLimitePago, fechaInicio, fechaFin, arancelBase, idPlanDePago, recargoPlanSnapshot);
             comision.IdComision = idComision;
             comision.Codigo = codigo ?? string.Empty;
             comision.Estado = estado ?? EstadoPreapertura;
@@ -56,7 +61,28 @@ namespace BE.Entidades
             return comision;
         }
 
-        private static void Validar(int idCurso, int idProfesor, TimeSpan horaInicio, TimeSpan horaFin, int cupoMinimo, int cupoMaximo, DateTime fechaLimitePago, decimal arancelBase, int idPlanDePago, decimal recargoPlanSnapshot)
+        public void ActualizarDatos(int idCurso, int idProfesor, DayOfWeek diaSemana, TimeSpan horaInicio, TimeSpan horaFin, int cupoMinimo, int cupoMaximo, DateTime fechaLimitePago, DateTime fechaInicio, DateTime fechaFin, decimal arancelBase)
+        {
+            Validar(idCurso, idProfesor, horaInicio, horaFin, cupoMinimo, cupoMaximo, fechaLimitePago, fechaInicio, fechaFin, arancelBase, IdPlanDePago, RecargoPlanSnapshot);
+            IdCurso = idCurso;
+            IdProfesor = idProfesor;
+            DiaSemana = diaSemana;
+            HoraInicio = horaInicio;
+            HoraFin = horaFin;
+            CupoMinimo = cupoMinimo;
+            CupoMaximo = cupoMaximo;
+            FechaLimitePago = fechaLimitePago.Date;
+            FechaInicio = fechaInicio.Date;
+            FechaFin = fechaFin.Date;
+            ArancelBase = arancelBase;
+        }
+
+        public bool EstaEliminada
+        {
+            get { return string.Equals(Estado, EstadoEliminada, StringComparison.OrdinalIgnoreCase); }
+        }
+
+        private static void Validar(int idCurso, int idProfesor, TimeSpan horaInicio, TimeSpan horaFin, int cupoMinimo, int cupoMaximo, DateTime fechaLimitePago, DateTime fechaInicio, DateTime fechaFin, decimal arancelBase, int idPlanDePago, decimal recargoPlanSnapshot)
         {
             if (idCurso <= 0) throw new ArgumentException("Errores.CursoObligatorio", nameof(idCurso));
             if (idProfesor <= 0) throw new ArgumentException("Errores.ProfesorObligatorio", nameof(idProfesor));
@@ -64,6 +90,8 @@ namespace BE.Entidades
             if (cupoMinimo <= 0) throw new ArgumentException("Errores.CupoMinimoInvalido", nameof(cupoMinimo));
             if (cupoMaximo < cupoMinimo) throw new ArgumentException("Errores.CupoMaximoInvalido", nameof(cupoMaximo));
             if (fechaLimitePago.Date < DateTime.Today) throw new ArgumentException("Errores.FechaLimitePagoInvalida", nameof(fechaLimitePago));
+            if (fechaInicio == DateTime.MinValue || fechaFin == DateTime.MinValue) throw new ArgumentException("Errores.FechasComisionObligatorias");
+            if (fechaInicio.Date > fechaFin.Date) throw new ArgumentException("Errores.RangoFechasComisionInvalido");
             if (arancelBase <= 0) throw new ArgumentException("Errores.ArancelBaseInvalido", nameof(arancelBase));
             if (idPlanDePago <= 0) throw new ArgumentException("Errores.PlanDePagoObligatorio", nameof(idPlanDePago));
             if (recargoPlanSnapshot < 0) throw new ArgumentException("Errores.RecargoPlanInvalido", nameof(recargoPlanSnapshot));

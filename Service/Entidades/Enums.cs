@@ -75,6 +75,9 @@ namespace Service.Entidades
         VerCursoProfesor = 54,
         HabilitarCursoProfesor = 55,
         DeshabilitarCursoProfesor = 56,
-        RegistrarPreaperturaComision = 57
+        RegistrarPreaperturaComision = 57,
+        VerComisiones = 61,
+        ModificarComision = 62,
+        EliminarComision = 63
     }
 }

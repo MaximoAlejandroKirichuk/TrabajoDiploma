@@ -1,6 +1,7 @@
 using BE.Entidades;
 using DAL.DAL;
 using Service;
+using Service.DTOs;
 using Service.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -19,6 +20,11 @@ namespace DAL
             return MapearCursos(_accesoDAL.LeerStoredProcedure("sp_CUN01_ListarCursosActivos"));
         }
 
+        public IEnumerable<Profesor_83KI> ObtenerProfesoresActivosParaFiltro()
+        {
+            return MapearProfesores(_accesoDAL.Leer("SELECT IdProfesor, DNI, Nombre, Apellido, Email, EstadoActivo, DVH FROM Profesor WHERE EstadoActivo = 1 ORDER BY Apellido, Nombre"));
+        }
+
         public IEnumerable<Profesor_83KI> ObtenerProfesoresDisponibles(int idCurso, DayOfWeek diaSemana, TimeSpan horaInicio, TimeSpan horaFin)
         {
             return MapearProfesores(_accesoDAL.LeerStoredProcedure("sp_CUN01_ListarProfesoresDisponibles", ParametrosDisponibilidad(idCurso, 0, diaSemana, horaInicio, horaFin)));
@@ -27,6 +33,20 @@ namespace DAL
         public bool ValidarCursoProfesorDisponibilidad(int idCurso, int idProfesor, DayOfWeek diaSemana, TimeSpan horaInicio, TimeSpan horaFin)
         {
             object resultado = _accesoDAL.LeerEscalarStoredProcedure("sp_CUN01_ValidarCursoProfesorDisponibilidad", ParametrosDisponibilidad(idCurso, idProfesor, diaSemana, horaInicio, horaFin));
+            return Convert.ToInt32(resultado) > 0;
+        }
+
+        public bool ExisteSolapamientoComision(int idProfesor, DayOfWeek diaSemana, TimeSpan horaInicio, TimeSpan horaFin, int? idComisionIgnorar = null)
+        {
+            var parametros = new List<SqlParameter>
+            {
+                new SqlParameter("@IdProfesor", idProfesor),
+                new SqlParameter("@DiaSemana", diaSemana.ToString()),
+                new SqlParameter("@HoraInicio", horaInicio),
+                new SqlParameter("@HoraFin", horaFin),
+                new SqlParameter("@IdComisionIgnorar", (object)idComisionIgnorar ?? DBNull.Value)
+            };
+            object resultado = _accesoDAL.LeerEscalarStoredProcedure("sp_CUN01_ValidarSolapamientoProfesor", parametros);
             return Convert.ToInt32(resultado) > 0;
         }
 
@@ -46,6 +66,36 @@ namespace DAL
                 RecomputarIntegridadComision(registrada.IdComision, conn, tran);
             });
             return registrada;
+        }
+
+        public IEnumerable<ComisionListado_83KI> ListarComisiones(FiltroComision_83KI filtro)
+        {
+            return MapearListado(_accesoDAL.LeerStoredProcedure("sp_CUN01_ListarComisiones", CrearParametrosFiltro(filtro)));
+        }
+
+        public Comision_83KI ObtenerComision(int idComision)
+        {
+            var ds = _accesoDAL.LeerStoredProcedure("sp_CUN01_ObtenerComision", new List<SqlParameter> { new SqlParameter("@IdComision", idComision) });
+            if (ds == null || ds.Tables.Count == 0 || ds.Tables[0].Rows.Count == 0) return null;
+            return MapearComision(ds.Tables[0].Rows[0]);
+        }
+
+        public void ModificarComision(Comision_83KI comision)
+        {
+            _accesoDAL.EjecutarTransaccion((conn, tran) =>
+            {
+                AccesoDAL_83KI.EscribirStoredProcedureTransaccional(conn, tran, "sp_CUN01_ModificarComision", CrearParametrosModificacion(comision));
+                RecomputarIntegridadComision(comision.IdComision, conn, tran);
+            });
+        }
+
+        public void EliminarComision(int idComision)
+        {
+            _accesoDAL.EjecutarTransaccion((conn, tran) =>
+            {
+                AccesoDAL_83KI.EscribirStoredProcedureTransaccional(conn, tran, "sp_CUN01_EliminarComisionLogica", new List<SqlParameter> { new SqlParameter("@IdComision", idComision) });
+                RecomputarIntegridadComision(idComision, conn, tran);
+            });
         }
 
         private static List<SqlParameter> ParametrosDisponibilidad(int idCurso, int idProfesor, DayOfWeek diaSemana, TimeSpan horaInicio, TimeSpan horaFin)
@@ -73,9 +123,44 @@ namespace DAL
                 new SqlParameter("@CupoMinimo", comision.CupoMinimo),
                 new SqlParameter("@CupoMaximo", comision.CupoMaximo),
                 new SqlParameter("@FechaLimitePago", comision.FechaLimitePago),
+                new SqlParameter("@FechaInicio", comision.FechaInicio),
+                new SqlParameter("@FechaFin", comision.FechaFin),
                 new SqlParameter("@ArancelBase", SqlDbType.Decimal) { Precision = 18, Scale = 2, Value = comision.ArancelBase },
                 new SqlParameter("@IdPlanDePago", comision.IdPlanDePago),
                 new SqlParameter("@RecargoPlanSnapshot", SqlDbType.Decimal) { Precision = 9, Scale = 4, Value = comision.RecargoPlanSnapshot }
+            };
+        }
+
+        private static List<SqlParameter> CrearParametrosFiltro(FiltroComision_83KI filtro)
+        {
+            filtro = filtro ?? new FiltroComision_83KI();
+            return new List<SqlParameter>
+            {
+                new SqlParameter("@IdCurso", (object)filtro.IdCurso ?? DBNull.Value),
+                new SqlParameter("@IdProfesor", (object)filtro.IdProfesor ?? DBNull.Value),
+                new SqlParameter("@Estado", string.IsNullOrWhiteSpace(filtro.Estado) ? (object)DBNull.Value : filtro.Estado),
+                new SqlParameter("@FechaInicioDesde", (object)filtro.FechaInicioDesde ?? DBNull.Value),
+                new SqlParameter("@FechaFinHasta", (object)filtro.FechaFinHasta ?? DBNull.Value),
+                new SqlParameter("@Codigo", string.IsNullOrWhiteSpace(filtro.Codigo) ? (object)DBNull.Value : filtro.Codigo.Trim())
+            };
+        }
+
+        private static List<SqlParameter> CrearParametrosModificacion(Comision_83KI comision)
+        {
+            return new List<SqlParameter>
+            {
+                new SqlParameter("@IdComision", comision.IdComision),
+                new SqlParameter("@IdCurso", comision.IdCurso),
+                new SqlParameter("@IdProfesor", comision.IdProfesor),
+                new SqlParameter("@DiaSemana", comision.DiaSemana.ToString()),
+                new SqlParameter("@HoraInicio", comision.HoraInicio),
+                new SqlParameter("@HoraFin", comision.HoraFin),
+                new SqlParameter("@CupoMinimo", comision.CupoMinimo),
+                new SqlParameter("@CupoMaximo", comision.CupoMaximo),
+                new SqlParameter("@FechaLimitePago", comision.FechaLimitePago),
+                new SqlParameter("@FechaInicio", comision.FechaInicio),
+                new SqlParameter("@FechaFin", comision.FechaFin),
+                new SqlParameter("@ArancelBase", SqlDbType.Decimal) { Precision = 18, Scale = 2, Value = comision.ArancelBase }
             };
         }
 
@@ -108,7 +193,36 @@ namespace DAL
 
         private static Comision_83KI MapearComision(DataRow row)
         {
-            return Comision_83KI.ReconstruirDesdePersistencia(Convert.ToInt32(row["IdComision"]), row["Codigo"].ToString(), Convert.ToInt32(row["IdCurso"]), Convert.ToInt32(row["IdProfesor"]), (DayOfWeek)Enum.Parse(typeof(DayOfWeek), row["DiaSemana"].ToString()), (TimeSpan)row["HoraInicio"], (TimeSpan)row["HoraFin"], Convert.ToInt32(row["CupoMinimo"]), Convert.ToInt32(row["CupoMaximo"]), Convert.ToDateTime(row["FechaLimitePago"]), Convert.ToDecimal(row["ArancelBase"]), Convert.ToInt32(row["IdPlanDePago"]), Convert.ToDecimal(row["RecargoPlanSnapshot"]), row["Estado"].ToString(), row["DVH"].ToString());
+            return Comision_83KI.ReconstruirDesdePersistencia(Convert.ToInt32(row["IdComision"]), row["Codigo"].ToString(), Convert.ToInt32(row["IdCurso"]), Convert.ToInt32(row["IdProfesor"]), (DayOfWeek)Enum.Parse(typeof(DayOfWeek), row["DiaSemana"].ToString()), (TimeSpan)row["HoraInicio"], (TimeSpan)row["HoraFin"], Convert.ToInt32(row["CupoMinimo"]), Convert.ToInt32(row["CupoMaximo"]), Convert.ToDateTime(row["FechaLimitePago"]), Convert.ToDateTime(row["FechaInicio"]), Convert.ToDateTime(row["FechaFin"]), Convert.ToDecimal(row["ArancelBase"]), Convert.ToInt32(row["IdPlanDePago"]), Convert.ToDecimal(row["RecargoPlanSnapshot"]), row["Estado"].ToString(), row["DVH"].ToString());
+        }
+
+        private static IEnumerable<ComisionListado_83KI> MapearListado(DataSet ds)
+        {
+            var resultado = new List<ComisionListado_83KI>();
+            if (ds == null || ds.Tables.Count == 0) return resultado;
+            foreach (DataRow row in ds.Tables[0].Rows)
+            {
+                resultado.Add(new ComisionListado_83KI
+                {
+                    IdComision = Convert.ToInt32(row["IdComision"]),
+                    Codigo = row["Codigo"].ToString(),
+                    IdCurso = Convert.ToInt32(row["IdCurso"]),
+                    Curso = row["Curso"].ToString(),
+                    IdProfesor = Convert.ToInt32(row["IdProfesor"]),
+                    Profesor = row["Profesor"].ToString(),
+                    DiaSemana = (DayOfWeek)Enum.Parse(typeof(DayOfWeek), row["DiaSemana"].ToString()),
+                    HoraInicio = (TimeSpan)row["HoraInicio"],
+                    HoraFin = (TimeSpan)row["HoraFin"],
+                    CupoMinimo = Convert.ToInt32(row["CupoMinimo"]),
+                    CupoMaximo = Convert.ToInt32(row["CupoMaximo"]),
+                    FechaLimitePago = Convert.ToDateTime(row["FechaLimitePago"]),
+                    FechaInicio = Convert.ToDateTime(row["FechaInicio"]),
+                    FechaFin = Convert.ToDateTime(row["FechaFin"]),
+                    ArancelBase = Convert.ToDecimal(row["ArancelBase"]),
+                    Estado = row["Estado"].ToString()
+                });
+            }
+            return resultado;
         }
 
         private void RecomputarIntegridadComision(int idComision, SqlConnection conn, SqlTransaction tran)

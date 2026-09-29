@@ -76,8 +76,11 @@ namespace UI
             gestionCursoProfesorToolStripMenuItem.Visible = PermisosUi_83KI.TieneAlguno(
                 PermisoSistema_83KI.GestionCursoProfesor,
                 PermisoSistema_83KI.VerCursoProfesor);
-            bool puedePlanificacionAcademica = PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarPreaperturaComision);
-            registrarPreaperturaComisionToolStripMenuItem.Visible = puedePlanificacionAcademica;
+            bool puedeRegistrarPreapertura = PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarPreaperturaComision);
+            bool puedeVerComisiones = PermisosUi_83KI.Tiene(PermisoSistema_83KI.VerComisiones);
+            bool puedePlanificacionAcademica = puedeRegistrarPreapertura || puedeVerComisiones;
+            gestionComisionesToolStripMenuItem.Visible = puedeVerComisiones;
+            registrarPreaperturaComisionToolStripMenuItem.Visible = puedeRegistrarPreapertura;
             planificacionAcademicaToolStripMenuItem.Visible = puedePlanificacionAcademica;
             maestrosToolStripMenuItem.Visible = PermisosUi_83KI.TienePermisoMaestros();
         }
@@ -99,6 +102,7 @@ namespace UI
             gestionProfesoresToolStripMenuItem.Text = Texto("FrmPrincipal.GestionProfesores");
             gestionCursoProfesorToolStripMenuItem.Text = Texto("FrmPrincipal.GestionCursoProfesor");
             planificacionAcademicaToolStripMenuItem.Text = Texto("FrmPrincipal.PlanificacionAcademica");
+            gestionComisionesToolStripMenuItem.Text = Texto("FrmPrincipal.GestionComisiones");
             registrarPreaperturaComisionToolStripMenuItem.Text = Texto("FrmPrincipal.RegistrarPreaperturaComision");
             cobrosMorosidadActasToolStripMenuItem.Text = Texto("FrmPrincipal.CobrosMorosidadActas");
             reportesToolStripMenuItem.Text = Texto("FrmPrincipal.Reportes");
@@ -337,14 +341,32 @@ namespace UI
                 return;
             }
 
-            using (var formulario = new FrmRegistrarPreaperturaComision_83KI(
-                new KI68GestorComisionBLL(
-                    new ComisionDAL_83KI(),
-                    SessionManager_83KI.Instancia,
-                    new BitacoraBLL_83KI(new BitacoraEventoDAL_83KI()))))
+            using (var formulario = new FrmRegistrarPreaperturaComision_83KI(CrearGestorComision()))
             {
                 formulario.ShowDialog(this);
             }
+        }
+
+        private void gestionComisionesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!PermisosUi_83KI.Tiene(PermisoSistema_83KI.VerComisiones))
+            {
+                IdiomaUiHelper_83KI.MostrarAdvertencia(this, "Errores.SinPermisos", "Comun.Seguridad");
+                return;
+            }
+
+            using (var formulario = new FrmGestionComisiones_83KI(CrearGestorComision()))
+            {
+                formulario.ShowDialog(this);
+            }
+        }
+
+        private IGestorComision_83KI CrearGestorComision()
+        {
+            return new KI68GestorComisionBLL(
+                new ComisionDAL_83KI(),
+                SessionManager_83KI.Instancia,
+                new BitacoraBLL_83KI(new BitacoraEventoDAL_83KI()));
         }
     }
 }

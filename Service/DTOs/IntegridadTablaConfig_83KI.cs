@@ -68,8 +68,8 @@ namespace Service.DTOs
                     "EstadoActivo", "IdCurso", "IdProfesor"),
 
                 new IntegridadTablaConfig_83KI("Comision",
-                    "ArancelBase", "Codigo", "CupoMaximo", "CupoMinimo", "DiaSemana", "Estado",
-                    "FechaLimitePago", "HoraFin", "HoraInicio", "IdComision", "IdCurso", "IdPlanDePago", "IdProfesor", "RecargoPlanSnapshot"),
+                "ArancelBase", "Codigo", "CupoMaximo", "CupoMinimo", "DiaSemana", "Estado",
+                    "FechaFin", "FechaInicio", "FechaLimitePago", "HoraFin", "HoraInicio", "IdComision", "IdCurso", "IdPlanDePago", "IdProfesor", "RecargoPlanSnapshot"),
 
                 new IntegridadTablaConfig_83KI("DisponibilidadProfesor",
                     "DiaSemana", "EstadoActivo", "HoraFin", "HoraInicio", "IdDisponibilidadProfesor", "IdProfesor"),

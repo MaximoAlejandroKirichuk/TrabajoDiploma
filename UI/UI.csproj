@@ -74,6 +74,18 @@
     <Compile Include="Modulos\PlanificacionAcademica\FrmRegistrarPreaperturaComision_83KI.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Modulos\PlanificacionAcademica\FrmGestionComisiones_83KI.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Modulos\PlanificacionAcademica\FrmGestionComisiones_83KI.Designer.cs">
+      <DependentUpon>FrmGestionComisiones_83KI.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Modulos\PlanificacionAcademica\FrmEditarComision_83KI.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Modulos\PlanificacionAcademica\FrmEditarComision_83KI.Designer.cs">
+      <DependentUpon>FrmEditarComision_83KI.cs</DependentUpon>
+    </Compile>
     <Compile Include="Modulos\PlanificacionAcademica\FrmRegistrarPreaperturaComision_83KI.Designer.cs">
       <DependentUpon>FrmRegistrarPreaperturaComision_83KI.cs</DependentUpon>
     </Compile>
@@ -198,6 +210,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Modulos\PlanificacionAcademica\FrmRegistrarPreaperturaComision_83KI.resx">
       <DependentUpon>FrmRegistrarPreaperturaComision_83KI.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Modulos\PlanificacionAcademica\FrmGestionComisiones_83KI.resx">
+      <DependentUpon>FrmGestionComisiones_83KI.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Modulos\PlanificacionAcademica\FrmEditarComision_83KI.resx">
+      <DependentUpon>FrmEditarComision_83KI.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Principal\FrmPrincipal.resx">
       <DependentUpon>FrmPrincipal.cs</DependentUpon>

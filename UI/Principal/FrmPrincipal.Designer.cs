@@ -44,6 +44,7 @@
             this.gestionProfesoresToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.gestionCursoProfesorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.planificacionAcademicaToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.gestionComisionesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.registrarPreaperturaComisionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.cobrosMorosidadActasToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.reportesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -186,6 +187,7 @@
             // planificacionAcademicaToolStripMenuItem
             // 
             this.planificacionAcademicaToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.gestionComisionesToolStripMenuItem,
             this.registrarPreaperturaComisionToolStripMenuItem});
             this.planificacionAcademicaToolStripMenuItem.Name = "planificacionAcademicaToolStripMenuItem";
             this.planificacionAcademicaToolStripMenuItem.Size = new System.Drawing.Size(189, 24);
@@ -193,7 +195,14 @@
             this.planificacionAcademicaToolStripMenuItem.Click += new System.EventHandler(this.planificacionAcademicaToolStripMenuItem_Click);
             // 
             // registrarPreaperturaComisionToolStripMenuItem
-            // 
+            //
+            this.gestionComisionesToolStripMenuItem.Name = "gestionComisionesToolStripMenuItem";
+            this.gestionComisionesToolStripMenuItem.Size = new System.Drawing.Size(304, 24);
+            this.gestionComisionesToolStripMenuItem.Text = "Gestión de comisiones";
+            this.gestionComisionesToolStripMenuItem.Click += new System.EventHandler(this.gestionComisionesToolStripMenuItem_Click);
+            //
+            // registrarPreaperturaComisionToolStripMenuItem
+            //
             this.registrarPreaperturaComisionToolStripMenuItem.Name = "registrarPreaperturaComisionToolStripMenuItem";
             this.registrarPreaperturaComisionToolStripMenuItem.Size = new System.Drawing.Size(304, 24);
             this.registrarPreaperturaComisionToolStripMenuItem.Text = "Registro de preapertura de comisión";
@@ -284,6 +293,7 @@
         private System.Windows.Forms.ToolStripMenuItem gestionProfesoresToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem gestionCursosToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem gestionCursoProfesorToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem gestionComisionesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem registrarPreaperturaComisionToolStripMenuItem;
     }
 }
