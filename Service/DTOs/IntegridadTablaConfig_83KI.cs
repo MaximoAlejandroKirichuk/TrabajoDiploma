@@ -73,6 +73,12 @@ namespace Service.DTOs
 
                 new IntegridadTablaConfig_83KI("DisponibilidadProfesor",
                     "DiaSemana", "EstadoActivo", "HoraFin", "HoraInicio", "IdDisponibilidadProfesor", "IdProfesor"),
+
+                new IntegridadTablaConfig_83KI("Lead",
+                    "Apellido", "DNI", "Email", "Estado", "FechaAlta", "IdLead", "Nombre", "Telefono"),
+
+                new IntegridadTablaConfig_83KI("ConsultaLead",
+                    "Codigo", "Estado", "FechaConsulta", "IdComision", "IdConsultaLead", "IdLead", "MedioContacto", "Motivo", "Observaciones"),
             };
 
         /// <summary>

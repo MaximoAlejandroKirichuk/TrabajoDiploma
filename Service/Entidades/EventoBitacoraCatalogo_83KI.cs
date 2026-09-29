@@ -80,7 +80,10 @@ namespace Service.Entidades
             new EventoBitacoraOpcion_83KI(Modulo.Admin, "Restauraci\u00f3n de base de datos ejecutada", "Restauraci\u00f3n de base de datos ejecutada:"),
 
             // --- Planificacion Academica ---
-            new EventoBitacoraOpcion_83KI(Modulo.PlanificacionAcademica, "Registro de preapertura de comisión", "Registro de preapertura de comisión:")
+            new EventoBitacoraOpcion_83KI(Modulo.PlanificacionAcademica, "Registro de preapertura de comisión", "Registro de preapertura de comisión:"),
+
+            // --- PreInscripcion ---
+            new EventoBitacoraOpcion_83KI(Modulo.PreInscripcion, "Registro de consulta lead", "Registro de consulta lead:")
         };
 
         public static IEnumerable<EventoBitacoraOpcion_83KI> ObtenerPorModulo(Modulo modulo)

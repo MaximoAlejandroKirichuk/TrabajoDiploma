@@ -10,7 +10,8 @@ namespace Service.Entidades
     {
         Usuarios,
         Admin,
-        PlanificacionAcademica
+        PlanificacionAcademica,
+        PreInscripcion
     }
 
     public enum Criticidad
@@ -76,6 +77,7 @@ namespace Service.Entidades
         HabilitarCursoProfesor = 55,
         DeshabilitarCursoProfesor = 56,
         RegistrarPreaperturaComision = 57,
+        RegistrarConsultaLead = 58,
         VerComisiones = 61,
         ModificarComision = 62,
         EliminarComision = 63

@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using UI.Modulos.Maestros;
 using UI.Modulos.PlanificacionAcademica;
+using UI.Modulos.PreInscripcion;
 
 namespace UI
 {
@@ -78,9 +79,11 @@ namespace UI
                 PermisoSistema_83KI.VerCursoProfesor);
             bool puedeRegistrarPreapertura = PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarPreaperturaComision);
             bool puedeVerComisiones = PermisosUi_83KI.Tiene(PermisoSistema_83KI.VerComisiones);
-            bool puedePlanificacionAcademica = puedeRegistrarPreapertura || puedeVerComisiones;
+            bool puedeRegistrarConsulta = PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarConsultaLead);
+            bool puedePlanificacionAcademica = puedeRegistrarPreapertura || puedeVerComisiones || puedeRegistrarConsulta;
             gestionComisionesToolStripMenuItem.Visible = puedeVerComisiones;
             registrarPreaperturaComisionToolStripMenuItem.Visible = puedeRegistrarPreapertura;
+            registrarConsultaToolStripMenuItem.Visible = puedeRegistrarConsulta;
             planificacionAcademicaToolStripMenuItem.Visible = puedePlanificacionAcademica;
             maestrosToolStripMenuItem.Visible = PermisosUi_83KI.TienePermisoMaestros();
         }
@@ -104,6 +107,7 @@ namespace UI
             planificacionAcademicaToolStripMenuItem.Text = Texto("FrmPrincipal.PlanificacionAcademica");
             gestionComisionesToolStripMenuItem.Text = Texto("FrmPrincipal.GestionComisiones");
             registrarPreaperturaComisionToolStripMenuItem.Text = Texto("FrmPrincipal.RegistrarPreaperturaComision");
+            registrarConsultaToolStripMenuItem.Text = Texto("FrmPrincipal.RegistrarConsulta");
             cobrosMorosidadActasToolStripMenuItem.Text = Texto("FrmPrincipal.CobrosMorosidadActas");
             reportesToolStripMenuItem.Text = Texto("FrmPrincipal.Reportes");
             reToolStripMenuItem.Text = Texto("FrmPrincipal.Ayuda");
@@ -356,6 +360,30 @@ namespace UI
             }
 
             using (var formulario = new FrmGestionComisiones_83KI(CrearGestorComision()))
+            {
+                formulario.ShowDialog(this);
+            }
+        }
+
+        private void registrarConsultaToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarConsultaLead))
+            {
+                IdiomaUiHelper_83KI.MostrarAdvertencia(this, "Errores.SinPermisos", "Comun.Seguridad");
+                return;
+            }
+
+            var comisionDal = new ComisionDAL_83KI();
+            var leadDal = new LeadDAL_83KI();
+            var comisionBLL = new KI68ComisionBLL(comisionDal);
+            using (var formulario = new FrmRegistrarConsultaLead_83KI(
+                new KI68LeadBLL(
+                    new KI68AlumnoPersonaBLL(leadDal),
+                    comisionBLL,
+                    new ConsultaLeadDAL_83KI(),
+                    SessionManager_83KI.Instancia,
+                    new BitacoraBLL_83KI(new BitacoraEventoDAL_83KI())),
+                comisionBLL))
             {
                 formulario.ShowDialog(this);
             }

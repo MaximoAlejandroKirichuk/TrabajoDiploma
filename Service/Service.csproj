@@ -44,6 +44,9 @@
   <ItemGroup>
     <Compile Include="DTOs\BitacoraEventoVista_83KI.cs" />
     <Compile Include="DTOs\ComisionListado_83KI.cs" />
+    <Compile Include="DTOs\BusquedaLeadResultado_83KI.cs" />
+    <Compile Include="DTOs\ConsultaLeadRequest_83KI.cs" />
+    <Compile Include="DTOs\ConsultaLeadResultado_83KI.cs" />
     <Compile Include="DTOs\ResultadoBootstrap_83KI.cs" />
     <Compile Include="DTOs\ConfiguracionConexionBD_83KI.cs" />
     <Compile Include="DTOs\FiltroBitacoraEventos_83KI.cs" />
@@ -80,13 +83,18 @@
     <Compile Include="Excepciones\Maestros\ProfesorNoEncontradoException_83KI.cs" />
     <Compile Include="Excepciones\Maestros\RelacionCursoProfesorNoEncontradaException_83KI.cs" />
     <Compile Include="Interfaces\IBitacoraManager_83KI.cs" />
+    <Compile Include="Interfaces\IAlumnoPersonaBLL_83KI.cs" />
     <Compile Include="Interfaces\IComisionDAL_83KI.cs" />
+    <Compile Include="Interfaces\IComisionConsultaBLL_83KI.cs" />
+    <Compile Include="Interfaces\IConsultaLeadDAL_83KI.cs" />
     <Compile Include="Interfaces\IDisponibilidadProfesorDAL_83KI.cs" />
     <Compile Include="Interfaces\IProveedorConfiguracionConexion_83KI.cs" />
     <Compile Include="Interfaces\IConsultaBitacoraEventos_83KI.cs" />
     <Compile Include="Interfaces\IBootstrapBaseDatosService_83KI.cs" />
     <Compile Include="Interfaces\IEncriptador_83KI.cs" />
     <Compile Include="Interfaces\IIntegridadDatosService_83KI.cs" />
+    <Compile Include="Interfaces\ILeadBLL_83KI.cs" />
+    <Compile Include="Interfaces\ILeadDAL_83KI.cs" />
     <Compile Include="Interfaces\IRecuperacionBaseDatosService_83KI.cs" />
     <Compile Include="Interfaces\observer\IGestorIdioma_83KI.cs" />
     <Compile Include="Interfaces\IGestorComision_83KI.cs" />

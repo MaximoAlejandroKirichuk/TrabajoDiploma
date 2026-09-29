@@ -50,6 +50,8 @@ namespace DAL
                 { "CursoProfesor",   new[] { "IdCurso", "IdProfesor" } },
                 { "Comision",        new[] { "IdComision" } },
                 { "DisponibilidadProfesor", new[] { "IdDisponibilidadProfesor" } },
+                { "Lead",            new[] { "IdLead" } },
+                { "ConsultaLead",    new[] { "IdConsultaLead" } },
             };
 
         // ------------------------------------------------------------------ //

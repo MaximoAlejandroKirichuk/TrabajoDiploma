@@ -46,6 +46,7 @@
             this.planificacionAcademicaToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.gestionComisionesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.registrarPreaperturaComisionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.registrarConsultaToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.cobrosMorosidadActasToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.reportesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuIdioma = new System.Windows.Forms.ToolStripMenuItem();
@@ -188,7 +189,8 @@
             // 
             this.planificacionAcademicaToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.gestionComisionesToolStripMenuItem,
-            this.registrarPreaperturaComisionToolStripMenuItem});
+            this.registrarPreaperturaComisionToolStripMenuItem,
+            this.registrarConsultaToolStripMenuItem});
             this.planificacionAcademicaToolStripMenuItem.Name = "planificacionAcademicaToolStripMenuItem";
             this.planificacionAcademicaToolStripMenuItem.Size = new System.Drawing.Size(189, 24);
             this.planificacionAcademicaToolStripMenuItem.Text = "Planificación Académica";
@@ -208,6 +210,13 @@
             this.registrarPreaperturaComisionToolStripMenuItem.Text = "Registro de preapertura de comisión";
             this.registrarPreaperturaComisionToolStripMenuItem.Click += new System.EventHandler(this.registrarPreaperturaComisionToolStripMenuItem_Click);
             // 
+            // registrarConsultaToolStripMenuItem
+            //
+            this.registrarConsultaToolStripMenuItem.Name = "registrarConsultaToolStripMenuItem";
+            this.registrarConsultaToolStripMenuItem.Size = new System.Drawing.Size(304, 24);
+            this.registrarConsultaToolStripMenuItem.Text = "Registrar consulta";
+            this.registrarConsultaToolStripMenuItem.Click += new System.EventHandler(this.registrarConsultaToolStripMenuItem_Click);
+            //
             // cobrosMorosidadActasToolStripMenuItem
             // 
             this.cobrosMorosidadActasToolStripMenuItem.Name = "cobrosMorosidadActasToolStripMenuItem";
@@ -295,5 +304,6 @@
         private System.Windows.Forms.ToolStripMenuItem gestionCursoProfesorToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem gestionComisionesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem registrarPreaperturaComisionToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem registrarConsultaToolStripMenuItem;
     }
 }

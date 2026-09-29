@@ -1830,6 +1830,16 @@ IF NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'Co
     INSERT INTO dbo.DigitoVerificador_83KI (NombreTabla, DVV, FechaActualizacion) VALUES (N'ConsultaLead', '', GETDATE());
 GO
 
+UPDATE dbo.DigitoVerificador_83KI
+SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.[Lead] ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)), FechaActualizacion = GETDATE()
+WHERE NombreTabla = N'Lead';
+GO
+
+UPDATE dbo.DigitoVerificador_83KI
+SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.ConsultaLead ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)), FechaActualizacion = GETDATE()
+WHERE NombreTabla = N'ConsultaLead';
+GO
+
 CREATE OR ALTER PROCEDURE dbo.sp_CUN02_ListarComisionesPreapertura
 AS
 BEGIN
