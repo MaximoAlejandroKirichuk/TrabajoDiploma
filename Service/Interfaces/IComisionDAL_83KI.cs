@@ -18,5 +18,7 @@ namespace Service.Interfaces
         Comision_83KI ObtenerComision(int idComision);
         void ModificarComision(Comision_83KI comision);
         void EliminarComision(int idComision);
+        IEnumerable<ComisionListado_83KI> ListarComisionesPreapertura();
+        bool ExisteComisionPreapertura(int idComision);
     }
 }

@@ -1608,3 +1608,329 @@ BEGIN
         SELECT 0 AS Solapamiento;
 END
 GO
+
+CREATE OR ALTER PROCEDURE dbo.sp_CUN01_ListarCursosActivos
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT IdCurso, Nombre, Descripcion, CargaHoraria, EstadoActivo, DVH
+    FROM dbo.Curso
+    WHERE EstadoActivo = 1
+    ORDER BY Nombre;
+END
+GO
+
+CREATE OR ALTER PROCEDURE dbo.sp_CUN01_ListarProfesoresDisponibles
+    @IdCurso INT,
+    @DiaSemana NVARCHAR(20),
+    @HoraInicio TIME,
+    @HoraFin TIME
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT DISTINCT p.IdProfesor, p.DNI, p.Nombre, p.Apellido, p.Email, p.EstadoActivo, p.DVH
+    FROM dbo.Profesor p
+    INNER JOIN dbo.CursoProfesor cp ON cp.IdProfesor = p.IdProfesor AND cp.IdCurso = @IdCurso AND cp.EstadoActivo = 1
+    INNER JOIN dbo.Curso c ON c.IdCurso = cp.IdCurso AND c.EstadoActivo = 1
+    INNER JOIN dbo.DisponibilidadProfesor dp ON dp.IdProfesor = p.IdProfesor
+        AND dp.EstadoActivo = 1
+        AND dp.DiaSemana = @DiaSemana
+        AND dp.HoraInicio <= @HoraInicio
+        AND dp.HoraFin >= @HoraFin
+    WHERE p.EstadoActivo = 1
+    ORDER BY p.Apellido, p.Nombre;
+END
+GO
+
+CREATE OR ALTER PROCEDURE dbo.sp_CUN01_ValidarCursoProfesorDisponibilidad
+    @IdCurso INT,
+    @IdProfesor INT,
+    @DiaSemana NVARCHAR(20),
+    @HoraInicio TIME,
+    @HoraFin TIME
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT CASE WHEN EXISTS (
+        SELECT 1
+        FROM dbo.Profesor p
+        INNER JOIN dbo.CursoProfesor cp ON cp.IdProfesor = p.IdProfesor AND cp.IdCurso = @IdCurso AND cp.EstadoActivo = 1
+        INNER JOIN dbo.Curso c ON c.IdCurso = cp.IdCurso AND c.EstadoActivo = 1
+        INNER JOIN dbo.DisponibilidadProfesor dp ON dp.IdProfesor = p.IdProfesor
+            AND dp.EstadoActivo = 1
+            AND dp.DiaSemana = @DiaSemana
+            AND dp.HoraInicio <= @HoraInicio
+            AND dp.HoraFin >= @HoraFin
+        WHERE p.IdProfesor = @IdProfesor AND p.EstadoActivo = 1
+    ) THEN 1 ELSE 0 END;
+END
+GO
+
+CREATE OR ALTER PROCEDURE dbo.sp_CUN01_InsertarDisponibilidadProfesor
+    @IdProfesor INT,
+    @DiaSemana NVARCHAR(20),
+    @HoraInicio TIME,
+    @HoraFin TIME,
+    @EstadoActivo BIT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    INSERT INTO dbo.DisponibilidadProfesor (IdProfesor, DiaSemana, HoraInicio, HoraFin, EstadoActivo)
+    VALUES (@IdProfesor, @DiaSemana, @HoraInicio, @HoraFin, @EstadoActivo);
+    SELECT CAST(SCOPE_IDENTITY() AS INT) AS IdDisponibilidadProfesor;
+END
+GO
+
+CREATE OR ALTER PROCEDURE dbo.sp_CUN01_ActualizarDisponibilidadProfesor
+    @IdDisponibilidadProfesor INT,
+    @IdProfesor INT,
+    @DiaSemana NVARCHAR(20),
+    @HoraInicio TIME,
+    @HoraFin TIME,
+    @EstadoActivo BIT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE dbo.DisponibilidadProfesor
+    SET IdProfesor = @IdProfesor, DiaSemana = @DiaSemana, HoraInicio = @HoraInicio, HoraFin = @HoraFin, EstadoActivo = @EstadoActivo
+    WHERE IdDisponibilidadProfesor = @IdDisponibilidadProfesor;
+END
+GO
+
+CREATE OR ALTER PROCEDURE dbo.sp_CUN01_ListarDisponibilidadProfesor
+    @IdProfesor INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT IdDisponibilidadProfesor, IdProfesor, DiaSemana, HoraInicio, HoraFin, EstadoActivo, DVH
+    FROM dbo.DisponibilidadProfesor
+    WHERE IdProfesor = @IdProfesor
+    ORDER BY DiaSemana, HoraInicio;
+END
+GO
+
+UPDATE dbo.Patentes
+SET DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+    N'CodigoPatente=', CONVERT(NVARCHAR(128), CodigoPatente), N'|',
+    N'Nombre=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Nombre), N'∅')))
+)), 2));
+GO
+UPDATE dbo.Roles
+SET DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+    N'CodigoRol=', CONVERT(NVARCHAR(128), CodigoRol), N'|',
+    N'Nombre=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Nombre), N'∅')))
+)), 2));
+GO
+UPDATE dbo.RolPatente
+SET DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+    N'CodigoPatente=', CONVERT(NVARCHAR(128), CodigoPatente), N'|',
+    N'CodigoRol=', CONVERT(NVARCHAR(128), CodigoRol)
+)), 2));
+GO
+UPDATE dbo.Comision
+SET DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+    N'Codigo=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Codigo), N'∅'))), N'|',
+    N'CupoMaximo=', CONVERT(NVARCHAR(128), CupoMaximo), N'|',
+    N'CupoMinimo=', CONVERT(NVARCHAR(128), CupoMinimo), N'|',
+    N'DiaSemana=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), DiaSemana), N'∅'))), N'|',
+    N'Estado=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Estado), N'∅'))), N'|',
+    N'FechaLimitePago=', CONVERT(NVARCHAR(30), CONVERT(DATETIME, FechaLimitePago), 126), N'.000|',
+    N'HoraFin=', CONVERT(NVARCHAR(128), HoraFin), N'|',
+    N'HoraInicio=', CONVERT(NVARCHAR(128), HoraInicio), N'|',
+    N'IdComision=', CONVERT(NVARCHAR(128), IdComision), N'|',
+    N'IdCurso=', CONVERT(NVARCHAR(128), IdCurso), N'|',
+    N'IdProfesor=', CONVERT(NVARCHAR(128), IdProfesor)
+)), 2));
+GO
+UPDATE dbo.DisponibilidadProfesor
+SET DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+    N'DiaSemana=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), DiaSemana), N'∅'))), N'|',
+    N'EstadoActivo=', CASE WHEN EstadoActivo = 1 THEN N'1' ELSE N'0' END, N'|',
+    N'HoraFin=', CONVERT(NVARCHAR(128), HoraFin), N'|',
+    N'HoraInicio=', CONVERT(NVARCHAR(128), HoraInicio), N'|',
+    N'IdDisponibilidadProfesor=', CONVERT(NVARCHAR(128), IdDisponibilidadProfesor), N'|',
+    N'IdProfesor=', CONVERT(NVARCHAR(128), IdProfesor)
+)), 2));
+GO
+UPDATE dbo.DigitoVerificador_83KI SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.Patentes ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)), FechaActualizacion = GETDATE() WHERE NombreTabla = N'Patentes';
+UPDATE dbo.DigitoVerificador_83KI SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.Roles ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)), FechaActualizacion = GETDATE() WHERE NombreTabla = N'Roles';
+UPDATE dbo.DigitoVerificador_83KI SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.RolPatente ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)), FechaActualizacion = GETDATE() WHERE NombreTabla = N'RolPatente';
+UPDATE dbo.DigitoVerificador_83KI SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.Comision ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)), FechaActualizacion = GETDATE() WHERE NombreTabla = N'Comision';
+UPDATE dbo.DigitoVerificador_83KI SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.DisponibilidadProfesor ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)), FechaActualizacion = GETDATE() WHERE NombreTabla = N'DisponibilidadProfesor';
+GO
+
+-- CUN02 Registrar consulta de lead ------------------------------------------------
+IF OBJECT_ID(N'[dbo].[Lead]', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.[Lead](
+        IdLead INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_Lead PRIMARY KEY,
+        DNI NVARCHAR(20) NULL,
+        Nombre NVARCHAR(100) NOT NULL,
+        Apellido NVARCHAR(100) NOT NULL,
+        Email NVARCHAR(255) NOT NULL,
+        Telefono NVARCHAR(50) NOT NULL,
+        FechaAlta DATETIME NOT NULL CONSTRAINT DF_Lead_FechaAlta DEFAULT GETDATE(),
+        Estado NVARCHAR(30) NOT NULL CONSTRAINT DF_Lead_Estado DEFAULT N'activo',
+        DVH VARCHAR(64) NOT NULL CONSTRAINT DF_Lead_DVH DEFAULT '',
+        CONSTRAINT CK_Lead_Estado CHECK (Estado = N'activo')
+    );
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_Lead_DNI' AND object_id = OBJECT_ID(N'dbo.Lead'))
+    CREATE UNIQUE INDEX UX_Lead_DNI ON dbo.[Lead](DNI) WHERE DNI IS NOT NULL AND DNI <> N'';
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Lead_Email' AND object_id = OBJECT_ID(N'dbo.Lead'))
+    CREATE INDEX IX_Lead_Email ON dbo.[Lead](Email);
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Lead_Telefono' AND object_id = OBJECT_ID(N'dbo.Lead'))
+    CREATE INDEX IX_Lead_Telefono ON dbo.[Lead](Telefono);
+GO
+
+IF OBJECT_ID(N'[dbo].[ConsultaLead]', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.ConsultaLead(
+        IdConsultaLead INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_ConsultaLead PRIMARY KEY,
+        Codigo NVARCHAR(30) NOT NULL CONSTRAINT UQ_ConsultaLead_Codigo UNIQUE,
+        IdLead INT NOT NULL,
+        IdComision INT NOT NULL,
+        FechaConsulta DATETIME NOT NULL CONSTRAINT DF_ConsultaLead_Fecha DEFAULT GETDATE(),
+        MedioContacto NVARCHAR(80) NOT NULL,
+        Motivo NVARCHAR(200) NOT NULL,
+        Observaciones NVARCHAR(1000) NULL,
+        Estado NVARCHAR(30) NOT NULL CONSTRAINT DF_ConsultaLead_Estado DEFAULT N'registrada',
+        DVH VARCHAR(64) NOT NULL CONSTRAINT DF_ConsultaLead_DVH DEFAULT '',
+        CONSTRAINT FK_ConsultaLead_Lead FOREIGN KEY (IdLead) REFERENCES dbo.[Lead](IdLead),
+        CONSTRAINT FK_ConsultaLead_Comision FOREIGN KEY (IdComision) REFERENCES dbo.Comision(IdComision),
+        CONSTRAINT CK_ConsultaLead_Estado CHECK (Estado = N'registrada')
+    );
+END
+GO
+
+IF OBJECT_ID(N'dbo.Seq_ConsultaLeadCodigo', N'SO') IS NULL
+    CREATE SEQUENCE dbo.Seq_ConsultaLeadCodigo AS INT START WITH 1 INCREMENT BY 1;
+GO
+
+SET IDENTITY_INSERT dbo.Patentes ON
+GO
+IF NOT EXISTS (SELECT 1 FROM dbo.Patentes WHERE CodigoPatente = 58)
+    INSERT INTO dbo.Patentes (CodigoPatente, Nombre, DVH) VALUES (58, N'RegistrarConsultaLead', '');
+GO
+SET IDENTITY_INSERT dbo.Patentes OFF
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.RolPatente WHERE CodigoRol = 1 AND CodigoPatente = 58)
+    INSERT INTO dbo.RolPatente (CodigoRol, CodigoPatente, DVH) VALUES (1, 58, '');
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'Lead')
+    INSERT INTO dbo.DigitoVerificador_83KI (NombreTabla, DVV, FechaActualizacion) VALUES (N'Lead', '', GETDATE());
+GO
+IF NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'ConsultaLead')
+    INSERT INTO dbo.DigitoVerificador_83KI (NombreTabla, DVV, FechaActualizacion) VALUES (N'ConsultaLead', '', GETDATE());
+GO
+
+CREATE OR ALTER PROCEDURE dbo.sp_CUN02_ListarComisionesPreapertura
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT c.IdComision, c.Codigo, c.IdCurso, cu.Nombre AS Curso, c.IdProfesor,
+           CONCAT(p.Apellido, N', ', p.Nombre) AS Profesor, c.DiaSemana, c.HoraInicio, c.HoraFin,
+           c.CupoMinimo, c.CupoMaximo, c.FechaLimitePago, c.FechaInicio, c.FechaFin,
+           c.ArancelBase, c.Estado
+    FROM dbo.Comision c
+    INNER JOIN dbo.Curso cu ON cu.IdCurso = c.IdCurso
+    INNER JOIN dbo.Profesor p ON p.IdProfesor = c.IdProfesor
+    WHERE c.Estado = N'preapertura'
+      AND c.FechaLimitePago >= CONVERT(date, GETDATE())
+    ORDER BY c.FechaInicio DESC, c.Codigo;
+END
+GO
+
+CREATE OR ALTER PROCEDURE dbo.sp_CUN02_BuscarLead
+    @DNI NVARCHAR(20) = NULL,
+    @Email NVARCHAR(255) = NULL,
+    @Telefono NVARCHAR(50) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF NULLIF(LTRIM(RTRIM(@DNI)), N'') IS NOT NULL AND EXISTS (SELECT 1 FROM dbo.[Lead] WHERE DNI = LTRIM(RTRIM(@DNI)))
+    BEGIN
+        SELECT * FROM dbo.[Lead] WHERE DNI = LTRIM(RTRIM(@DNI)); RETURN;
+    END
+    IF NULLIF(LTRIM(RTRIM(@Email)), N'') IS NOT NULL AND EXISTS (SELECT 1 FROM dbo.[Lead] WHERE Email = LOWER(LTRIM(RTRIM(@Email))))
+    BEGIN
+        SELECT * FROM dbo.[Lead] WHERE Email = LOWER(LTRIM(RTRIM(@Email))); RETURN;
+    END
+    IF NULLIF(LTRIM(RTRIM(@Telefono)), N'') IS NOT NULL
+        SELECT * FROM dbo.[Lead] WHERE Telefono = LTRIM(RTRIM(@Telefono));
+END
+GO
+
+CREATE OR ALTER PROCEDURE dbo.sp_CUN02_RegistrarConsultaLead
+    @DNI NVARCHAR(20), @Nombre NVARCHAR(100), @Apellido NVARCHAR(100), @Email NVARCHAR(255), @Telefono NVARCHAR(50),
+    @IdComision INT, @MedioContacto NVARCHAR(80), @Motivo NVARCHAR(200), @Observaciones NVARCHAR(1000) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF NOT EXISTS (SELECT 1 FROM dbo.Comision WHERE IdComision = @IdComision AND Estado = N'preapertura' AND FechaLimitePago >= CONVERT(date, GETDATE())) THROW 52001, 'Comision no disponible.', 1;
+    DECLARE @IdLead INT = NULL, @IdConsultaLead INT = NULL, @LeadCreado BIT = 0;
+    SELECT TOP 1 @IdLead = IdLead FROM dbo.[Lead] WHERE NULLIF(@DNI, N'') IS NOT NULL AND DNI = @DNI;
+    IF @IdLead IS NULL SELECT TOP 1 @IdLead = IdLead FROM dbo.[Lead] WHERE Email = LOWER(LTRIM(RTRIM(@Email))) ORDER BY IdLead;
+    IF @IdLead IS NULL SELECT TOP 1 @IdLead = IdLead FROM dbo.[Lead] WHERE Telefono = LTRIM(RTRIM(@Telefono)) ORDER BY IdLead;
+    IF @IdLead IS NULL
+    BEGIN
+        INSERT INTO dbo.[Lead] (DNI, Nombre, Apellido, Email, Telefono, FechaAlta, Estado)
+        VALUES (NULLIF(LTRIM(RTRIM(@DNI)), N''), LTRIM(RTRIM(@Nombre)), LTRIM(RTRIM(@Apellido)), LOWER(LTRIM(RTRIM(@Email))), LTRIM(RTRIM(@Telefono)), GETDATE(), N'activo');
+        SET @IdLead = SCOPE_IDENTITY(); SET @LeadCreado = 1;
+    END
+    ELSE
+    BEGIN
+        UPDATE dbo.[Lead]
+        SET Nombre = LTRIM(RTRIM(@Nombre)), Apellido = LTRIM(RTRIM(@Apellido)), Email = LOWER(LTRIM(RTRIM(@Email))), Telefono = LTRIM(RTRIM(@Telefono))
+        WHERE IdLead = @IdLead;
+    END
+    DECLARE @Codigo NVARCHAR(30) = CONCAT(N'CON-', FORMAT(GETDATE(), 'yyyyMMdd'), N'-', RIGHT(CONCAT(N'0000', CONVERT(NVARCHAR(10), NEXT VALUE FOR dbo.Seq_ConsultaLeadCodigo)), 4));
+    INSERT INTO dbo.ConsultaLead (Codigo, IdLead, IdComision, FechaConsulta, MedioContacto, Motivo, Observaciones, Estado)
+    VALUES (@Codigo, @IdLead, @IdComision, GETDATE(), LTRIM(RTRIM(@MedioContacto)), LTRIM(RTRIM(@Motivo)), @Observaciones, N'registrada');
+    SET @IdConsultaLead = SCOPE_IDENTITY();
+
+    UPDATE dbo.[Lead]
+    SET DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+        N'Apellido=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Apellido), N'∅'))), N'|',
+        N'DNI=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), DNI), N'∅'))), N'|',
+        N'Email=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Email), N'∅'))), N'|',
+        N'Estado=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Estado), N'∅'))), N'|',
+        N'FechaAlta=', CONVERT(NVARCHAR(25), FechaAlta, 126), N'|',
+        N'IdLead=', CONVERT(NVARCHAR(128), IdLead), N'|',
+        N'Nombre=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Nombre), N'∅'))), N'|',
+        N'Telefono=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Telefono), N'∅')))
+    )), 2))
+    WHERE IdLead = @IdLead;
+
+    UPDATE dbo.ConsultaLead
+    SET DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+        N'Codigo=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Codigo), N'∅'))), N'|',
+        N'Estado=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Estado), N'∅'))), N'|',
+        N'FechaConsulta=', CONVERT(NVARCHAR(25), FechaConsulta, 126), N'|',
+        N'IdComision=', CONVERT(NVARCHAR(128), IdComision), N'|',
+        N'IdConsultaLead=', CONVERT(NVARCHAR(128), IdConsultaLead), N'|',
+        N'IdLead=', CONVERT(NVARCHAR(128), IdLead), N'|',
+        N'MedioContacto=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), MedioContacto), N'∅'))), N'|',
+        N'Motivo=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Motivo), N'∅'))), N'|',
+        N'Observaciones=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Observaciones), N'∅')))
+    )), 2))
+    WHERE IdConsultaLead = @IdConsultaLead;
+
+    UPDATE dbo.DigitoVerificador_83KI
+    SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.[Lead] ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)), FechaActualizacion = GETDATE()
+    WHERE NombreTabla = N'Lead';
+
+    UPDATE dbo.DigitoVerificador_83KI
+    SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.ConsultaLead ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)), FechaActualizacion = GETDATE()
+    WHERE NombreTabla = N'ConsultaLead';
+
+    SELECT IdLead,DNI,Nombre,Apellido,Email,Telefono,FechaAlta,Estado,DVH,@LeadCreado AS LeadCreado FROM dbo.[Lead] WHERE IdLead = @IdLead;
+    SELECT IdConsultaLead,Codigo,IdLead,IdComision,FechaConsulta,MedioContacto,Motivo,Observaciones,Estado,DVH FROM dbo.ConsultaLead WHERE IdConsultaLead = @IdConsultaLead;
+END
+GO

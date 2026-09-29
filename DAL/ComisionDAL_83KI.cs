@@ -98,6 +98,17 @@ namespace DAL
             });
         }
 
+        public IEnumerable<ComisionListado_83KI> ListarComisionesPreapertura()
+        {
+            return MapearListado(_accesoDAL.LeerStoredProcedure("sp_CUN02_ListarComisionesPreapertura"));
+        }
+
+        public bool ExisteComisionPreapertura(int idComision)
+        {
+            object resultado = _accesoDAL.LeerEscalar("SELECT CASE WHEN EXISTS (SELECT 1 FROM dbo.Comision WHERE IdComision = @id AND Estado = N'preapertura' AND FechaLimitePago >= CONVERT(date, GETDATE())) THEN 1 ELSE 0 END", new List<SqlParameter> { new SqlParameter("@id", idComision) });
+            return Convert.ToInt32(resultado) > 0;
+        }
+
         private static List<SqlParameter> ParametrosDisponibilidad(int idCurso, int idProfesor, DayOfWeek diaSemana, TimeSpan horaInicio, TimeSpan horaFin)
         {
             var parametros = new List<SqlParameter>
@@ -223,6 +234,17 @@ namespace DAL
                 });
             }
             return resultado;
+        }
+
+        private static IEnumerable<Comision_83KI> MapearComisiones(DataSet ds)
+        {
+            var comisiones = new List<Comision_83KI>();
+            if (ds == null || ds.Tables.Count == 0) return comisiones;
+            foreach (DataRow row in ds.Tables[0].Rows)
+            {
+                comisiones.Add(MapearComision(row));
+            }
+            return comisiones;
         }
 
         private void RecomputarIntegridadComision(int idComision, SqlConnection conn, SqlTransaction tran)
