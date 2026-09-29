@@ -42,6 +42,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AccesoDAL_83KI.cs" />
+    <Compile Include="AlumnoDAL_83KI.cs" />
     <Compile Include="BitacoraEventoDAL_83KI.cs" />
     <Compile Include="BootstrapBaseDatosDAL_83KI.cs" />
     <Compile Include="ComisionDAL_83KI.cs" />
@@ -50,6 +51,7 @@
     <Compile Include="CursoDAL_83KI.cs" />
     <Compile Include="Negocio\KI68DisponibilidadProfesorDAL.cs" />
     <Compile Include="IntegridadDAL_83KI.cs" />
+    <Compile Include="InscripcionDAL_83KI.cs" />
     <Compile Include="LeadDAL_83KI.cs" />
     <Compile Include="interfaces\IBitacoraDAL_83KI.cs" />
     <Compile Include="interfaces\IBootstrapBaseDatosDAL_83KI.cs" />

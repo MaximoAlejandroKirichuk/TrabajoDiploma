@@ -45,6 +45,8 @@
     <Compile Include="ConsultaBitacoraEventos_83KI.cs" />
     <Compile Include="BootstrapBaseDatosBLL_83KI.cs" />
     <Compile Include="Negocio\KI68GestorComisionBLL.cs" />
+    <Compile Include="Negocio\KI68CuotaBLL.cs" />
+    <Compile Include="Negocio\KI68InscripcionBLL.cs" />
     <Compile Include="Negocio\KI68AlumnoPersonaBLL.cs" />
     <Compile Include="Negocio\KI68ComisionBLL.cs" />
     <Compile Include="Negocio\KI68LeadBLL.cs" />
