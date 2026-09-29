@@ -189,6 +189,7 @@ namespace UI.Modulos.PlanificacionAcademica
             if (dgvComisiones.Columns["IdCurso"] != null) dgvComisiones.Columns["IdCurso"].Visible = false;
             if (dgvComisiones.Columns["IdProfesor"] != null) dgvComisiones.Columns["IdProfesor"].Visible = false;
             if (dgvComisiones.Columns["Eliminada"] != null) dgvComisiones.Columns["Eliminada"].Visible = false;
+            if (dgvComisiones.Columns["Descripcion"] != null) dgvComisiones.Columns["Descripcion"].Visible = false;
 
             ConfigurarEncabezado("Codigo", "FrmGestionComisiones.ColCodigo");
             ConfigurarEncabezado("Curso", "FrmGestionComisiones.ColCurso");

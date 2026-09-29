@@ -83,7 +83,8 @@ namespace Service.Entidades
             new EventoBitacoraOpcion_83KI(Modulo.PlanificacionAcademica, "Registro de preapertura de comisión", "Registro de preapertura de comisión:"),
 
             // --- PreInscripcion ---
-            new EventoBitacoraOpcion_83KI(Modulo.PreInscripcion, "Registro de consulta lead", "Registro de consulta lead:")
+            new EventoBitacoraOpcion_83KI(Modulo.PreInscripcion, "Registro de consulta lead", "Registro de consulta lead:"),
+            new EventoBitacoraOpcion_83KI(Modulo.PreInscripcion, "Registro de solicitud de inscripción", "Registro de solicitud de inscripción:", "Registro de solicitud de inscripcion:")
         };
 
         public static IEnumerable<EventoBitacoraOpcion_83KI> ObtenerPorModulo(Modulo modulo)

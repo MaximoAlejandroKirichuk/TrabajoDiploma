@@ -69,7 +69,7 @@ namespace Service.DTOs
 
                 new IntegridadTablaConfig_83KI("Comision",
                 "ArancelBase", "Codigo", "CupoMaximo", "CupoMinimo", "DiaSemana", "Estado",
-                    "FechaFin", "FechaInicio", "FechaLimitePago", "HoraFin", "HoraInicio", "IdComision", "IdCurso", "IdPlanDePago", "IdProfesor", "RecargoPlanSnapshot"),
+                    "FechaFin", "FechaInicio", "FechaLimitePago", "HoraFin", "HoraInicio", "IdComision", "IdCurso", "IdPlanDePago", "IdProfesor", "MontoMatricula", "RecargoPlanSnapshot"),
 
                 new IntegridadTablaConfig_83KI("DisponibilidadProfesor",
                     "DiaSemana", "EstadoActivo", "HoraFin", "HoraInicio", "IdDisponibilidadProfesor", "IdProfesor"),
@@ -79,6 +79,15 @@ namespace Service.DTOs
 
                 new IntegridadTablaConfig_83KI("ConsultaLead",
                     "Codigo", "Estado", "FechaConsulta", "IdComision", "IdConsultaLead", "IdLead", "MedioContacto", "Motivo", "Observaciones"),
+
+                new IntegridadTablaConfig_83KI("Alumno",
+                    "Apellido", "DNI", "Email", "Estado", "FechaAlta", "IdAlumno", "Nombre", "Telefono"),
+
+                new IntegridadTablaConfig_83KI("SolicitudInscripcion",
+                    "Codigo", "Estado", "FechaSolicitud", "IdAlumno", "IdComision", "IdLeadOrigen", "IdPlanDePago", "IdSolicitudInscripcion", "Observaciones", "RecargoPlanSnapshot"),
+
+                new IntegridadTablaConfig_83KI("Cuota",
+                    "BalanceAdeudado", "Estado", "FechaVencimiento", "IdCuota", "IdSolicitudInscripcion", "MontoOriginal", "NumeroCuota"),
             };
 
         /// <summary>

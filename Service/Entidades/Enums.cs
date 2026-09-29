@@ -80,6 +80,7 @@ namespace Service.Entidades
         RegistrarConsultaLead = 58,
         VerComisiones = 61,
         ModificarComision = 62,
-        EliminarComision = 63
+        EliminarComision = 63,
+        RegistrarSolicitudInscripcion = 64
     }
 }

@@ -19,11 +19,21 @@ namespace Service.DTOs
         public DateTime FechaInicio { get; set; }
         public DateTime FechaFin { get; set; }
         public decimal ArancelBase { get; set; }
+        public decimal MontoMatricula { get; set; }
+        public int VacantesDisponibles { get; set; }
         public string Estado { get; set; }
 
         public bool Eliminada
         {
             get { return string.Equals(Estado, "eliminada", StringComparison.OrdinalIgnoreCase); }
+        }
+
+        public string Descripcion
+        {
+            get
+            {
+                return string.Format("{0} - {1} - {2:hh\\:mm}-{3:hh\\:mm} - Vacantes: {4}", Codigo, Curso, HoraInicio, HoraFin, VacantesDisponibles);
+            }
         }
     }
 }

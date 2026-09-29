@@ -41,6 +41,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Entidades\Alumno_83KI.cs" />
+    <Compile Include="Entidades\Cuota_83KI.cs" />
+    <Compile Include="Entidades\SolicitudInscripcion_83KI.cs" />
     <Compile Include="Entidades\Comision_83KI.cs" />
     <Compile Include="Entidades\PlanDePago_83KI.cs" />
     <Compile Include="Entidades\ConsultaLead_83KI.cs" />
