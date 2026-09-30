@@ -48,7 +48,9 @@
     <Compile Include="DTOs\ActaCierreComisionRequest_83KI.cs" />
     <Compile Include="DTOs\AltaOficialComisionRequest_83KI.cs" />
     <Compile Include="DTOs\ComisionListado_83KI.cs" />
+    <Compile Include="DTOs\ComisionXml_83KI.cs" />
     <Compile Include="DTOs\ComisionEstadoDefinitivoListado_83KI.cs" />
+    <Compile Include="DTOs\ReporteOcupacionComision_83KI.cs" />
     <Compile Include="DTOs\EvaluacionQuorumComision_83KI.cs" />
     <Compile Include="DTOs\BusquedaInscripcionPersonaResultado_83KI.cs" />
     <Compile Include="DTOs\CuotaPreview_83KI.cs" />
@@ -103,10 +105,13 @@
     <Compile Include="Interfaces\IPagoInscripcionDAL_83KI.cs" />
     <Compile Include="Interfaces\IEstadoDefinitivoComisionBLL_83KI.cs" />
     <Compile Include="Interfaces\IEstadoDefinitivoComisionDAL_83KI.cs" />
+    <Compile Include="Interfaces\IReporteOcupacionComisionBLL_83KI.cs" />
+    <Compile Include="Interfaces\IReporteOcupacionComisionDAL_83KI.cs" />
     <Compile Include="Interfaces\IAlumnoPersonaBLL_83KI.cs" />
     <Compile Include="Interfaces\IBecaDAL_83KI.cs" />
     <Compile Include="Interfaces\IComisionDAL_83KI.cs" />
     <Compile Include="Interfaces\IComisionConsultaBLL_83KI.cs" />
+    <Compile Include="Interfaces\IComisionSerializacionBLL_83KI.cs" />
     <Compile Include="Interfaces\IConsultaLeadDAL_83KI.cs" />
     <Compile Include="Interfaces\IDisponibilidadProfesorDAL_83KI.cs" />
     <Compile Include="Interfaces\IProveedorConfiguracionConexion_83KI.cs" />

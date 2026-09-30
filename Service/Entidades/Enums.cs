@@ -84,6 +84,9 @@ namespace Service.Entidades
         RegistrarSolicitudInscripcion = 64,
         RegistrarDecisionBeca = 65,
         RegistrarPagoInscripcion = 66,
-        RegistrarEstadoDefinitivoComision = 67
+        RegistrarEstadoDefinitivoComision = 67,
+        SerializarComisiones = 68,
+        DeserializarComisiones = 69,
+        VerReporteOcupacionComisiones = 70
     }
 }

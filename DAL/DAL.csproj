@@ -49,6 +49,7 @@
     <Compile Include="BootstrapBaseDatosDAL_83KI.cs" />
     <Compile Include="ComisionDAL_83KI.cs" />
     <Compile Include="EstadoDefinitivoComisionDAL_83KI.cs" />
+    <Compile Include="ReporteOcupacionComisionDAL_83KI.cs" />
     <Compile Include="ConsultaLeadDAL_83KI.cs" />
     <Compile Include="Negocio\KI68CursoProfesorDAL.cs" />
     <Compile Include="CursoDAL_83KI.cs" />

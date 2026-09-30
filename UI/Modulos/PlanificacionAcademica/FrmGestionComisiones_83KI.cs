@@ -6,6 +6,7 @@ using Service.DTOs;
 using Service.Entidades;
 using Service.Interfaces;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -16,6 +17,9 @@ namespace UI.Modulos.PlanificacionAcademica
     {
         private readonly IGestorComision_83KI _gestor;
         private readonly IGestorIdioma_83KI _gestorIdioma;
+        private readonly IComisionSerializacionBLL_83KI _serializacion;
+        private List<ComisionXml_83KI> _comisionesDeserializadas;
+        private bool _mostrandoDeserializadas;
         private DataGridView dgvComisiones;
         private ComboBox cmbCursos;
         private ComboBox cmbProfesores;
@@ -30,6 +34,9 @@ namespace UI.Modulos.PlanificacionAcademica
         private Button btnModificar;
         private Button btnEliminar;
         private Button btnRegistrarPreapertura;
+        private Button btnSerializar;
+        private Button btnDeserializar;
+        private Button btnGuardarDeserializadas;
         private Label lblMensaje;
         private Label lblCurso;
         private Label lblProfesor;
@@ -37,8 +44,14 @@ namespace UI.Modulos.PlanificacionAcademica
         private Label lblCodigo;
 
         public FrmGestionComisiones_83KI(IGestorComision_83KI gestor)
+            : this(gestor, new KI68ComisionBLL(new ComisionDAL_83KI()))
+        {
+        }
+
+        public FrmGestionComisiones_83KI(IGestorComision_83KI gestor, IComisionSerializacionBLL_83KI serializacion)
         {
             _gestor = gestor;
+            _serializacion = serializacion;
             _gestorIdioma = ServiceFactory_83KI.GetGestorIdioma();
             InitializeComponent();
             InicializarControles();
@@ -95,7 +108,7 @@ namespace UI.Modulos.PlanificacionAcademica
             filtros.Controls.Add(btnLimpiar, 5, 2);
             Controls.Add(filtros);
 
-            dgvComisiones = new DataGridView { Left = 12, Top = 135, Width = 880, Height = 455, ReadOnly = true, AutoGenerateColumns = true, SelectionMode = DataGridViewSelectionMode.FullRowSelect, MultiSelect = false };
+            dgvComisiones = new DataGridView { Left = 12, Top = 135, Width = 880, Height = 455, ReadOnly = true, AutoGenerateColumns = true, SelectionMode = DataGridViewSelectionMode.FullRowSelect, MultiSelect = true };
             dgvComisiones.SelectionChanged += (s, e) => ActualizarAcciones();
             dgvComisiones.CellFormatting += dgvComisiones_CellFormatting;
             Controls.Add(dgvComisiones);
@@ -110,7 +123,16 @@ namespace UI.Modulos.PlanificacionAcademica
             btnRegistrarPreapertura = new Button { Left = x, Top = 240, Width = 210, Height = 48 };
             btnRegistrarPreapertura.Click += btnRegistrarPreapertura_Click;
             Controls.Add(btnRegistrarPreapertura);
-            lblMensaje = new Label { Left = x, Top = 305, Width = 210, Height = 140, ForeColor = Color.DarkBlue };
+            btnSerializar = new Button { Left = x, Top = 300, Width = 210, Height = 36 };
+            btnSerializar.Click += btnSerializar_Click;
+            Controls.Add(btnSerializar);
+            btnDeserializar = new Button { Left = x, Top = 346, Width = 210, Height = 36 };
+            btnDeserializar.Click += btnDeserializar_Click;
+            Controls.Add(btnDeserializar);
+            btnGuardarDeserializadas = new Button { Left = x, Top = 392, Width = 210, Height = 48 };
+            btnGuardarDeserializadas.Click += btnGuardarDeserializadas_Click;
+            Controls.Add(btnGuardarDeserializadas);
+            lblMensaje = new Label { Left = x, Top = 450, Width = 210, Height = 140, ForeColor = Color.DarkBlue };
             Controls.Add(lblMensaje);
             ActualizarIdioma(null);
         }
@@ -149,7 +171,10 @@ namespace UI.Modulos.PlanificacionAcademica
                     FechaInicioDesde = chkFechaInicio.Checked ? (DateTime?)dtpFechaInicio.Value.Date : null,
                     FechaFinHasta = chkFechaFin.Checked ? (DateTime?)dtpFechaFin.Value.Date : null
                 };
-                dgvComisiones.DataSource = _gestor.ListarComisiones(filtro).ToList();
+                var comisiones = _gestor.ListarComisiones(filtro).ToList();
+                _mostrandoDeserializadas = false;
+                _comisionesDeserializadas = null;
+                dgvComisiones.DataSource = comisiones;
                 ConfigurarGrilla();
                 lblMensaje.Text = string.Empty;
             }
@@ -190,6 +215,10 @@ namespace UI.Modulos.PlanificacionAcademica
             if (dgvComisiones.Columns["IdProfesor"] != null) dgvComisiones.Columns["IdProfesor"].Visible = false;
             if (dgvComisiones.Columns["Eliminada"] != null) dgvComisiones.Columns["Eliminada"].Visible = false;
             if (dgvComisiones.Columns["Descripcion"] != null) dgvComisiones.Columns["Descripcion"].Visible = false;
+            if (dgvComisiones.Columns["HoraInicioXml"] != null) dgvComisiones.Columns["HoraInicioXml"].Visible = false;
+            if (dgvComisiones.Columns["HoraFinXml"] != null) dgvComisiones.Columns["HoraFinXml"].Visible = false;
+            if (dgvComisiones.Columns["IdPlanDePago"] != null) dgvComisiones.Columns["IdPlanDePago"].Visible = false;
+            if (dgvComisiones.Columns["RecargoPlanSnapshot"] != null) dgvComisiones.Columns["RecargoPlanSnapshot"].Visible = false;
 
             ConfigurarEncabezado("Codigo", "FrmGestionComisiones.ColCodigo");
             ConfigurarEncabezado("Curso", "FrmGestionComisiones.ColCurso");
@@ -234,15 +263,143 @@ namespace UI.Modulos.PlanificacionAcademica
 
         private ComisionListado_83KI Seleccionada()
         {
-            return dgvComisiones.SelectedRows.Count == 0 ? null : dgvComisiones.SelectedRows[0].DataBoundItem as ComisionListado_83KI;
+            var fila = dgvComisiones.SelectedRows.Cast<DataGridViewRow>().OrderBy(f => f.Index).FirstOrDefault();
+            return fila == null ? null : fila.DataBoundItem as ComisionListado_83KI;
+        }
+
+        private List<ComisionListado_83KI> ComisionesSeleccionadas()
+        {
+            return dgvComisiones.SelectedRows.Cast<DataGridViewRow>()
+                .OrderBy(f => f.Index)
+                .Select(f => f.DataBoundItem as ComisionListado_83KI)
+                .Where(c => c != null)
+                .ToList();
+        }
+
+        private List<ComisionXml_83KI> DeserializadasSeleccionadas()
+        {
+            return dgvComisiones.SelectedRows.Cast<DataGridViewRow>()
+                .OrderBy(f => f.Index)
+                .Select(f => f.DataBoundItem as ComisionXml_83KI)
+                .Where(c => c != null)
+                .ToList();
         }
 
         private void ActualizarAcciones()
         {
             var seleccion = Seleccionada();
-            bool activa = seleccion != null && !seleccion.Eliminada;
+            bool activa = !_mostrandoDeserializadas && seleccion != null && !seleccion.Eliminada;
             btnModificar.Enabled = activa;
             btnEliminar.Enabled = activa;
+            btnSerializar.Enabled = !_mostrandoDeserializadas && dgvComisiones.SelectedRows.Count > 0;
+            btnGuardarDeserializadas.Enabled = _mostrandoDeserializadas && dgvComisiones.SelectedRows.Count > 0;
+        }
+
+        // A03 - Serializar: el usuario selecciona comisiones, elige ubicacion y nombre, y se genera el XML.
+        private void btnSerializar_Click(object sender, EventArgs e)
+        {
+            var seleccionadas = ComisionesSeleccionadas();
+            if (seleccionadas.Count == 0)
+            {
+                IdiomaUiHelper_83KI.MostrarAdvertencia(this, "FrmGestionComisiones.SeleccioneParaSerializar", "Comun.Validacion");
+                return;
+            }
+
+            using (var dialogo = new SaveFileDialog())
+            {
+                dialogo.Filter = IdiomaUiHelper_83KI.Texto("FrmGestionComisiones.FiltroXml");
+                dialogo.DefaultExt = "xml";
+                dialogo.AddExtension = true;
+                dialogo.FileName = "Comisiones.xml";
+                if (dialogo.ShowDialog(this) != DialogResult.OK) return;
+
+                try
+                {
+                    _serializacion.Serializar(dialogo.FileName, seleccionadas);
+                    IdiomaUiHelper_83KI.MostrarInformacion(this, "FrmGestionComisiones.SerializacionExitosa", "Comun.Informacion");
+                }
+                catch (Exception ex)
+                {
+                    IdiomaUiHelper_83KI.MostrarError(this, ex, "Comun.Error", MessageBoxIcon.Warning);
+                }
+            }
+        }
+
+        // A03 - Deserializar: el usuario elige un XML y las comisiones se muestran en la grilla.
+        private void btnDeserializar_Click(object sender, EventArgs e)
+        {
+            using (var dialogo = new OpenFileDialog())
+            {
+                dialogo.Filter = IdiomaUiHelper_83KI.Texto("FrmGestionComisiones.FiltroXml");
+                dialogo.CheckFileExists = true;
+                dialogo.Multiselect = false;
+                if (dialogo.ShowDialog(this) != DialogResult.OK) return;
+
+                try
+                {
+                    _comisionesDeserializadas = _serializacion.Deserializar(dialogo.FileName);
+                    MostrarDeserializadas();
+                    lblMensaje.Text = IdiomaUiHelper_83KI.Texto("FrmGestionComisiones.DeserializacionExitosa", _comisionesDeserializadas.Count);
+                }
+                catch (Exception ex)
+                {
+                    IdiomaUiHelper_83KI.MostrarError(this, ex, "Comun.Error", MessageBoxIcon.Warning);
+                }
+            }
+        }
+
+        private void MostrarDeserializadas()
+        {
+            _mostrandoDeserializadas = true;
+            dgvComisiones.DataSource = _comisionesDeserializadas.ToList();
+            ConfigurarGrilla();
+            dgvComisiones.ClearSelection();
+            ActualizarAcciones();
+        }
+
+        // Las comisiones deserializadas que el usuario selecciona se registran como preapertura nueva.
+        private void btnGuardarDeserializadas_Click(object sender, EventArgs e)
+        {
+            var seleccionadas = DeserializadasSeleccionadas();
+            if (seleccionadas.Count == 0)
+            {
+                IdiomaUiHelper_83KI.MostrarAdvertencia(this, "FrmGestionComisiones.SeleccioneParaGuardar", "Comun.Validacion");
+                return;
+            }
+
+            string confirmacion = IdiomaUiHelper_83KI.Texto("FrmGestionComisiones.ConfirmarGuardar", seleccionadas.Count);
+            if (MessageBox.Show(this, confirmacion, IdiomaUiHelper_83KI.Texto("Comun.Confirmacion"), MessageBoxButtons.OKCancel, MessageBoxIcon.Question) != DialogResult.OK) return;
+
+            int registradas = 0;
+            int conError = 0;
+            var detalle = new List<string>();
+            foreach (var comision in seleccionadas)
+            {
+                try
+                {
+                    string codigoNuevo = _gestor.RegistrarPreapertura(comision.IdCurso, comision.IdProfesor, comision.DiaSemana, comision.HoraInicio, comision.HoraFin,
+                        comision.CupoMinimo, comision.CupoMaximo, comision.FechaLimitePago, comision.FechaInicio, comision.FechaFin,
+                        comision.ArancelBase, comision.IdPlanDePago, comision.RecargoPlanSnapshot);
+                    registradas++;
+                    detalle.Add("• " + comision.Codigo + "  →  " + IdiomaUiHelper_83KI.Texto("FrmGestionComisiones.DetalleRegistrada", codigoNuevo));
+                    _comisionesDeserializadas.Remove(comision);
+                }
+                catch (Exception ex)
+                {
+                    conError++;
+                    detalle.Add("• " + comision.Codigo + "  →  " + IdiomaUiHelper_83KI.TraducirExcepcion(ex));
+                }
+            }
+
+            string resumen = IdiomaUiHelper_83KI.Texto("FrmGestionComisiones.ResultadoGuardar", registradas, conError)
+                + Environment.NewLine + Environment.NewLine + string.Join(Environment.NewLine + Environment.NewLine, detalle);
+            MessageBox.Show(this, resumen, IdiomaUiHelper_83KI.Texto(conError == 0 ? "Comun.Informacion" : "Comun.Validacion"), MessageBoxButtons.OK, conError == 0 ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
+
+            // Si ya no quedan comisiones del XML pendientes, se vuelve a la grilla de la base de datos.
+            if (_comisionesDeserializadas.Count == 0)
+                Buscar();
+            else
+                MostrarDeserializadas();
         }
 
         private void btnModificar_Click(object sender, EventArgs e)
@@ -284,6 +441,10 @@ namespace UI.Modulos.PlanificacionAcademica
             btnModificar.Visible = PermisosUi_83KI.Tiene(PermisoSistema_83KI.ModificarComision);
             btnEliminar.Visible = PermisosUi_83KI.Tiene(PermisoSistema_83KI.EliminarComision);
             btnRegistrarPreapertura.Visible = PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarPreaperturaComision);
+            btnSerializar.Visible = PermisosUi_83KI.Tiene(PermisoSistema_83KI.SerializarComisiones);
+            btnDeserializar.Visible = PermisosUi_83KI.Tiene(PermisoSistema_83KI.DeserializarComisiones);
+            btnGuardarDeserializadas.Visible = PermisosUi_83KI.Tiene(PermisoSistema_83KI.DeserializarComisiones)
+                && PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarPreaperturaComision);
         }
 
         public void ActualizarIdioma(IIdioma idioma)
@@ -300,6 +461,9 @@ namespace UI.Modulos.PlanificacionAcademica
             btnModificar.Text = IdiomaUiHelper_83KI.Texto("FrmGestionComisiones.Modificar");
             btnEliminar.Text = IdiomaUiHelper_83KI.Texto("FrmGestionComisiones.Eliminar");
             btnRegistrarPreapertura.Text = IdiomaUiHelper_83KI.Texto("FrmGestionComisiones.RegistrarPreapertura");
+            btnSerializar.Text = IdiomaUiHelper_83KI.Texto("FrmGestionComisiones.Serializar");
+            btnDeserializar.Text = IdiomaUiHelper_83KI.Texto("FrmGestionComisiones.Deserializar");
+            btnGuardarDeserializadas.Text = IdiomaUiHelper_83KI.Texto("FrmGestionComisiones.GuardarDeserializadas");
             CargarEstados();
             ConfigurarGrilla();
             dgvComisiones.Refresh();

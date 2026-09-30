@@ -53,6 +53,7 @@
             this.registrarEstadoDefinitivoComisionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.cobrosMorosidadActasToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.reportesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.reporteOcupacionComisionesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuIdioma = new System.Windows.Forms.ToolStripMenuItem();
             this.espanolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.inglesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -261,9 +262,18 @@
             // 
             // reportesToolStripMenuItem
             // 
+            this.reportesToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.reporteOcupacionComisionesToolStripMenuItem});
             this.reportesToolStripMenuItem.Name = "reportesToolStripMenuItem";
             this.reportesToolStripMenuItem.Size = new System.Drawing.Size(84, 24);
             this.reportesToolStripMenuItem.Text = "Reportes";
+            // 
+            // reporteOcupacionComisionesToolStripMenuItem
+            // 
+            this.reporteOcupacionComisionesToolStripMenuItem.Name = "reporteOcupacionComisionesToolStripMenuItem";
+            this.reporteOcupacionComisionesToolStripMenuItem.Size = new System.Drawing.Size(304, 24);
+            this.reporteOcupacionComisionesToolStripMenuItem.Text = "Ocupación de comisiones";
+            this.reporteOcupacionComisionesToolStripMenuItem.Click += new System.EventHandler(this.reporteOcupacionComisionesToolStripMenuItem_Click);
             // 
             // menuIdioma
             // 
@@ -335,6 +345,7 @@
         private System.Windows.Forms.ToolStripMenuItem planificacionAcademicaToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem cobrosMorosidadActasToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem reportesToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem reporteOcupacionComisionesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem gestionProfesoresToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem gestionCursosToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem gestionCursoProfesorToolStripMenuItem;

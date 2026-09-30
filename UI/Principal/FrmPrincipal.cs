@@ -16,6 +16,7 @@ using System.Windows.Forms;
 using UI.Modulos.Maestros;
 using UI.Modulos.PlanificacionAcademica;
 using UI.Modulos.PreInscripcion;
+using UI.Modulos.Reportes;
 
 namespace UI
 {
@@ -93,6 +94,9 @@ namespace UI
             registrarPagoInscripcionToolStripMenuItem.Visible = puedeRegistrarPagoInscripcion;
             registrarEstadoDefinitivoComisionToolStripMenuItem.Visible = puedeRegistrarEstadoDefinitivo;
             planificacionAcademicaToolStripMenuItem.Visible = puedePlanificacionAcademica;
+            bool puedeVerReporteOcupacion = PermisosUi_83KI.Tiene(PermisoSistema_83KI.VerReporteOcupacionComisiones);
+            reporteOcupacionComisionesToolStripMenuItem.Visible = puedeVerReporteOcupacion;
+            reportesToolStripMenuItem.Visible = puedeVerReporteOcupacion;
             maestrosToolStripMenuItem.Visible = PermisosUi_83KI.TienePermisoMaestros();
         }
 
@@ -122,6 +126,7 @@ namespace UI
             registrarEstadoDefinitivoComisionToolStripMenuItem.Text = Texto("FrmPrincipal.RegistrarEstadoDefinitivoComision");
             cobrosMorosidadActasToolStripMenuItem.Text = Texto("FrmPrincipal.CobrosMorosidadActas");
             reportesToolStripMenuItem.Text = Texto("FrmPrincipal.Reportes");
+            reporteOcupacionComisionesToolStripMenuItem.Text = Texto("FrmPrincipal.ReporteOcupacionComisiones");
             reToolStripMenuItem.Text = Texto("FrmPrincipal.Ayuda");
             menuIdioma.Text = Texto("FrmPrincipal.Idioma");
             espanolToolStripMenuItem.Text = Texto("FrmPrincipal.Espanol");
@@ -371,7 +376,7 @@ namespace UI
                 return;
             }
 
-            using (var formulario = new FrmGestionComisiones_83KI(CrearGestorComision()))
+            using (var formulario = new FrmGestionComisiones_83KI(CrearGestorComision(), new KI68ComisionBLL(new ComisionDAL_83KI(), SessionManager_83KI.Instancia)))
             {
                 formulario.ShowDialog(this);
             }
@@ -480,6 +485,23 @@ namespace UI
                     new EstadoDefinitivoComisionDAL_83KI(),
                     SessionManager_83KI.Instancia,
                     new BitacoraBLL_83KI(new BitacoraEventoDAL_83KI()))))
+            {
+                formulario.ShowDialog(this);
+            }
+        }
+
+        private void reporteOcupacionComisionesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!PermisosUi_83KI.Tiene(PermisoSistema_83KI.VerReporteOcupacionComisiones))
+            {
+                IdiomaUiHelper_83KI.MostrarAdvertencia(this, "Errores.SinPermisos", "Comun.Seguridad");
+                return;
+            }
+
+            using (var formulario = new FrmReporteOcupacionComisiones_83KI(
+                new KI68ReporteOcupacionComisionBLL(
+                    new ReporteOcupacionComisionDAL_83KI(),
+                    SessionManager_83KI.Instancia)))
             {
                 formulario.ShowDialog(this);
             }
