@@ -149,6 +149,27 @@ BEGIN
 END
 GO
 
+IF OBJECT_ID(N'dbo.Beca', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Beca(
+        IdBeca INT IDENTITY(1,1) NOT NULL,
+        IdAlumno INT NOT NULL,
+        IdComision INT NOT NULL,
+        IdSolicitudInscripcion INT NOT NULL,
+        TipoBeneficio NVARCHAR(100) NOT NULL,
+        FechaSolicitud DATETIME NOT NULL,
+        EstadoBeca NVARCHAR(30) NOT NULL,
+        MotivoDecision NVARCHAR(500) NOT NULL,
+        DVH VARCHAR(64) NOT NULL CONSTRAINT DF_Beca_DVH DEFAULT '',
+        CONSTRAINT PK_Beca PRIMARY KEY CLUSTERED (IdBeca),
+        CONSTRAINT FK_Beca_Alumno FOREIGN KEY (IdAlumno) REFERENCES dbo.Alumno(IdAlumno),
+        CONSTRAINT FK_Beca_Comision FOREIGN KEY (IdComision) REFERENCES dbo.Comision(IdComision),
+        CONSTRAINT FK_Beca_SolicitudInscripcion FOREIGN KEY (IdSolicitudInscripcion) REFERENCES dbo.SolicitudInscripcion(IdSolicitudInscripcion),
+        CONSTRAINT CK_Beca_EstadoBeca CHECK (EstadoBeca IN (N'Aprobada', N'Denegada'))
+    );
+END
+GO
+
 -- ---------------------------------------------------------------------------
 -- 2. tabla de control DigitoVerificador
 -- ---------------------------------------------------------------------------

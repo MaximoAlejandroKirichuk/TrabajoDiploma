@@ -200,6 +200,24 @@ SELECT N'CursoProfesor', LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL
 WHERE NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'CursoProfesor');
 GO
 
+UPDATE dbo.Beca
+SET DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+    N'EstadoBeca=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), EstadoBeca), N'∅'))), N'|',
+    N'FechaSolicitud=', ISNULL(CONVERT(NVARCHAR(25), FechaSolicitud, 126), N'∅'), N'|',
+    N'IdAlumno=', CONVERT(NVARCHAR(128), IdAlumno), N'|',
+    N'IdBeca=', CONVERT(NVARCHAR(128), IdBeca), N'|',
+    N'IdComision=', CONVERT(NVARCHAR(128), IdComision), N'|',
+    N'IdSolicitudInscripcion=', CONVERT(NVARCHAR(128), IdSolicitudInscripcion), N'|',
+    N'MotivoDecision=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), MotivoDecision), N'∅'))), N'|',
+    N'TipoBeneficio=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), TipoBeneficio), N'∅')))
+)), 2));
+GO
+
+INSERT INTO dbo.DigitoVerificador_83KI (NombreTabla, DVV, FechaActualizacion)
+SELECT N'Beca', LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.Beca ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)), GETDATE()
+WHERE NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'Beca');
+GO
+
 -- Roles DVV
 INSERT INTO dbo.DigitoVerificador_83KI (NombreTabla, DVV, FechaActualizacion)
 SELECT N'Roles',

@@ -86,6 +86,12 @@
     <Compile Include="Modulos\PreInscripcion\FrmRegistrarSolicitudInscripcion_83KI.Designer.cs">
       <DependentUpon>FrmRegistrarSolicitudInscripcion_83KI.cs</DependentUpon>
     </Compile>
+    <Compile Include="Modulos\PreInscripcion\FrmRegistrarDecisionBeca_83KI.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Modulos\PreInscripcion\FrmRegistrarDecisionBeca_83KI.Designer.cs">
+      <DependentUpon>FrmRegistrarDecisionBeca_83KI.cs</DependentUpon>
+    </Compile>
     <Compile Include="Modulos\PlanificacionAcademica\FrmGestionComisiones_83KI.cs">
       <SubType>Form</SubType>
     </Compile>

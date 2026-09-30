@@ -43,6 +43,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DTOs\BitacoraEventoVista_83KI.cs" />
+    <Compile Include="DTOs\BusquedaDecisionBecaResultado_83KI.cs" />
     <Compile Include="DTOs\ComisionListado_83KI.cs" />
     <Compile Include="DTOs\BusquedaInscripcionPersonaResultado_83KI.cs" />
     <Compile Include="DTOs\CuotaPreview_83KI.cs" />
@@ -51,6 +52,8 @@
     <Compile Include="DTOs\BusquedaLeadResultado_83KI.cs" />
     <Compile Include="DTOs\ConsultaLeadRequest_83KI.cs" />
     <Compile Include="DTOs\ConsultaLeadResultado_83KI.cs" />
+    <Compile Include="DTOs\DecisionBecaRequest_83KI.cs" />
+    <Compile Include="DTOs\DecisionBecaResultado_83KI.cs" />
     <Compile Include="DTOs\ResultadoBootstrap_83KI.cs" />
     <Compile Include="DTOs\ConfiguracionConexionBD_83KI.cs" />
     <Compile Include="DTOs\FiltroBitacoraEventos_83KI.cs" />
@@ -89,6 +92,7 @@
     <Compile Include="Interfaces\IBitacoraManager_83KI.cs" />
     <Compile Include="Interfaces\IAlumnoDAL_83KI.cs" />
     <Compile Include="Interfaces\IAlumnoPersonaBLL_83KI.cs" />
+    <Compile Include="Interfaces\IBecaDAL_83KI.cs" />
     <Compile Include="Interfaces\IComisionDAL_83KI.cs" />
     <Compile Include="Interfaces\IComisionConsultaBLL_83KI.cs" />
     <Compile Include="Interfaces\IConsultaLeadDAL_83KI.cs" />
@@ -105,6 +109,7 @@
     <Compile Include="Interfaces\IInscripcionDAL_83KI.cs" />
     <Compile Include="Interfaces\IRecuperacionBaseDatosService_83KI.cs" />
     <Compile Include="Interfaces\observer\IGestorIdioma_83KI.cs" />
+    <Compile Include="Interfaces\IGestorBeca_83KI.cs" />
     <Compile Include="Interfaces\IGestorComision_83KI.cs" />
     <Compile Include="Interfaces\IGestorCursoProfesor_83KI.cs" />
     <Compile Include="Interfaces\IGestorCurso_83KI.cs" />

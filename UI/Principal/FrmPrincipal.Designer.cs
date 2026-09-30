@@ -48,6 +48,7 @@
             this.registrarPreaperturaComisionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.registrarConsultaToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.registrarSolicitudInscripcionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.registrarDecisionBecaToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.cobrosMorosidadActasToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.reportesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuIdioma = new System.Windows.Forms.ToolStripMenuItem();
@@ -192,7 +193,8 @@
             this.gestionComisionesToolStripMenuItem,
             this.registrarPreaperturaComisionToolStripMenuItem,
             this.registrarConsultaToolStripMenuItem,
-            this.registrarSolicitudInscripcionToolStripMenuItem});
+            this.registrarSolicitudInscripcionToolStripMenuItem,
+            this.registrarDecisionBecaToolStripMenuItem});
             this.planificacionAcademicaToolStripMenuItem.Name = "planificacionAcademicaToolStripMenuItem";
             this.planificacionAcademicaToolStripMenuItem.Size = new System.Drawing.Size(189, 24);
             this.planificacionAcademicaToolStripMenuItem.Text = "Planificación Académica";
@@ -225,6 +227,13 @@
             this.registrarSolicitudInscripcionToolStripMenuItem.Size = new System.Drawing.Size(304, 24);
             this.registrarSolicitudInscripcionToolStripMenuItem.Text = "Registrar solicitud de inscripción";
             this.registrarSolicitudInscripcionToolStripMenuItem.Click += new System.EventHandler(this.registrarSolicitudInscripcionToolStripMenuItem_Click);
+            //
+            // registrarDecisionBecaToolStripMenuItem
+            //
+            this.registrarDecisionBecaToolStripMenuItem.Name = "registrarDecisionBecaToolStripMenuItem";
+            this.registrarDecisionBecaToolStripMenuItem.Size = new System.Drawing.Size(304, 24);
+            this.registrarDecisionBecaToolStripMenuItem.Text = "Registrar decisión de beca";
+            this.registrarDecisionBecaToolStripMenuItem.Click += new System.EventHandler(this.registrarDecisionBecaToolStripMenuItem_Click);
             //
             // cobrosMorosidadActasToolStripMenuItem
             // 
@@ -315,5 +324,6 @@
         private System.Windows.Forms.ToolStripMenuItem registrarPreaperturaComisionToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem registrarConsultaToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem registrarSolicitudInscripcionToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem registrarDecisionBecaToolStripMenuItem;
     }
 }

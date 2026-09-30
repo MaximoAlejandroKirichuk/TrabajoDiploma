@@ -88,6 +88,9 @@ namespace Service.DTOs
 
                 new IntegridadTablaConfig_83KI("Cuota",
                     "BalanceAdeudado", "Estado", "FechaVencimiento", "IdCuota", "IdSolicitudInscripcion", "MontoOriginal", "NumeroCuota"),
+
+                new IntegridadTablaConfig_83KI("Beca",
+                    "EstadoBeca", "FechaSolicitud", "IdAlumno", "IdBeca", "IdComision", "IdSolicitudInscripcion", "MotivoDecision", "TipoBeneficio"),
             };
 
         /// <summary>
