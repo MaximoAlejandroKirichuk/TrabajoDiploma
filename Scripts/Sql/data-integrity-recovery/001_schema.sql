@@ -211,3 +211,5 @@ GO
 -- verifica que el esquema se aplico correctamente
 PRINT '001_schema.sql aplicado: tablas protegidas base + Profesor/Curso/CursoProfesor + tabla DigitoVerificador_83KI creadas.';
 GO
+-- CUN06 protects AltaOficialComision and ActaCierreComision.
+-- Apply Scripts/Sql/cun06/001_migracion.sql before running integrity recovery on databases using CUN06.

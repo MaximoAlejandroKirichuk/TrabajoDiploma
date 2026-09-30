@@ -2661,3 +2661,7 @@ BEGIN
     WHERE p.IdPagoInscripcion = @IdPago;
 END
 GO
+/* CUN06 - registrar estado definitivo de comisión.
+   Para bases nuevas o restauradas, aplicar Scripts/Sql/cun06/001_migracion.sql después de este esquema.
+   El cambio agrega AltaOficialComision, ActaCierreComision, permiso 67 y sp_CUN06_*.
+*/

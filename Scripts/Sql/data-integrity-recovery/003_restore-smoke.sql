@@ -459,3 +459,4 @@ PRINT '003_restore-smoke.sql: verificacion desde datos vivos completa (unicode-s
 PRINT 'Parte A muestra discrepancias DVH por fila (vacio = todas las filas PASS).';
 PRINT 'Parte B muestra discrepancias DVV por tabla (recalculado desde datos vivos).';
 GO
+-- CUN06 smoke coverage lives in Scripts/Sql/cun06/002_pruebas_estado_definitivo.sql.

@@ -207,7 +207,7 @@ namespace DAL
         {
             decimal arancelBase = Convert.ToDecimal(row["ArancelBase"]);
             decimal montoMatricula = row.Table.Columns.Contains("MontoMatricula") && row["MontoMatricula"] != DBNull.Value ? Convert.ToDecimal(row["MontoMatricula"]) : arancelBase;
-            return Comision_83KI.ReconstruirDesdePersistencia(Convert.ToInt32(row["IdComision"]), row["Codigo"].ToString(), Convert.ToInt32(row["IdCurso"]), Convert.ToInt32(row["IdProfesor"]), (DayOfWeek)Enum.Parse(typeof(DayOfWeek), row["DiaSemana"].ToString()), (TimeSpan)row["HoraInicio"], (TimeSpan)row["HoraFin"], Convert.ToInt32(row["CupoMinimo"]), Convert.ToInt32(row["CupoMaximo"]), Convert.ToDateTime(row["FechaLimitePago"]), Convert.ToDateTime(row["FechaInicio"]), Convert.ToDateTime(row["FechaFin"]), arancelBase, montoMatricula, Convert.ToInt32(row["IdPlanDePago"]), Convert.ToDecimal(row["RecargoPlanSnapshot"]), row["Estado"].ToString(), row["DVH"].ToString());
+            return Comision_83KI.ReconstruirDesdePersistencia(Convert.ToInt32(row["IdComision"]), row["Codigo"].ToString(), Convert.ToInt32(row["IdCurso"]), Convert.ToInt32(row["IdProfesor"]), ConvertirDiaSemana(row["DiaSemana"].ToString()), (TimeSpan)row["HoraInicio"], (TimeSpan)row["HoraFin"], Convert.ToInt32(row["CupoMinimo"]), Convert.ToInt32(row["CupoMaximo"]), Convert.ToDateTime(row["FechaLimitePago"]), Convert.ToDateTime(row["FechaInicio"]), Convert.ToDateTime(row["FechaFin"]), arancelBase, montoMatricula, Convert.ToInt32(row["IdPlanDePago"]), Convert.ToDecimal(row["RecargoPlanSnapshot"]), row["Estado"].ToString(), row["DVH"].ToString());
         }
 
         private static IEnumerable<ComisionListado_83KI> MapearListado(DataSet ds)
@@ -224,7 +224,7 @@ namespace DAL
                     Curso = row["Curso"].ToString(),
                     IdProfesor = Convert.ToInt32(row["IdProfesor"]),
                     Profesor = row["Profesor"].ToString(),
-                    DiaSemana = (DayOfWeek)Enum.Parse(typeof(DayOfWeek), row["DiaSemana"].ToString()),
+                    DiaSemana = ConvertirDiaSemana(row["DiaSemana"].ToString()),
                     HoraInicio = (TimeSpan)row["HoraInicio"],
                     HoraFin = (TimeSpan)row["HoraFin"],
                     CupoMinimo = Convert.ToInt32(row["CupoMinimo"]),
@@ -238,6 +238,29 @@ namespace DAL
                 });
             }
             return resultado;
+        }
+
+        // La base guarda el dia en ingles (DayOfWeek.ToString()), pero hay datos de prueba cargados en castellano ("Lunes").
+        // Se aceptan ambos formatos para que la grilla no falle al leerlos.
+        private static DayOfWeek ConvertirDiaSemana(string valor)
+        {
+            string dia = (valor ?? string.Empty).Trim();
+            DayOfWeek resultado;
+            if (Enum.TryParse(dia, true, out resultado)) return resultado;
+
+            switch (dia.ToLowerInvariant())
+            {
+                case "lunes": return DayOfWeek.Monday;
+                case "martes": return DayOfWeek.Tuesday;
+                case "miercoles":
+                case "mi\u00e9rcoles": return DayOfWeek.Wednesday;
+                case "jueves": return DayOfWeek.Thursday;
+                case "viernes": return DayOfWeek.Friday;
+                case "sabado":
+                case "s\u00e1bado": return DayOfWeek.Saturday;
+                case "domingo": return DayOfWeek.Sunday;
+                default: throw new InvalidOperationException("Errores.DiaSemanaInvalido");
+            }
         }
 
         private static IEnumerable<Comision_83KI> MapearComisiones(DataSet ds)

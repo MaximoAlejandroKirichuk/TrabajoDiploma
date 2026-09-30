@@ -6,6 +6,7 @@ namespace BE.Entidades
     {
         public const string EstadoPendiente = "pendiente";
         public const string EstadoPagada = "pagada";
+        public const string EstadoReintegroPendiente = "reintegro_pendiente";
 
         public int IdCuota { get; private set; }
         public int IdSolicitudInscripcion { get; private set; }

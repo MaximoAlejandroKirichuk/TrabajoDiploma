@@ -81,6 +81,8 @@ namespace Service.Entidades
 
             // --- Planificacion Academica ---
             new EventoBitacoraOpcion_83KI(Modulo.PlanificacionAcademica, "Registro de preapertura de comisión", "Registro de preapertura de comisión:"),
+            new EventoBitacoraOpcion_83KI(Modulo.PlanificacionAcademica, "Registro de alta oficial de comisión", "Registro de alta oficial de comisión:"),
+            new EventoBitacoraOpcion_83KI(Modulo.PlanificacionAcademica, "Registro de cierre de comisión", "Registro de cierre de comisión:"),
 
             // --- PreInscripcion ---
             new EventoBitacoraOpcion_83KI(Modulo.PreInscripcion, "Registro de consulta lead", "Registro de consulta lead:"),

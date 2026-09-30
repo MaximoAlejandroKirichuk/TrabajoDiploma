@@ -50,6 +50,7 @@
             this.registrarSolicitudInscripcionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.registrarDecisionBecaToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.registrarPagoInscripcionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.registrarEstadoDefinitivoComisionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.cobrosMorosidadActasToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.reportesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuIdioma = new System.Windows.Forms.ToolStripMenuItem();
@@ -196,7 +197,8 @@
             this.registrarConsultaToolStripMenuItem,
             this.registrarSolicitudInscripcionToolStripMenuItem,
             this.registrarDecisionBecaToolStripMenuItem,
-            this.registrarPagoInscripcionToolStripMenuItem});
+            this.registrarPagoInscripcionToolStripMenuItem,
+            this.registrarEstadoDefinitivoComisionToolStripMenuItem});
             this.planificacionAcademicaToolStripMenuItem.Name = "planificacionAcademicaToolStripMenuItem";
             this.planificacionAcademicaToolStripMenuItem.Size = new System.Drawing.Size(189, 24);
             this.planificacionAcademicaToolStripMenuItem.Text = "Planificación Académica";
@@ -243,6 +245,13 @@
             this.registrarPagoInscripcionToolStripMenuItem.Size = new System.Drawing.Size(304, 24);
             this.registrarPagoInscripcionToolStripMenuItem.Text = "Registrar pago de inscripción";
             this.registrarPagoInscripcionToolStripMenuItem.Click += new System.EventHandler(this.registrarPagoInscripcionToolStripMenuItem_Click);
+            //
+            // registrarEstadoDefinitivoComisionToolStripMenuItem
+            //
+            this.registrarEstadoDefinitivoComisionToolStripMenuItem.Name = "registrarEstadoDefinitivoComisionToolStripMenuItem";
+            this.registrarEstadoDefinitivoComisionToolStripMenuItem.Size = new System.Drawing.Size(304, 24);
+            this.registrarEstadoDefinitivoComisionToolStripMenuItem.Text = "Registrar estado definitivo";
+            this.registrarEstadoDefinitivoComisionToolStripMenuItem.Click += new System.EventHandler(this.registrarEstadoDefinitivoComisionToolStripMenuItem_Click);
             //
             // cobrosMorosidadActasToolStripMenuItem
             // 
@@ -335,5 +344,6 @@
         private System.Windows.Forms.ToolStripMenuItem registrarSolicitudInscripcionToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem registrarDecisionBecaToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem registrarPagoInscripcionToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem registrarEstadoDefinitivoComisionToolStripMenuItem;
     }
 }

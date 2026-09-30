@@ -45,7 +45,11 @@
     <Compile Include="DTOs\BitacoraEventoVista_83KI.cs" />
     <Compile Include="DTOs\BusquedaDecisionBecaResultado_83KI.cs" />
     <Compile Include="DTOs\BusquedaPagoInscripcionResultado_83KI.cs" />
+    <Compile Include="DTOs\ActaCierreComisionRequest_83KI.cs" />
+    <Compile Include="DTOs\AltaOficialComisionRequest_83KI.cs" />
     <Compile Include="DTOs\ComisionListado_83KI.cs" />
+    <Compile Include="DTOs\ComisionEstadoDefinitivoListado_83KI.cs" />
+    <Compile Include="DTOs\EvaluacionQuorumComision_83KI.cs" />
     <Compile Include="DTOs\BusquedaInscripcionPersonaResultado_83KI.cs" />
     <Compile Include="DTOs\CuotaPreview_83KI.cs" />
     <Compile Include="DTOs\SolicitudInscripcionRequest_83KI.cs" />
@@ -57,6 +61,7 @@
     <Compile Include="DTOs\DecisionBecaResultado_83KI.cs" />
     <Compile Include="DTOs\PagoInscripcionRequest_83KI.cs" />
     <Compile Include="DTOs\PagoInscripcionResultado_83KI.cs" />
+    <Compile Include="DTOs\ResultadoEstadoDefinitivoComision_83KI.cs" />
     <Compile Include="DTOs\ResultadoBootstrap_83KI.cs" />
     <Compile Include="DTOs\ConfiguracionConexionBD_83KI.cs" />
     <Compile Include="DTOs\FiltroBitacoraEventos_83KI.cs" />
@@ -96,6 +101,8 @@
     <Compile Include="Interfaces\IAlumnoDAL_83KI.cs" />
     <Compile Include="Interfaces\IPagoInscripcionBLL_83KI.cs" />
     <Compile Include="Interfaces\IPagoInscripcionDAL_83KI.cs" />
+    <Compile Include="Interfaces\IEstadoDefinitivoComisionBLL_83KI.cs" />
+    <Compile Include="Interfaces\IEstadoDefinitivoComisionDAL_83KI.cs" />
     <Compile Include="Interfaces\IAlumnoPersonaBLL_83KI.cs" />
     <Compile Include="Interfaces\IBecaDAL_83KI.cs" />
     <Compile Include="Interfaces\IComisionDAL_83KI.cs" />

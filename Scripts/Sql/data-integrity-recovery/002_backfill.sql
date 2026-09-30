@@ -322,3 +322,4 @@ GO
 
 PRINT '002_backfill.sql aplicado: DVH backfilleado + semillas DVV pobladas para las 8 tablas protegidas (unicode-safe).';
 GO
+-- CUN06 adds DVH/DVV metadata for AltaOficialComision and ActaCierreComision through Scripts/Sql/cun06/001_migracion.sql.

@@ -42,6 +42,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Entidades\Alumno_83KI.cs" />
+    <Compile Include="Entidades\ActaCierreComision_83KI.cs" />
+    <Compile Include="Entidades\AltaOficialComision_83KI.cs" />
     <Compile Include="Entidades\Beca_83KI.cs" />
     <Compile Include="Entidades\Cuota_83KI.cs" />
     <Compile Include="Entidades\PagoInscripcion_83KI.cs" />

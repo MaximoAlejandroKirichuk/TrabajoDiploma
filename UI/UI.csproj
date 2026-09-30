@@ -74,6 +74,12 @@
     <Compile Include="Modulos\PlanificacionAcademica\FrmRegistrarPreaperturaComision_83KI.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Modulos\PlanificacionAcademica\FrmRegistrarEstadoDefinitivoComision_83KI.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Modulos\PlanificacionAcademica\FrmRegistrarEstadoDefinitivoComision_83KI.Designer.cs">
+      <DependentUpon>FrmRegistrarEstadoDefinitivoComision_83KI.cs</DependentUpon>
+    </Compile>
     <Compile Include="Modulos\PreInscripcion\FrmRegistrarConsultaLead_83KI.cs">
       <SubType>Form</SubType>
     </Compile>

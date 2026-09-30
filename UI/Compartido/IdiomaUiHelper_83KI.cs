@@ -143,6 +143,12 @@ namespace UI
             }
 
             string mensaje = ex.Message ?? string.Empty;
+            // ArgumentException agrega "Parameter name: x" en una segunda linea; se descarta para poder traducir la clave.
+            if (ex is ArgumentException)
+            {
+                int saltoLinea = mensaje.IndexOfAny(new[] { '\r', '\n' });
+                if (saltoLinea >= 0) mensaje = mensaje.Substring(0, saltoLinea).Trim();
+            }
             string clave;
             if (ClavesErrores.TryGetValue(mensaje, out clave))
             {

@@ -5,6 +5,8 @@ namespace BE.Entidades
     public class Comision_83KI
     {
         public const string EstadoPreapertura = "preapertura";
+        public const string EstadoConfirmada = "confirmada";
+        public const string EstadoCanceladaFaltaQuorum = "cancelada_falta_quorum";
         public const string EstadoEliminada = "eliminada";
 
         public int IdComision { get; private set; }
@@ -65,7 +67,24 @@ namespace BE.Entidades
 
         public static Comision_83KI ReconstruirDesdePersistencia(int idComision, string codigo, int idCurso, int idProfesor, DayOfWeek diaSemana, TimeSpan horaInicio, TimeSpan horaFin, int cupoMinimo, int cupoMaximo, DateTime fechaLimitePago, DateTime fechaInicio, DateTime fechaFin, decimal arancelBase, decimal montoMatricula, int idPlanDePago, decimal recargoPlanSnapshot, string estado, string dvh)
         {
-            var comision = CrearPreapertura(idCurso, idProfesor, diaSemana, horaInicio, horaFin, cupoMinimo, cupoMaximo, fechaLimitePago, fechaInicio, fechaFin, arancelBase, montoMatricula, idPlanDePago, recargoPlanSnapshot);
+            ValidarPersistencia(idComision, idCurso, idProfesor, horaInicio, horaFin, cupoMinimo, cupoMaximo, fechaInicio, fechaFin, arancelBase, montoMatricula, idPlanDePago, recargoPlanSnapshot);
+            var comision = new Comision_83KI
+            {
+                IdCurso = idCurso,
+                IdProfesor = idProfesor,
+                DiaSemana = diaSemana,
+                HoraInicio = horaInicio,
+                HoraFin = horaFin,
+                CupoMinimo = cupoMinimo,
+                CupoMaximo = cupoMaximo,
+                FechaLimitePago = fechaLimitePago.Date,
+                FechaInicio = fechaInicio.Date,
+                FechaFin = fechaFin.Date,
+                ArancelBase = arancelBase,
+                MontoMatricula = montoMatricula,
+                IdPlanDePago = idPlanDePago,
+                RecargoPlanSnapshot = recargoPlanSnapshot
+            };
             comision.IdComision = idComision;
             comision.Codigo = codigo ?? string.Empty;
             comision.Estado = estado ?? EstadoPreapertura;
@@ -102,6 +121,22 @@ namespace BE.Entidades
             if (cupoMinimo <= 0) throw new ArgumentException("Errores.CupoMinimoInvalido", nameof(cupoMinimo));
             if (cupoMaximo < cupoMinimo) throw new ArgumentException("Errores.CupoMaximoInvalido", nameof(cupoMaximo));
             if (fechaLimitePago.Date < DateTime.Today) throw new ArgumentException("Errores.FechaLimitePagoInvalida", nameof(fechaLimitePago));
+            if (fechaInicio == DateTime.MinValue || fechaFin == DateTime.MinValue) throw new ArgumentException("Errores.FechasComisionObligatorias");
+            if (fechaInicio.Date > fechaFin.Date) throw new ArgumentException("Errores.RangoFechasComisionInvalido");
+            if (arancelBase <= 0) throw new ArgumentException("Errores.ArancelBaseInvalido", nameof(arancelBase));
+            if (montoMatricula <= 0) throw new ArgumentException("Errores.MontoMatriculaInvalido", nameof(montoMatricula));
+            if (idPlanDePago <= 0) throw new ArgumentException("Errores.PlanDePagoObligatorio", nameof(idPlanDePago));
+            if (recargoPlanSnapshot < 0) throw new ArgumentException("Errores.RecargoPlanInvalido", nameof(recargoPlanSnapshot));
+        }
+
+        private static void ValidarPersistencia(int idComision, int idCurso, int idProfesor, TimeSpan horaInicio, TimeSpan horaFin, int cupoMinimo, int cupoMaximo, DateTime fechaInicio, DateTime fechaFin, decimal arancelBase, decimal montoMatricula, int idPlanDePago, decimal recargoPlanSnapshot)
+        {
+            if (idComision <= 0) throw new ArgumentException("Errores.ComisionNoEncontrada", nameof(idComision));
+            if (idCurso <= 0) throw new ArgumentException("Errores.CursoObligatorio", nameof(idCurso));
+            if (idProfesor <= 0) throw new ArgumentException("Errores.ProfesorObligatorio", nameof(idProfesor));
+            if (horaInicio >= horaFin) throw new ArgumentException("Errores.HorarioInvalido");
+            if (cupoMinimo <= 0) throw new ArgumentException("Errores.CupoMinimoInvalido", nameof(cupoMinimo));
+            if (cupoMaximo < cupoMinimo) throw new ArgumentException("Errores.CupoMaximoInvalido", nameof(cupoMaximo));
             if (fechaInicio == DateTime.MinValue || fechaFin == DateTime.MinValue) throw new ArgumentException("Errores.FechasComisionObligatorias");
             if (fechaInicio.Date > fechaFin.Date) throw new ArgumentException("Errores.RangoFechasComisionInvalido");
             if (arancelBase <= 0) throw new ArgumentException("Errores.ArancelBaseInvalido", nameof(arancelBase));

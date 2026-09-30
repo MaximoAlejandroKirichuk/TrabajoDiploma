@@ -57,6 +57,8 @@ namespace DAL
                 { "Cuota",           new[] { "IdCuota" } },
                 { "Beca",            new[] { "IdBeca" } },
                 { "PagoInscripcion", new[] { "IdPagoInscripcion" } },
+                { "AltaOficialComision", new[] { "IdAltaOficialComision" } },
+                { "ActaCierreComision",  new[] { "IdActaCierreComision" } },
             };
 
         // ------------------------------------------------------------------ //
@@ -108,7 +110,7 @@ namespace DAL
         public List<IntegridadFilaInconsistencia_83KI> ObtenerFilasInconsistentes(string nombreTabla)
         {
             var config = ResolverConfig(nombreTabla);
-            var pkCols = PK[nombreTabla];
+            var pkCols = ResolverPk(nombreTabla);
             var inconsistencias = new List<IntegridadFilaInconsistencia_83KI>();
 
             string sql = $"SELECT * FROM {nombreTabla}";
@@ -288,7 +290,7 @@ namespace DAL
             SqlTransaction tran)
         {
             var config = ResolverConfig(nombreTabla);
-            var pkCols = PK[nombreTabla];
+            var pkCols = ResolverPk(nombreTabla);
 
             // construye clausula where desde las columnas pk
             var whereClauses = new List<string>();
@@ -313,6 +315,13 @@ namespace DAL
             if (config == null)
                 throw new ArgumentException($"Table '{nombreTabla}' is not a protected table.");
             return config;
+        }
+
+        private static string[] ResolverPk(string nombreTabla)
+        {
+            if (!PK.TryGetValue(nombreTabla, out string[] pkCols) || pkCols == null || pkCols.Length == 0)
+                throw new InvalidOperationException($"Protected table '{nombreTabla}' does not have primary-key metadata configured for integrity recovery.");
+            return pkCols;
         }
 
         /// <summary>
@@ -493,7 +502,7 @@ namespace DAL
             SqlTransaction tran)
         {
             string nombreTabla = config.NombreTabla;
-            string[] pkCols = PK[nombreTabla];
+            string[] pkCols = ResolverPk(nombreTabla);
 
             // 1. lee todas las filas (excluyendo dvh) de la tabla
             string selectSql = $"SELECT * FROM {nombreTabla}";
