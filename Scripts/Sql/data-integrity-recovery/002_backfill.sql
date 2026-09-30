@@ -302,5 +302,23 @@ SELECT N'FamiliaFamilia',
 WHERE NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'FamiliaFamilia');
 GO
 
+UPDATE dbo.PagoInscripcion
+SET DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+    N'FechaPago=', ISNULL(CONVERT(NVARCHAR(25), FechaPago, 126), N'∅'), N'|',
+    N'IdAlumno=', CONVERT(NVARCHAR(128), IdAlumno), N'|',
+    N'IdCuota=', CONVERT(NVARCHAR(128), IdCuota), N'|',
+    N'IdPagoInscripcion=', CONVERT(NVARCHAR(128), IdPagoInscripcion), N'|',
+    N'IdSolicitudInscripcion=', CONVERT(NVARCHAR(128), IdSolicitudInscripcion), N'|',
+    N'MetodoPago=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), MetodoPago), N'∅'))), N'|',
+    N'MontoPagado=', CONVERT(NVARCHAR(128), MontoPagado), N'|',
+    N'NumeroReferencia=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), NumeroReferencia), N'∅')))
+)), 2));
+GO
+
+INSERT INTO dbo.DigitoVerificador_83KI (NombreTabla, DVV, FechaActualizacion)
+SELECT N'PagoInscripcion', LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.PagoInscripcion ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)), GETDATE()
+WHERE NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'PagoInscripcion');
+GO
+
 PRINT '002_backfill.sql aplicado: DVH backfilleado + semillas DVV pobladas para las 8 tablas protegidas (unicode-safe).';
 GO

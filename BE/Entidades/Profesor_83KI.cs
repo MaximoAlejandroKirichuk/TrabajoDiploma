@@ -11,7 +11,7 @@ namespace BE.Entidades
         public string DNI { get; private set; }
         public string Nombre { get; private set; }
         public string Apellido { get; private set; }
-        public string NombreCompleto { get { return $"{Apellido}, {Nombre}"; } }
+        public string NombreCompleto { get { return Apellido + ", " + Nombre; } }
         public string Email { get; private set; }
         public bool EstadoActivo { get; private set; }
         public string DVH { get; private set; }

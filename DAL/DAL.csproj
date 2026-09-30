@@ -45,6 +45,7 @@
     <Compile Include="AlumnoDAL_83KI.cs" />
     <Compile Include="BecaDAL_83KI.cs" />
     <Compile Include="BitacoraEventoDAL_83KI.cs" />
+    <Compile Include="PagoInscripcionDAL_83KI.cs" />
     <Compile Include="BootstrapBaseDatosDAL_83KI.cs" />
     <Compile Include="ComisionDAL_83KI.cs" />
     <Compile Include="ConsultaLeadDAL_83KI.cs" />

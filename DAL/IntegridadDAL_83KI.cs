@@ -56,6 +56,7 @@ namespace DAL
                 { "SolicitudInscripcion", new[] { "IdSolicitudInscripcion" } },
                 { "Cuota",           new[] { "IdCuota" } },
                 { "Beca",            new[] { "IdBeca" } },
+                { "PagoInscripcion", new[] { "IdPagoInscripcion" } },
             };
 
         // ------------------------------------------------------------------ //

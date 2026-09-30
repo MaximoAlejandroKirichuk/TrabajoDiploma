@@ -82,6 +82,7 @@ namespace Service.Entidades
         ModificarComision = 62,
         EliminarComision = 63,
         RegistrarSolicitudInscripcion = 64,
-        RegistrarDecisionBeca = 65
+        RegistrarDecisionBeca = 65,
+        RegistrarPagoInscripcion = 66
     }
 }

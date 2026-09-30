@@ -5,6 +5,7 @@ namespace BE.Entidades
     public class Cuota_83KI
     {
         public const string EstadoPendiente = "pendiente";
+        public const string EstadoPagada = "pagada";
 
         public int IdCuota { get; private set; }
         public int IdSolicitudInscripcion { get; private set; }

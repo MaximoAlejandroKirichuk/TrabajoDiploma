@@ -170,6 +170,27 @@ BEGIN
 END
 GO
 
+IF OBJECT_ID(N'dbo.PagoInscripcion', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.PagoInscripcion(
+        IdPagoInscripcion INT IDENTITY(1,1) NOT NULL,
+        IdAlumno INT NOT NULL,
+        IdSolicitudInscripcion INT NOT NULL,
+        IdCuota INT NOT NULL,
+        MetodoPago NVARCHAR(30) NOT NULL,
+        MontoPagado DECIMAL(18,2) NOT NULL,
+        NumeroReferencia NVARCHAR(100) NOT NULL,
+        FechaPago DATETIME NOT NULL,
+        DVH VARCHAR(64) NOT NULL CONSTRAINT DF_PagoInscripcion_DVH DEFAULT '',
+        CONSTRAINT PK_PagoInscripcion PRIMARY KEY CLUSTERED (IdPagoInscripcion),
+        CONSTRAINT FK_PagoInscripcion_Alumno FOREIGN KEY (IdAlumno) REFERENCES dbo.Alumno(IdAlumno),
+        CONSTRAINT FK_PagoInscripcion_SolicitudInscripcion FOREIGN KEY (IdSolicitudInscripcion) REFERENCES dbo.SolicitudInscripcion(IdSolicitudInscripcion),
+        CONSTRAINT FK_PagoInscripcion_Cuota FOREIGN KEY (IdCuota) REFERENCES dbo.Cuota(IdCuota),
+        CONSTRAINT CK_PagoInscripcion_MetodoPago CHECK (MetodoPago IN (N'transferencia', N'tarjeta', N'billetera virtual'))
+    );
+END
+GO
+
 -- ---------------------------------------------------------------------------
 -- 2. tabla de control DigitoVerificador
 -- ---------------------------------------------------------------------------

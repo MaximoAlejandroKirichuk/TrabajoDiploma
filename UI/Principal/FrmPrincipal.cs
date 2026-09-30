@@ -82,12 +82,14 @@ namespace UI
             bool puedeRegistrarConsulta = PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarConsultaLead);
             bool puedeRegistrarSolicitudInscripcion = PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarSolicitudInscripcion);
             bool puedeRegistrarDecisionBeca = PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarDecisionBeca);
-            bool puedePlanificacionAcademica = puedeRegistrarPreapertura || puedeVerComisiones || puedeRegistrarConsulta || puedeRegistrarSolicitudInscripcion || puedeRegistrarDecisionBeca;
+            bool puedeRegistrarPagoInscripcion = PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarPagoInscripcion);
+            bool puedePlanificacionAcademica = puedeRegistrarPreapertura || puedeVerComisiones || puedeRegistrarConsulta || puedeRegistrarSolicitudInscripcion || puedeRegistrarDecisionBeca || puedeRegistrarPagoInscripcion;
             gestionComisionesToolStripMenuItem.Visible = puedeVerComisiones;
             registrarPreaperturaComisionToolStripMenuItem.Visible = puedeRegistrarPreapertura;
             registrarConsultaToolStripMenuItem.Visible = puedeRegistrarConsulta;
             registrarSolicitudInscripcionToolStripMenuItem.Visible = puedeRegistrarSolicitudInscripcion;
             registrarDecisionBecaToolStripMenuItem.Visible = puedeRegistrarDecisionBeca;
+            registrarPagoInscripcionToolStripMenuItem.Visible = puedeRegistrarPagoInscripcion;
             planificacionAcademicaToolStripMenuItem.Visible = puedePlanificacionAcademica;
             maestrosToolStripMenuItem.Visible = PermisosUi_83KI.TienePermisoMaestros();
         }
@@ -114,6 +116,7 @@ namespace UI
             registrarConsultaToolStripMenuItem.Text = Texto("FrmPrincipal.RegistrarConsulta");
             registrarSolicitudInscripcionToolStripMenuItem.Text = Texto("FrmPrincipal.RegistrarSolicitudInscripcion");
             registrarDecisionBecaToolStripMenuItem.Text = Texto("FrmPrincipal.RegistrarDecisionBeca");
+            registrarPagoInscripcionToolStripMenuItem.Text = Texto("FrmPrincipal.RegistrarPagoInscripcion");
             cobrosMorosidadActasToolStripMenuItem.Text = Texto("FrmPrincipal.CobrosMorosidadActas");
             reportesToolStripMenuItem.Text = Texto("FrmPrincipal.Reportes");
             reToolStripMenuItem.Text = Texto("FrmPrincipal.Ayuda");
@@ -428,6 +431,24 @@ namespace UI
                 new KI68GestorBecaBLL(
                     new BecaDAL_83KI(),
                     new InscripcionDAL_83KI(),
+                    SessionManager_83KI.Instancia,
+                    new BitacoraBLL_83KI(new BitacoraEventoDAL_83KI()))))
+            {
+                formulario.ShowDialog(this);
+            }
+        }
+
+        private void registrarPagoInscripcionToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarPagoInscripcion))
+            {
+                IdiomaUiHelper_83KI.MostrarAdvertencia(this, "Errores.SinPermisos", "Comun.Seguridad");
+                return;
+            }
+
+            using (var formulario = new FrmRegistrarPagoInscripcion_83KI(
+                new KI68PagoInscripcionBLL(
+                    new PagoInscripcionDAL_83KI(),
                     SessionManager_83KI.Instancia,
                     new BitacoraBLL_83KI(new BitacoraEventoDAL_83KI()))))
             {
