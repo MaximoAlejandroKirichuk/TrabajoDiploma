@@ -97,7 +97,7 @@ namespace DAL
                     Curso = row["Curso"].ToString(),
                     IdProfesor = Convert.ToInt32(row["IdProfesor"]),
                     Profesor = row["Profesor"].ToString(),
-                    DiaSemana = (DayOfWeek)Enum.Parse(typeof(DayOfWeek), row["DiaSemana"].ToString()),
+                    DiaSemana = ConvertirDiaSemana(row["DiaSemana"].ToString()),
                     HoraInicio = (TimeSpan)row["HoraInicio"],
                     HoraFin = (TimeSpan)row["HoraFin"],
                     CupoMinimo = Convert.ToInt32(row["CupoMinimo"]),
@@ -139,5 +139,28 @@ namespace DAL
 
         private static string Normalizar(string value) { return (value ?? string.Empty).Trim(); }
         private static string NormalizarTelefono(string value) { return Normalizar(value).Replace(" ", string.Empty).Replace("-", string.Empty); }
+
+        // La base guarda el dia en ingles (DayOfWeek.ToString()), pero hay datos de prueba cargados en castellano ("Lunes").
+        // Se aceptan ambos formatos para que la grilla no falle al leerlos.
+        private static DayOfWeek ConvertirDiaSemana(string valor)
+        {
+            string dia = (valor ?? string.Empty).Trim();
+            DayOfWeek resultado;
+            if (Enum.TryParse(dia, true, out resultado)) return resultado;
+
+            switch (dia.ToLowerInvariant())
+            {
+                case "lunes": return DayOfWeek.Monday;
+                case "martes": return DayOfWeek.Tuesday;
+                case "miercoles":
+                case "miércoles": return DayOfWeek.Wednesday;
+                case "jueves": return DayOfWeek.Thursday;
+                case "viernes": return DayOfWeek.Friday;
+                case "sabado":
+                case "sábado": return DayOfWeek.Saturday;
+                case "domingo": return DayOfWeek.Sunday;
+                default: throw new InvalidOperationException("Errores.DiaSemanaInvalido");
+            }
+        }
     }
 }
