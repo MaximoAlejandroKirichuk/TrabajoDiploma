@@ -2111,6 +2111,14 @@ BEGIN
 END
 GO
 
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_SolicitudInscripcion_AlumnoComision' AND object_id = OBJECT_ID(N'dbo.SolicitudInscripcion'))
+    CREATE INDEX IX_SolicitudInscripcion_AlumnoComision ON dbo.SolicitudInscripcion (IdAlumno, IdComision) INCLUDE (Estado, IdSolicitudInscripcion);
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Cuota_SolicitudEstadoBalance' AND object_id = OBJECT_ID(N'dbo.Cuota'))
+    CREATE INDEX IX_Cuota_SolicitudEstadoBalance ON dbo.Cuota (IdSolicitudInscripcion, Estado, BalanceAdeudado);
+GO
+
 IF NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'Alumno')
     INSERT INTO dbo.DigitoVerificador_83KI (NombreTabla, DVV, FechaActualizacion) VALUES (N'Alumno', '', GETDATE());
 IF NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'SolicitudInscripcion')
@@ -2265,6 +2273,12 @@ BEGIN
         IF @IdAlumno IS NULL SELECT @IdAlumno = IdAlumno FROM dbo.Alumno WITH (UPDLOCK, HOLDLOCK) WHERE DNI = @DNI;
         IF @IdAlumno IS NULL BEGIN INSERT INTO dbo.Alumno (DNI, Nombre, Apellido, Email, Telefono, FechaAlta, Estado, DVH) VALUES (@DNI, @Nombre, @Apellido, @Email, @Telefono, GETDATE(), N'activo', N''); SET @IdAlumno = SCOPE_IDENTITY(); END
         IF EXISTS (SELECT 1 FROM dbo.SolicitudInscripcion WITH (UPDLOCK, HOLDLOCK) WHERE IdAlumno = @IdAlumno AND IdComision = @IdComision AND Estado IN (N'pendiente', N'confirmada', N'activa')) THROW 52003, N'Errores.InscripcionDuplicada', 1;
+        IF EXISTS (
+            SELECT 1 FROM dbo.SolicitudInscripcion si WITH (UPDLOCK, HOLDLOCK, INDEX(IX_SolicitudInscripcion_AlumnoComision))
+            INNER JOIN dbo.Cuota cu WITH (UPDLOCK, HOLDLOCK, INDEX(IX_Cuota_SolicitudEstadoBalance)) ON cu.IdSolicitudInscripcion = si.IdSolicitudInscripcion
+            WHERE si.IdAlumno = @IdAlumno AND si.IdComision = @IdComision
+              AND cu.Estado = N'pendiente' AND cu.BalanceAdeudado > 0
+        ) THROW 52005, N'Errores.InscripcionPendienteDeuda', 1;
         SELECT @VacantesDisponibles = c.CupoMaximo - COUNT(si.IdSolicitudInscripcion) FROM dbo.Comision c WITH (UPDLOCK, HOLDLOCK) LEFT JOIN dbo.SolicitudInscripcion si ON si.IdComision = c.IdComision AND si.Estado IN (N'pendiente', N'confirmada', N'activa') WHERE c.IdComision = @IdComision GROUP BY c.CupoMaximo;
         IF ISNULL(@VacantesDisponibles, 0) <= 0 THROW 52004, N'Errores.SinVacantesComision', 1;
         INSERT INTO dbo.SolicitudInscripcion (Codigo, IdAlumno, IdLeadOrigen, IdComision, IdPlanDePago, RecargoPlanSnapshot, FechaSolicitud, Estado, Observaciones, DVH) VALUES (N'', @IdAlumno, @IdLead, @IdComision, @IdPlanDePago, @Recargo, GETDATE(), N'pendiente', ISNULL(@Observaciones, N''), N'');

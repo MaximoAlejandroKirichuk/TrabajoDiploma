@@ -1,4 +1,5 @@
 using BE.Entidades;
+using System;
 
 namespace Service.DTOs
 {
@@ -12,5 +13,11 @@ namespace Service.DTOs
         public string Curso { get; set; }
         public string CodigoSolicitud { get; set; }
         public bool AuditoriaFallida { get; set; }
+        public string NumeroReciboInstitucional { get; set; }
+        public string FacturaTexto { get; set; }
+        public string FacturaConcepto { get; set; }
+        public decimal FacturaTotal { get; set; }
+        public DateTime FacturaFecha { get; set; }
+        public int IdFactura { get; set; }
     }
 }

@@ -198,7 +198,6 @@
             this.registrarConsultaToolStripMenuItem,
             this.registrarSolicitudInscripcionToolStripMenuItem,
             this.registrarDecisionBecaToolStripMenuItem,
-            this.registrarPagoInscripcionToolStripMenuItem,
             this.registrarEstadoDefinitivoComisionToolStripMenuItem});
             this.planificacionAcademicaToolStripMenuItem.Name = "planificacionAcademicaToolStripMenuItem";
             this.planificacionAcademicaToolStripMenuItem.Size = new System.Drawing.Size(189, 24);
@@ -256,6 +255,8 @@
             //
             // cobrosMorosidadActasToolStripMenuItem
             // 
+            this.cobrosMorosidadActasToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.registrarPagoInscripcionToolStripMenuItem});
             this.cobrosMorosidadActasToolStripMenuItem.Name = "cobrosMorosidadActasToolStripMenuItem";
             this.cobrosMorosidadActasToolStripMenuItem.Size = new System.Drawing.Size(208, 24);
             this.cobrosMorosidadActasToolStripMenuItem.Text = "Cobros, Morosidad y Actas";

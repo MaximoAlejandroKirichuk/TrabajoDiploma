@@ -85,7 +85,7 @@ namespace UI
             bool puedeRegistrarDecisionBeca = PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarDecisionBeca);
             bool puedeRegistrarPagoInscripcion = PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarPagoInscripcion);
             bool puedeRegistrarEstadoDefinitivo = PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarEstadoDefinitivoComision);
-            bool puedePlanificacionAcademica = puedeRegistrarPreapertura || puedeVerComisiones || puedeRegistrarConsulta || puedeRegistrarSolicitudInscripcion || puedeRegistrarDecisionBeca || puedeRegistrarPagoInscripcion || puedeRegistrarEstadoDefinitivo;
+            bool puedePlanificacionAcademica = puedeRegistrarPreapertura || puedeVerComisiones || puedeRegistrarConsulta || puedeRegistrarSolicitudInscripcion || puedeRegistrarDecisionBeca || puedeRegistrarEstadoDefinitivo;
             gestionComisionesToolStripMenuItem.Visible = puedeVerComisiones;
             registrarPreaperturaComisionToolStripMenuItem.Visible = puedeRegistrarPreapertura;
             registrarConsultaToolStripMenuItem.Visible = puedeRegistrarConsulta;
@@ -94,6 +94,7 @@ namespace UI
             registrarPagoInscripcionToolStripMenuItem.Visible = puedeRegistrarPagoInscripcion;
             registrarEstadoDefinitivoComisionToolStripMenuItem.Visible = puedeRegistrarEstadoDefinitivo;
             planificacionAcademicaToolStripMenuItem.Visible = puedePlanificacionAcademica;
+            cobrosMorosidadActasToolStripMenuItem.Visible = puedeRegistrarPagoInscripcion;
             bool puedeVerReporteOcupacion = PermisosUi_83KI.Tiene(PermisoSistema_83KI.VerReporteOcupacionComisiones);
             reporteOcupacionComisionesToolStripMenuItem.Visible = puedeVerReporteOcupacion;
             reportesToolStripMenuItem.Visible = puedeVerReporteOcupacion;

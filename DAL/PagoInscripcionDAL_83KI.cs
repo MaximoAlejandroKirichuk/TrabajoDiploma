@@ -15,6 +15,19 @@ namespace DAL
         private readonly AccesoDAL_83KI _accesoDAL = new AccesoDAL_83KI();
         private readonly IntegridadDAL_83KI _integridadDAL = new IntegridadDAL_83KI(new Encriptador_83KI());
 
+        public IEnumerable<ComisionPagoOpcion_83KI> ListarComisionesConCuotasPendientes(string dni)
+        {
+            var ds = _accesoDAL.LeerStoredProcedure("sp_CUN07_ListarComisionesPago", new List<SqlParameter>
+            {
+                new SqlParameter("@DNI", Normalizar(dni))
+            });
+            var resultado = new List<ComisionPagoOpcion_83KI>();
+            if (ds == null || ds.Tables.Count == 0) return resultado;
+            foreach (DataRow row in ds.Tables[0].Rows)
+                resultado.Add(new ComisionPagoOpcion_83KI { Codigo = row["CodigoComision"].ToString(), Descripcion = row["Descripcion"].ToString() });
+            return resultado;
+        }
+
         public BusquedaPagoInscripcionResultado_83KI BuscarCuotasPendientesPorDni(string dni)
         {
             var ds = _accesoDAL.LeerStoredProcedure("sp_CUN05_BuscarCuotasPendientesPorDni", new List<SqlParameter>
@@ -27,6 +40,28 @@ namespace DAL
             BusquedaPagoInscripcionResultado_83KI resultado = null;
             foreach (DataRow row in ds.Tables[0].Rows)
             {
+                if (resultado == null) resultado = MapearBusqueda(row);
+                resultado.CuotasPendientes.Add(MapearCuota(row));
+            }
+            return resultado;
+        }
+
+        public BusquedaPagoInscripcionResultado_83KI BuscarCuotasPendientes(string dni, string codigoComision)
+        {
+            var ds = _accesoDAL.LeerStoredProcedure("sp_CUN07_BuscarCuotasPendientes", new List<SqlParameter>
+            {
+                new SqlParameter("@DNI", Normalizar(dni)),
+                new SqlParameter("@CodigoComision", Normalizar(codigoComision))
+            });
+            if (ds == null || ds.Tables.Count == 0 || ds.Tables[0].Rows.Count == 0) return null;
+            BusquedaPagoInscripcionResultado_83KI resultado = null;
+            int? idSolicitud = null;
+            foreach (DataRow row in ds.Tables[0].Rows)
+            {
+                int rowIdSolicitud = Convert.ToInt32(row["IdSolicitudInscripcion"]);
+                if (idSolicitud.HasValue && idSolicitud.Value != rowIdSolicitud)
+                    throw new InvalidOperationException("Errores.PagoSolicitudesAmbiguas");
+                idSolicitud = rowIdSolicitud;
                 if (resultado == null) resultado = MapearBusqueda(row);
                 resultado.CuotasPendientes.Add(MapearCuota(row));
             }
@@ -58,13 +93,14 @@ SELECT CASE WHEN EXISTS (
             PagoInscripcionResultado_83KI resultado = null;
             _accesoDAL.EjecutarTransaccion((conn, tran) =>
             {
-                var ds = AccesoDAL_83KI.LeerStoredProcedureTransaccional(conn, tran, "sp_CUN05_RegistrarPagoInscripcion", CrearParametrosRegistro(pago));
+                var ds = AccesoDAL_83KI.LeerStoredProcedureTransaccional(conn, tran, "sp_CUN07_RegistrarPago", CrearParametrosRegistro(pago));
                 if (ds == null || ds.Tables.Count == 0 || ds.Tables[0].Rows.Count == 0) throw new InvalidOperationException("Errores.PagoNoRegistrado");
 
                 resultado = MapearResultado(ds.Tables[0].Rows[0]);
                 RecomputarIntegridad("PagoInscripcion", "IdPagoInscripcion", resultado.Pago.IdPagoInscripcion, conn, tran);
                 RecomputarIntegridad("Cuota", "IdCuota", resultado.Cuota.IdCuota, conn, tran);
                 RecomputarIntegridad("SolicitudInscripcion", "IdSolicitudInscripcion", resultado.Solicitud.IdSolicitudInscripcion, conn, tran);
+                RecomputarIntegridad("FacturaCUN07", "IdFactura", resultado.IdFactura, conn, tran);
             });
             return resultado;
         }
@@ -76,10 +112,12 @@ SELECT CASE WHEN EXISTS (
                 new SqlParameter("@IdAlumno", pago.IdAlumno),
                 new SqlParameter("@IdSolicitudInscripcion", pago.IdSolicitudInscripcion),
                 new SqlParameter("@IdCuota", pago.IdCuota),
+                new SqlParameter("@CodigoComision", Normalizar(pago.CodigoComision)),
                 new SqlParameter("@MetodoPago", Normalizar(pago.MetodoPago)),
                 new SqlParameter("@MontoRecibido", pago.MontoPagado),
                 new SqlParameter("@NumeroReferencia", Normalizar(pago.NumeroReferencia)),
-                new SqlParameter("@FechaPago", pago.FechaPago)
+                new SqlParameter("@FechaPago", pago.FechaPago),
+                new SqlParameter("@FechaAcreditacion", pago.FechaAcreditacion)
             };
         }
 
@@ -178,6 +216,8 @@ SELECT CASE WHEN EXISTS (
                 Convert.ToDecimal(row["MontoPagado"]),
                 row["NumeroReferencia"].ToString(),
                 Convert.ToDateTime(row["FechaPago"]),
+                Convert.ToDateTime(row["FechaAcreditacion"]),
+                row["CodigoComision"].ToString(),
                 row["PagoDVH"].ToString());
 
             return new PagoInscripcionResultado_83KI
@@ -188,7 +228,13 @@ SELECT CASE WHEN EXISTS (
                 Cuota = cuota,
                 CodigoComision = row["CodigoComision"].ToString(),
                 Curso = row["Curso"].ToString(),
-                CodigoSolicitud = solicitud.Codigo
+                CodigoSolicitud = solicitud.Codigo,
+                NumeroReciboInstitucional = row["NumeroReciboInstitucional"].ToString(),
+                FacturaConcepto = row["ConceptoFactura"].ToString(),
+                FacturaTotal = Convert.ToDecimal(row["TotalFactura"]),
+                FacturaFecha = Convert.ToDateTime(row["FechaTransaccion"]),
+                IdFactura = Convert.ToInt32(row["IdFactura"]),
+                FacturaTexto = string.Format("{0}|{1}|{2}|{3}", row["NumeroReciboInstitucional"], row["ConceptoFactura"], row["TotalFactura"], row["FechaTransaccion"])
             };
         }
 

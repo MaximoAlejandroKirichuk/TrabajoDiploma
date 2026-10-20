@@ -45,6 +45,7 @@
     <Compile Include="DTOs\BitacoraEventoVista_83KI.cs" />
     <Compile Include="DTOs\BusquedaDecisionBecaResultado_83KI.cs" />
     <Compile Include="DTOs\BusquedaPagoInscripcionResultado_83KI.cs" />
+    <Compile Include="DTOs\ComisionPagoOpcion_83KI.cs" />
     <Compile Include="DTOs\ActaCierreComisionRequest_83KI.cs" />
     <Compile Include="DTOs\AltaOficialComisionRequest_83KI.cs" />
     <Compile Include="DTOs\ComisionListado_83KI.cs" />

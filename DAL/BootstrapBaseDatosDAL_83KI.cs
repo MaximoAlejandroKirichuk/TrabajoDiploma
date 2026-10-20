@@ -153,6 +153,9 @@ namespace DAL
                         if (result == null || result == DBNull.Value)
                             return (false, $"La base de datos '{settings.NombreBaseDatos}' no existe en la instancia '{settings.InstanciaServidor}'. Debe crearla manualmente antes de continuar.");
                     }
+
+                    var migration = EjecutarMigracionCun07(conn);
+                    if (!migration.success) return migration;
                 }
             }
             catch (SqlException ex)
@@ -161,6 +164,27 @@ namespace DAL
             }
 
             return (true, "Conexion validada correctamente.");
+        }
+
+        private static (bool success, string message) EjecutarMigracionCun07(SqlConnection conn)
+        {
+            string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Scripts", "Sql", "cun07", "001_migracion.sql");
+            if (!File.Exists(path)) return (false, $"No se encontro la migracion CUN07 en '{path}'.");
+            try
+            {
+                string[] batches = Regex.Split(File.ReadAllText(path), @"^\s*GO\s*$", RegexOptions.Multiline | RegexOptions.IgnoreCase);
+                foreach (string batch in batches)
+                {
+                    if (string.IsNullOrWhiteSpace(batch)) continue;
+                    using (var cmd = new SqlCommand(batch, conn))
+                    {
+                        cmd.CommandTimeout = 60;
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+                return (true, "Migracion CUN07 aplicada.");
+            }
+            catch (Exception ex) { return (false, $"Error al aplicar la migracion CUN07: {ex.Message}"); }
         }
 
         public (bool success, string message) InstalarBaseDatos(string serverInstance, string databaseName)
@@ -181,6 +205,8 @@ namespace DAL
             try
             {
                 scriptContent = File.ReadAllText(scriptPath);
+                string cun07Path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Scripts", "Sql", "cun07", "001_migracion.sql");
+                if (File.Exists(cun07Path)) scriptContent += Environment.NewLine + File.ReadAllText(cun07Path);
             }
             catch (Exception ex)
             {

@@ -16,13 +16,17 @@ namespace BE.Entidades
         public decimal MontoPagado { get; private set; }
         public string NumeroReferencia { get; private set; }
         public DateTime FechaPago { get; private set; }
+        public DateTime FechaAcreditacion { get; private set; }
+        public string CodigoComision { get; private set; }
         public string DVH { get; private set; }
 
         private PagoInscripcion_83KI() { }
 
-        public static PagoInscripcion_83KI Crear(int idAlumno, int idSolicitudInscripcion, int idCuota, string metodoPago, decimal montoPagado, string numeroReferencia, DateTime fechaPago)
+        public static PagoInscripcion_83KI Crear(int idAlumno, int idSolicitudInscripcion, int idCuota, string metodoPago, decimal montoPagado, string numeroReferencia, DateTime fechaPago, DateTime fechaAcreditacion, string codigoComision)
         {
             Validar(idAlumno, idSolicitudInscripcion, idCuota, metodoPago, montoPagado, numeroReferencia, fechaPago);
+            if (fechaAcreditacion == default(DateTime)) throw new ArgumentException("Errores.PagoFechaAcreditacionObligatoria", nameof(fechaAcreditacion));
+            if (string.IsNullOrWhiteSpace(codigoComision)) throw new ArgumentException("Errores.PagoComisionObligatoria", nameof(codigoComision));
             return new PagoInscripcion_83KI
             {
                 IdAlumno = idAlumno,
@@ -32,14 +36,16 @@ namespace BE.Entidades
                 MontoPagado = montoPagado,
                 NumeroReferencia = Normalizar(numeroReferencia),
                 FechaPago = fechaPago,
+                FechaAcreditacion = fechaAcreditacion,
+                CodigoComision = codigoComision.Trim(),
                 DVH = string.Empty
             };
         }
 
-        public static PagoInscripcion_83KI ReconstruirDesdePersistencia(int idPagoInscripcion, int idAlumno, int idSolicitudInscripcion, int idCuota, string metodoPago, decimal montoPagado, string numeroReferencia, DateTime fechaPago, string dvh)
+        public static PagoInscripcion_83KI ReconstruirDesdePersistencia(int idPagoInscripcion, int idAlumno, int idSolicitudInscripcion, int idCuota, string metodoPago, decimal montoPagado, string numeroReferencia, DateTime fechaPago, DateTime fechaAcreditacion, string codigoComision, string dvh)
         {
             if (idPagoInscripcion <= 0) throw new ArgumentException("Errores.PagoNoRegistrado", nameof(idPagoInscripcion));
-            var pago = Crear(idAlumno, idSolicitudInscripcion, idCuota, metodoPago, montoPagado, numeroReferencia, fechaPago);
+            var pago = Crear(idAlumno, idSolicitudInscripcion, idCuota, metodoPago, montoPagado, numeroReferencia, fechaPago, fechaAcreditacion, codigoComision);
             pago.IdPagoInscripcion = idPagoInscripcion;
             pago.DVH = dvh ?? string.Empty;
             return pago;

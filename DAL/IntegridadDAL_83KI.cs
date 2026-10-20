@@ -57,6 +57,7 @@ namespace DAL
                 { "Cuota",           new[] { "IdCuota" } },
                 { "Beca",            new[] { "IdBeca" } },
                 { "PagoInscripcion", new[] { "IdPagoInscripcion" } },
+                { "FacturaCUN07", new[] { "IdFactura" } },
                 { "AltaOficialComision", new[] { "IdAltaOficialComision" } },
                 { "ActaCierreComision",  new[] { "IdActaCierreComision" } },
             };

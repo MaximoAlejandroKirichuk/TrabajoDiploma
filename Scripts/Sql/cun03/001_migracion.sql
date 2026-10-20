@@ -113,6 +113,14 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Cuota_Solicitud' AND 
     CREATE INDEX IX_Cuota_Solicitud ON dbo.Cuota (IdSolicitudInscripcion);
 GO
 
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_SolicitudInscripcion_AlumnoComision' AND object_id = OBJECT_ID(N'dbo.SolicitudInscripcion'))
+    CREATE INDEX IX_SolicitudInscripcion_AlumnoComision ON dbo.SolicitudInscripcion (IdAlumno, IdComision) INCLUDE (Estado, IdSolicitudInscripcion);
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Cuota_SolicitudEstadoBalance' AND object_id = OBJECT_ID(N'dbo.Cuota'))
+    CREATE INDEX IX_Cuota_SolicitudEstadoBalance ON dbo.Cuota (IdSolicitudInscripcion, Estado, BalanceAdeudado);
+GO
+
 IF NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'Alumno')
     INSERT INTO dbo.DigitoVerificador_83KI (NombreTabla, DVV, FechaActualizacion) VALUES (N'Alumno', '', GETDATE());
 IF NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'SolicitudInscripcion')
@@ -258,6 +266,14 @@ BEGIN
 
         IF EXISTS (SELECT 1 FROM dbo.SolicitudInscripcion WITH (UPDLOCK, HOLDLOCK) WHERE IdAlumno = @IdAlumno AND IdComision = @IdComision AND Estado IN (N'pendiente', N'confirmada', N'activa'))
             THROW 52003, N'Errores.InscripcionDuplicada', 1;
+
+        IF EXISTS (
+            SELECT 1
+            FROM dbo.SolicitudInscripcion si WITH (UPDLOCK, HOLDLOCK, INDEX(IX_SolicitudInscripcion_AlumnoComision))
+            INNER JOIN dbo.Cuota cu WITH (UPDLOCK, HOLDLOCK, INDEX(IX_Cuota_SolicitudEstadoBalance)) ON cu.IdSolicitudInscripcion = si.IdSolicitudInscripcion
+            WHERE si.IdAlumno = @IdAlumno AND si.IdComision = @IdComision
+              AND cu.Estado = N'pendiente' AND cu.BalanceAdeudado > 0
+        ) THROW 52005, N'Errores.InscripcionPendienteDeuda', 1;
 
         SELECT @VacantesDisponibles = c.CupoMaximo - COUNT(si.IdSolicitudInscripcion)
         FROM dbo.Comision c WITH (UPDLOCK, HOLDLOCK)

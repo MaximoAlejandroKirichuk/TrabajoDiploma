@@ -20,12 +20,20 @@ namespace BLL
             _bitacora = bitacora;
         }
 
-        public BusquedaPagoInscripcionResultado_83KI BuscarCuotasPendientes(string dni)
+        public BusquedaPagoInscripcionResultado_83KI BuscarCuotasPendientes(string dni, string codigoComision)
         {
             ValidarPermiso();
             if (string.IsNullOrWhiteSpace(dni)) throw new ArgumentException("Errores.PagoDniObligatorio");
+            if (string.IsNullOrWhiteSpace(codigoComision)) throw new ArgumentException("Errores.PagoComisionObligatoria");
 
-            return _pagoDAL.BuscarCuotasPendientesPorDni(dni);
+            return _pagoDAL.BuscarCuotasPendientes(dni, codigoComision);
+        }
+
+        public System.Collections.Generic.IEnumerable<ComisionPagoOpcion_83KI> ListarComisionesConCuotasPendientes(string dni)
+        {
+            ValidarPermiso();
+            if (string.IsNullOrWhiteSpace(dni)) throw new ArgumentException("Errores.PagoDniObligatorio");
+            return _pagoDAL.ListarComisionesConCuotasPendientes(dni);
         }
 
         public PagoInscripcionResultado_83KI RegistrarPagoInscripcion(PagoInscripcionRequest_83KI request)
@@ -46,7 +54,9 @@ namespace BLL
                 request.MetodoPago,
                 request.MontoRecibido,
                 request.NumeroReferencia,
-                request.FechaPago);
+                request.FechaPago,
+                request.FechaAcreditacion,
+                request.CodigoComision);
 
             var resultado = _pagoDAL.RegistrarPago(pago);
             bool auditoriaFallida = !RegistrarAuditoriaSegura(resultado);
@@ -67,15 +77,18 @@ namespace BLL
             if (string.IsNullOrWhiteSpace(request.DNI)) throw new ArgumentException("Errores.PagoDniObligatorio");
             if (request.IdCuota <= 0) throw new ArgumentException("Errores.PagoCuotaObligatoria");
             if (request.MontoRecibido <= 0) throw new ArgumentException("Errores.MontoMatriculaInvalido");
-            if (string.IsNullOrWhiteSpace(request.MetodoPago) || !PagoInscripcion_83KI.MetodoValido(request.MetodoPago))
-                throw new ArgumentException("Errores.PagoMetodoInvalido");
             if (string.IsNullOrWhiteSpace(request.NumeroReferencia)) throw new ArgumentException("Errores.PagoReferenciaObligatoria");
             if (request.FechaPago == default(DateTime)) throw new ArgumentException("Errores.PagoFechaObligatoria");
+            if (request.FechaAcreditacion == default(DateTime)) throw new ArgumentException("Errores.PagoFechaObligatoria");
+            if (request.FechaPago.Date > DateTime.Today || request.FechaAcreditacion.Date > DateTime.Today)
+                throw new ArgumentException("Errores.PagoFechaFutura");
+            if (request.FechaAcreditacion.Date < request.FechaPago.Date) throw new ArgumentException("Errores.PagoFechaAcreditacionAnterior");
+            if (string.IsNullOrWhiteSpace(request.CodigoComision)) throw new ArgumentException("Errores.PagoComisionObligatoria");
         }
 
         private BusquedaPagoInscripcionResultado_83KI ValidarCuota(PagoInscripcionRequest_83KI request)
         {
-            var busqueda = _pagoDAL.BuscarCuotasPendientesPorDni(request.DNI);
+            var busqueda = _pagoDAL.BuscarCuotasPendientes(request.DNI, request.CodigoComision);
             if (busqueda == null || busqueda.Alumno == null || busqueda.Solicitud == null || busqueda.CuotasPendientes == null || busqueda.CuotasPendientes.Count == 0)
                 throw new InvalidOperationException("Errores.PagoCuotaNoPendiente");
 
