@@ -225,7 +225,8 @@ namespace UI.Modulos.PreInscripcion
         {
             string mensaje = IdiomaUiHelper_83KI.Texto("FrmRegistrarPagoInscripcion.Registrado", resultado.Alumno.Nombre, resultado.Alumno.DNI, resultado.CodigoSolicitud, resultado.Cuota.NumeroMensualidad, resultado.Pago.MontoPagado, resultado.Pago.MetodoPago, resultado.Pago.NumeroReferencia);
             _pagoPendienteDeGuardarFactura = resultado;
-            grpBusqueda.Enabled = dgvCuotas.Enabled = btnLimpiar.Enabled = grpPago.Enabled = false;
+            grpBusqueda.Enabled = dgvCuotas.Enabled = grpPago.Enabled = false;
+            btnGuardar.Enabled = btnLimpiar.Enabled = true;
             if (resultado.AuditoriaFallida) mensaje += Environment.NewLine + IdiomaUiHelper_83KI.Texto("FrmRegistrarPagoInscripcion.AuditoriaFallida");
             string errorFactura = null; bool facturaGuardada = false;
             using (var dialogo = new SaveFileDialog { Filter = "Archivo PDF (*.pdf)|*.pdf", DefaultExt = "pdf", AddExtension = true, FileName = resultado.NumeroReciboInstitucional + ".pdf", Title = "Guardar factura" })
@@ -234,8 +235,8 @@ namespace UI.Modulos.PreInscripcion
                     try { new FacturaPagoPdfExporter_83KI().Exportar(resultado, dialogo.FileName); facturaGuardada = true; }
                     catch (Exception ex) { errorFactura = ex.Message; }
             }
-            if (errorFactura != null) mensaje += Environment.NewLine + "El pago quedó registrado, pero no se pudo guardar la factura: " + errorFactura + " Podés volver a intentar con Guardar.";
-            else if (!facturaGuardada) mensaje += Environment.NewLine + "El pago quedó registrado, pero la factura no se guardó. Podés volver a intentar con Guardar.";
+            if (errorFactura != null) mensaje += Environment.NewLine + "El pago quedó registrado, pero no se pudo guardar la factura: " + errorFactura + " Puede reintentar con Guardar o comenzar otra búsqueda con Limpiar.";
+            else if (!facturaGuardada) mensaje += Environment.NewLine + "El pago quedó registrado, pero la factura no se guardó. Puede reintentar con Guardar o comenzar otra búsqueda con Limpiar.";
             MessageBox.Show(this, mensaje, IdiomaUiHelper_83KI.Texto("Comun.Informacion"), MessageBoxButtons.OK, MessageBoxIcon.Information);
             if (facturaGuardada)
             {
@@ -250,6 +251,9 @@ namespace UI.Modulos.PreInscripcion
 
         private void LimpiarFormulario()
         {
+            _pagoPendienteDeGuardarFactura = null;
+            grpBusqueda.Enabled = dgvCuotas.Enabled = btnLimpiar.Enabled = true;
+            _lblPlanDePago.Text = string.Empty;
             txtDni.Clear(); cmbComision.DataSource = null; txtMonto.Clear(); txtNumeroReferencia.Clear(); cmbMetodoPago.SelectedIndex = 0;
             dtpFechaPago.Value = DateTime.Today; dtpFechaAcreditacion.MinDate = dtpFechaPago.Value.Date; dtpFechaAcreditacion.Value = DateTime.Today;
             dgvCuotas.Rows.Clear(); lblAlumno.Text = string.Empty; lblSolicitud.Text = string.Empty; lblMensaje.Text = string.Empty;
