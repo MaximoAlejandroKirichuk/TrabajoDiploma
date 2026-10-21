@@ -92,7 +92,10 @@ namespace UI.Modulos.PreInscripcion
                     IdPlanDePago = IdPlanSeleccionado,
                     Observaciones = txtObservaciones.Text
                 });
-                MessageBox.Show(this, IdiomaUiHelper_83KI.Texto("FrmRegistrarSolicitudInscripcion.Registrada", resultado.CodigoSolicitud), IdiomaUiHelper_83KI.Texto("Comun.Informacion"), MessageBoxButtons.OK, MessageBoxIcon.Information);
+                string confirmacion = IdiomaUiHelper_83KI.Texto("FrmRegistrarSolicitudInscripcion.Registrada", resultado.CodigoSolicitud)
+                    + Environment.NewLine + IdiomaUiHelper_83KI.Texto("FrmRegistrarSolicitudInscripcion.FinanciacionGenerada", resultado.CuotaInicial.MontoOriginal,
+                        resultado.Solicitud.CantidadCuotasSnapshot, resultado.Solicitud.TotalCursoSnapshot);
+                MessageBox.Show(this, confirmacion, IdiomaUiHelper_83KI.Texto("Comun.Informacion"), MessageBoxButtons.OK, MessageBoxIcon.Information);
                 DialogResult = DialogResult.OK;
                 Close();
             }

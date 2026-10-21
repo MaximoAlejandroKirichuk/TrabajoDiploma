@@ -181,7 +181,7 @@ namespace DAL
             var planes = new List<PlanDePago_83KI>();
             if (ds == null || ds.Tables.Count == 0) return planes;
             foreach (DataRow row in ds.Tables[0].Rows)
-                planes.Add(PlanDePago_83KI.ReconstruirDesdePersistencia(Convert.ToInt32(row["IdPlanDePago"]), row["Nombre"].ToString(), Convert.ToBoolean(row["EstadoActivo"]), Convert.ToDecimal(row["RecargoPorcentaje"])));
+                planes.Add(PlanDePago_83KI.ReconstruirDesdePersistencia(Convert.ToInt32(row["IdPlanDePago"]), row["Nombre"].ToString(), Convert.ToBoolean(row["EstadoActivo"]), Convert.ToDecimal(row["RecargoPorcentaje"]), Convert.ToInt32(row["CantidadCuotas"])));
             return planes;
         }
 

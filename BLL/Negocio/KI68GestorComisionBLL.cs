@@ -47,7 +47,7 @@ namespace BLL
             return _comisionDAL.ObtenerPlanesDePagoActivos();
         }
 
-        public string RegistrarPreapertura(int idCurso, int idProfesor, DayOfWeek diaSemana, TimeSpan horaInicio, TimeSpan horaFin, int cupoMinimo, int cupoMaximo, DateTime fechaLimitePago, DateTime fechaInicio, DateTime fechaFin, decimal arancelBase, int idPlanDePago, decimal recargoPlanSnapshot)
+        public string RegistrarPreapertura(int idCurso, int idProfesor, DayOfWeek diaSemana, TimeSpan horaInicio, TimeSpan horaFin, int cupoMinimo, int cupoMaximo, DateTime fechaLimitePago, DateTime fechaInicio, DateTime fechaFin, decimal arancelBase, int idPlanDePago, decimal recargoPlanSnapshot, decimal? montoMatricula = null)
         {
             ValidarPermiso(PermisoSistema_83KI.RegistrarPreaperturaComision);
             if (arancelBase <= 0) throw new ArgumentException("Errores.ArancelBaseInvalido", nameof(arancelBase));
@@ -55,7 +55,7 @@ namespace BLL
             var plan = _comisionDAL.ObtenerPlanesDePagoActivos().FirstOrDefault(p => p.IdPlanDePago == idPlanDePago);
             if (plan == null) throw new InvalidOperationException("Errores.PlanDePagoNoDisponible");
 
-            var comision = Comision_83KI.CrearPreapertura(idCurso, idProfesor, diaSemana, horaInicio, horaFin, cupoMinimo, cupoMaximo, fechaLimitePago, fechaInicio, fechaFin, arancelBase, idPlanDePago, plan.RecargoPorcentaje);
+            var comision = Comision_83KI.CrearPreapertura(idCurso, idProfesor, diaSemana, horaInicio, horaFin, cupoMinimo, cupoMaximo, fechaLimitePago, fechaInicio, fechaFin, arancelBase, montoMatricula ?? arancelBase, idPlanDePago, plan.RecargoPorcentaje);
             if (!_comisionDAL.ValidarCursoProfesorDisponibilidad(idCurso, idProfesor, diaSemana, horaInicio, horaFin))
                 throw new InvalidOperationException("Errores.ProfesorNoDisponibleParaPreapertura");
             if (_comisionDAL.ExisteSolapamientoComision(idProfesor, diaSemana, horaInicio, horaFin))

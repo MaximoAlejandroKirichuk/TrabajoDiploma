@@ -42,10 +42,37 @@ namespace BE.Entidades
             };
         }
 
+        public static PagoInscripcion_83KI Crear(int idAlumno, int idSolicitudInscripcion, int idCuota, string metodoPago, decimal montoPagado, string numeroReferencia, DateTime fechaPago)
+        {
+            Validar(idAlumno, idSolicitudInscripcion, idCuota, metodoPago, montoPagado, numeroReferencia, fechaPago);
+            return new PagoInscripcion_83KI
+            {
+                IdAlumno = idAlumno,
+                IdSolicitudInscripcion = idSolicitudInscripcion,
+                IdCuota = idCuota,
+                MetodoPago = Normalizar(metodoPago).ToLowerInvariant(),
+                MontoPagado = montoPagado,
+                NumeroReferencia = Normalizar(numeroReferencia),
+                FechaPago = fechaPago,
+                FechaAcreditacion = fechaPago,
+                CodigoComision = string.Empty,
+                DVH = string.Empty
+            };
+        }
+
         public static PagoInscripcion_83KI ReconstruirDesdePersistencia(int idPagoInscripcion, int idAlumno, int idSolicitudInscripcion, int idCuota, string metodoPago, decimal montoPagado, string numeroReferencia, DateTime fechaPago, DateTime fechaAcreditacion, string codigoComision, string dvh)
         {
             if (idPagoInscripcion <= 0) throw new ArgumentException("Errores.PagoNoRegistrado", nameof(idPagoInscripcion));
             var pago = Crear(idAlumno, idSolicitudInscripcion, idCuota, metodoPago, montoPagado, numeroReferencia, fechaPago, fechaAcreditacion, codigoComision);
+            pago.IdPagoInscripcion = idPagoInscripcion;
+            pago.DVH = dvh ?? string.Empty;
+            return pago;
+        }
+
+        public static PagoInscripcion_83KI ReconstruirDesdePersistencia(int idPagoInscripcion, int idAlumno, int idSolicitudInscripcion, int idCuota, string metodoPago, decimal montoPagado, string numeroReferencia, DateTime fechaPago, string dvh)
+        {
+            var pago = Crear(idAlumno, idSolicitudInscripcion, idCuota, metodoPago, montoPagado, numeroReferencia, fechaPago);
+            if (idPagoInscripcion <= 0) throw new ArgumentException("Errores.PagoNoRegistrado", nameof(idPagoInscripcion));
             pago.IdPagoInscripcion = idPagoInscripcion;
             pago.DVH = dvh ?? string.Empty;
             return pago;

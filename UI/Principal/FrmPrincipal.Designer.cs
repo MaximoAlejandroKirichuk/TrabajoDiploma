@@ -50,6 +50,7 @@
             this.registrarSolicitudInscripcionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.registrarDecisionBecaToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.registrarPagoInscripcionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.registrarPagoCuotaToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.registrarEstadoDefinitivoComisionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.cobrosMorosidadActasToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.reportesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -245,6 +246,10 @@
             this.registrarPagoInscripcionToolStripMenuItem.Size = new System.Drawing.Size(304, 24);
             this.registrarPagoInscripcionToolStripMenuItem.Text = "Registrar pago de inscripción";
             this.registrarPagoInscripcionToolStripMenuItem.Click += new System.EventHandler(this.registrarPagoInscripcionToolStripMenuItem_Click);
+            this.registrarPagoCuotaToolStripMenuItem.Name = "registrarPagoCuotaToolStripMenuItem";
+            this.registrarPagoCuotaToolStripMenuItem.Size = new System.Drawing.Size(304, 24);
+            this.registrarPagoCuotaToolStripMenuItem.Text = "Registrar pago de cuotas";
+            this.registrarPagoCuotaToolStripMenuItem.Click += new System.EventHandler(this.registrarPagoCuotaToolStripMenuItem_Click);
             //
             // registrarEstadoDefinitivoComisionToolStripMenuItem
             //
@@ -256,7 +261,8 @@
             // cobrosMorosidadActasToolStripMenuItem
             // 
             this.cobrosMorosidadActasToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.registrarPagoInscripcionToolStripMenuItem});
+            this.registrarPagoInscripcionToolStripMenuItem,
+            this.registrarPagoCuotaToolStripMenuItem});
             this.cobrosMorosidadActasToolStripMenuItem.Name = "cobrosMorosidadActasToolStripMenuItem";
             this.cobrosMorosidadActasToolStripMenuItem.Size = new System.Drawing.Size(208, 24);
             this.cobrosMorosidadActasToolStripMenuItem.Text = "Cobros, Morosidad y Actas";
@@ -356,6 +362,7 @@
         private System.Windows.Forms.ToolStripMenuItem registrarSolicitudInscripcionToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem registrarDecisionBecaToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem registrarPagoInscripcionToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem registrarPagoCuotaToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem registrarEstadoDefinitivoComisionToolStripMenuItem;
     }
 }

@@ -102,7 +102,7 @@ BEGIN
           AND c.FechaLimitePago >= CONVERT(date, GETDATE()) AND c.MontoMatricula > 0;
         IF @MontoMatricula IS NULL THROW 52001, N'Errores.ComisionElegibleNoDisponible', 1;
         SELECT @Recargo = pp.RecargoPorcentaje FROM dbo.Comision c
-        INNER JOIN dbo.PlanesDePago pp ON pp.IdPlanDePago = c.IdPlanDePago
+        INNER JOIN dbo.PlanesDePago pp WITH(HOLDLOCK) ON pp.IdPlanDePago = c.IdPlanDePago
         WHERE c.IdComision = @IdComision AND pp.IdPlanDePago = @IdPlanDePago AND pp.EstadoActivo = 1;
         IF @Recargo IS NULL THROW 52002, N'Errores.PlanDePagoNoDisponible', 1;
         IF @IdAlumno IS NULL SELECT @IdAlumno = IdAlumno FROM dbo.Alumno WITH (UPDLOCK, HOLDLOCK) WHERE DNI = @DNI;
@@ -138,6 +138,7 @@ BEGIN
         INSERT dbo.Cuota (IdSolicitudInscripcion, NumeroCuota, MontoOriginal, BalanceAdeudado, FechaVencimiento, Estado, DVH)
         VALUES (@IdSolicitud, 1, @MontoMatricula, @MontoMatricula, DATEADD(day, 7, CONVERT(date, GETDATE())), N'pendiente', N'');
         SET @IdCuota = SCOPE_IDENTITY();
+        EXEC dbo.sp_Financiacion_GenerarCuotas @IdSolicitud;
         SET @VacantesDisponibles = @VacantesDisponibles - 1;
         IF @StartedTransaction = 1 COMMIT TRANSACTION;
     END TRY
@@ -149,11 +150,12 @@ BEGIN
            a.Email AS AlumnoEmail, a.Telefono AS AlumnoTelefono, a.FechaAlta AS AlumnoFechaAlta, a.Estado AS AlumnoEstado, a.DVH AS AlumnoDVH,
            si.IdSolicitudInscripcion, si.Codigo, si.IdLeadOrigen, si.IdComision, si.IdPlanDePago, si.RecargoPlanSnapshot,
            si.FechaSolicitud, si.Estado AS SolicitudEstado, si.Observaciones, si.DVH AS SolicitudDVH,
+           si.ArancelCursoSnapshot,si.CantidadCuotasSnapshot,si.TotalCursoSnapshot,si.FechaPrimerVencimientoSnapshot,si.NombrePlanSnapshot,
            cu.IdCuota, cu.NumeroCuota, cu.MontoOriginal, cu.BalanceAdeudado, cu.FechaVencimiento, cu.Estado AS CuotaEstado,
            cu.DVH AS CuotaDVH, @VacantesDisponibles AS VacantesDisponibles
     FROM dbo.SolicitudInscripcion si
     INNER JOIN dbo.Alumno a ON a.IdAlumno = si.IdAlumno
-    INNER JOIN dbo.Cuota cu ON cu.IdSolicitudInscripcion = si.IdSolicitudInscripcion AND cu.NumeroCuota = 1
+    INNER JOIN dbo.Cuota cu ON cu.IdSolicitudInscripcion = si.IdSolicitudInscripcion AND cu.TipoConcepto = N'matricula'
     WHERE si.IdSolicitudInscripcion = @IdSolicitud;
 END
 GO
@@ -173,7 +175,7 @@ BEGIN
     JOIN dbo.Curso cur ON cur.IdCurso=c.IdCurso
     WHERE a.DNI=LTRIM(RTRIM(@DNI))
       AND si.Estado IN(N'pendiente',N'confirmada',N'activa',N'Al día',N'Con deuda')
-      AND EXISTS(SELECT 1 FROM dbo.Cuota cu WHERE cu.IdSolicitudInscripcion=si.IdSolicitudInscripcion AND cu.Estado=N'pendiente' AND cu.BalanceAdeudado>0)
+      AND EXISTS(SELECT 1 FROM dbo.Cuota cu WHERE cu.IdSolicitudInscripcion=si.IdSolicitudInscripcion AND cu.TipoConcepto=N'curso')
     ORDER BY CodigoComision;
 END
 GO
@@ -183,10 +185,13 @@ BEGIN
     SET NOCOUNT ON;
     SELECT a.IdAlumno,a.DNI AlumnoDNI,a.Nombre AlumnoNombre,a.Apellido AlumnoApellido,a.Email AlumnoEmail,a.Telefono AlumnoTelefono,a.FechaAlta AlumnoFechaAlta,a.Estado AlumnoEstado,a.DVH AlumnoDVH,
       si.IdSolicitudInscripcion,si.Codigo CodigoSolicitud,si.IdLeadOrigen,si.IdComision,si.IdPlanDePago,si.RecargoPlanSnapshot,si.FechaSolicitud FechaSolicitudInscripcion,si.Estado SolicitudEstado,si.Observaciones SolicitudObservaciones,si.DVH SolicitudDVH,
-      cu.IdCuota,cu.NumeroCuota,cu.MontoOriginal,cu.BalanceAdeudado,cu.FechaVencimiento,cu.Estado CuotaEstado,cu.DVH CuotaDVH,c.Codigo CodigoComision,cur.Nombre Curso
+      si.ArancelCursoSnapshot,si.CantidadCuotasSnapshot,si.TotalCursoSnapshot,si.FechaPrimerVencimientoSnapshot,si.NombrePlanSnapshot,
+      CONVERT(bit,CASE WHEN EXISTS(SELECT 1 FROM dbo.Cuota m WHERE m.IdSolicitudInscripcion=si.IdSolicitudInscripcion AND m.TipoConcepto=N'matricula' AND m.Estado=N'pagada') THEN 1 ELSE 0 END) MatriculaPagada,
+      cu.IdCuota,cu.NumeroCuota,cu.TipoConcepto,cu.Periodo,cu.MontoOriginal,cu.BalanceAdeudado,cu.FechaVencimiento,cu.Estado CuotaEstado,cu.DVH CuotaDVH,c.Codigo CodigoComision,cur.Nombre Curso,si.NombrePlanSnapshot NombrePlanDePago
     FROM dbo.Alumno a JOIN dbo.SolicitudInscripcion si ON si.IdAlumno=a.IdAlumno JOIN dbo.Comision c ON c.IdComision=si.IdComision JOIN dbo.Curso cur ON cur.IdCurso=c.IdCurso
       JOIN dbo.Cuota cu ON cu.IdSolicitudInscripcion=si.IdSolicitudInscripcion
-    WHERE a.DNI=LTRIM(RTRIM(@DNI)) AND c.Codigo=LTRIM(RTRIM(@CodigoComision)) AND cu.Estado=N'pendiente' AND cu.BalanceAdeudado>0
+      JOIN dbo.PlanesDePago pp ON pp.IdPlanDePago=si.IdPlanDePago
+    WHERE a.DNI=LTRIM(RTRIM(@DNI)) AND c.Codigo=LTRIM(RTRIM(@CodigoComision)) AND cu.TipoConcepto=N'curso'
       AND si.Estado IN(N'pendiente',N'confirmada',N'activa',N'Al día',N'Con deuda') ORDER BY cu.NumeroCuota,cu.FechaVencimiento;
 END
 GO
@@ -199,7 +204,7 @@ CREATE PROCEDURE dbo.sp_CUN07_RegistrarPago
 AS
 BEGIN
  SET NOCOUNT ON;
- DECLARE @balance DECIMAL(18,2),@numeroCuota INT,@codigo NVARCHAR(40),@idPago INT,@estado NVARCHAR(30),@concepto NVARCHAR(200);
+  DECLARE @balance DECIMAL(18,2),@numeroCuota INT,@codigo NVARCHAR(40),@idPago INT,@concepto NVARCHAR(200);
  IF @IdAlumno<=0 OR @IdSolicitudInscripcion<=0 OR @IdCuota<=0 OR @MontoRecibido<=0 OR NULLIF(LTRIM(RTRIM(@NumeroReferencia)),N'') IS NULL OR @FechaPago IS NULL OR @FechaAcreditacion IS NULL
    THROW 52701,N'Errores.PagoDatosInvalidos',1;
  BEGIN TRY
@@ -208,8 +213,14 @@ BEGIN
    JOIN dbo.SolicitudInscripcion si WITH(UPDLOCK,HOLDLOCK) ON si.IdSolicitudInscripcion=cu.IdSolicitudInscripcion
    JOIN dbo.Comision c WITH(UPDLOCK,HOLDLOCK) ON c.IdComision=si.IdComision
    WHERE cu.IdCuota=@IdCuota AND cu.IdSolicitudInscripcion=@IdSolicitudInscripcion AND si.IdAlumno=@IdAlumno AND c.Codigo=@CodigoComision
-     AND cu.Estado=N'pendiente' AND cu.BalanceAdeudado>0 AND si.Estado IN(N'pendiente',N'confirmada',N'activa',N'Al día',N'Con deuda');
- IF @balance IS NULL THROW 52702,N'Errores.PagoCuotaNoPendiente',1;
+      AND cu.TipoConcepto=N'curso' AND cu.Estado=N'pendiente' AND cu.BalanceAdeudado>0 AND si.Estado IN(N'activa',N'Al día',N'Con deuda');
+  IF @balance IS NULL THROW 52702,N'Errores.PagoCuotaNoPendiente',1;
+  IF NOT EXISTS(SELECT 1 FROM dbo.Cuota WITH(UPDLOCK,HOLDLOCK)
+                WHERE IdSolicitudInscripcion=@IdSolicitudInscripcion AND TipoConcepto=N'matricula' AND Estado=N'pagada')
+    THROW 52709,N'Errores.PagoMatriculaPendiente',1;
+  IF EXISTS(SELECT 1 FROM dbo.Cuota WITH(UPDLOCK,HOLDLOCK)
+            WHERE IdSolicitudInscripcion=@IdSolicitudInscripcion AND TipoConcepto=N'curso' AND NumeroCuota<@numeroCuota AND BalanceAdeudado>0)
+    THROW 52708,N'Errores.PagoCuotaAnteriorPendiente',1;
   IF @MontoRecibido<>@balance THROW 52703,N'Errores.PagoMontoNoCoincide',1;
    IF CONVERT(date,@FechaPago)>CONVERT(date,GETDATE()) OR CONVERT(date,@FechaAcreditacion)>CONVERT(date,GETDATE())
      THROW 52707,N'Errores.PagoFechaFutura',1;
@@ -217,19 +228,19 @@ BEGIN
  IF @MetodoPago NOT IN(N'transferencia',N'tarjeta',N'billetera virtual') THROW 52704,N'Errores.PagoMetodoInvalido',1;
  IF EXISTS(SELECT 1 FROM dbo.PagoInscripcion WITH(UPDLOCK,HOLDLOCK) WHERE NumeroReferencia=@NumeroReferencia) THROW 52705,N'Errores.PagoReferenciaDuplicada',1;
  SET @codigo=N'CUN07-' + RIGHT(REPLICATE(N'0',12)+CONVERT(NVARCHAR(20),NEXT VALUE FOR dbo.SeqReciboInstitucionalCUN07),12);
- SET @concepto=N'Pago cuota ' + CONVERT(NVARCHAR(12),@numeroCuota);
+  SET @concepto=N'Pago cuota del curso ' + CONVERT(NVARCHAR(12),@numeroCuota-1);
  INSERT dbo.PagoInscripcion(IdAlumno,IdSolicitudInscripcion,IdCuota,MetodoPago,MontoPagado,NumeroReferencia,FechaPago,FechaAcreditacion,NumeroReciboInstitucional,DVH)
  VALUES(@IdAlumno,@IdSolicitudInscripcion,@IdCuota,@MetodoPago,@MontoRecibido,@NumeroReferencia,@FechaPago,@FechaAcreditacion,@codigo,'');
  SET @idPago=SCOPE_IDENTITY();
  UPDATE dbo.Cuota SET BalanceAdeudado=0,Estado=N'pagada',DVH='' WHERE IdCuota=@IdCuota;
- SET @estado=CASE WHEN EXISTS(SELECT 1 FROM dbo.Cuota WHERE IdSolicitudInscripcion=@IdSolicitudInscripcion AND Estado=N'pendiente' AND FechaVencimiento<CONVERT(date,GETDATE())) THEN N'Con deuda' ELSE N'Al día' END;
- UPDATE dbo.SolicitudInscripcion SET Estado=@estado,DVH='' WHERE IdSolicitudInscripcion=@IdSolicitudInscripcion;
+  -- Financial standing is separate from the academic enrollment state used by quorum/cancellation.
  INSERT dbo.FacturaCUN07(IdPagoInscripcion,NumeroReciboInstitucional,Concepto,Total,FechaTransaccion,DVH) VALUES(@idPago,@codigo,@concepto,@MontoRecibido,@FechaPago,'');
  COMMIT TRANSACTION;
   SELECT p.IdPagoInscripcion,p.IdAlumno,p.IdSolicitudInscripcion,p.IdCuota,p.MetodoPago,p.MontoPagado,p.NumeroReferencia,p.FechaPago,p.FechaAcreditacion,p.DVH PagoDVH,
  a.DNI AlumnoDNI,a.Nombre AlumnoNombre,a.Apellido AlumnoApellido,a.Email AlumnoEmail,a.Telefono AlumnoTelefono,a.FechaAlta AlumnoFechaAlta,a.Estado AlumnoEstado,a.DVH AlumnoDVH,
- si.Codigo CodigoSolicitud,si.IdLeadOrigen,si.IdComision,si.IdPlanDePago,si.RecargoPlanSnapshot,si.FechaSolicitud FechaSolicitudInscripcion,si.Estado SolicitudEstado,si.Observaciones SolicitudObservaciones,si.DVH SolicitudDVH,
- cu.NumeroCuota,cu.MontoOriginal,cu.BalanceAdeudado,cu.FechaVencimiento,cu.Estado CuotaEstado,cu.DVH CuotaDVH,c.Codigo CodigoComision,cur.Nombre Curso,
+  si.Codigo CodigoSolicitud,si.IdLeadOrigen,si.IdComision,si.IdPlanDePago,si.RecargoPlanSnapshot,si.FechaSolicitud FechaSolicitudInscripcion,si.Estado SolicitudEstado,si.Observaciones SolicitudObservaciones,si.DVH SolicitudDVH,
+  si.ArancelCursoSnapshot,si.CantidadCuotasSnapshot,si.TotalCursoSnapshot,si.FechaPrimerVencimientoSnapshot,si.NombrePlanSnapshot,
+  cu.NumeroCuota,cu.TipoConcepto,cu.Periodo,cu.MontoOriginal,cu.BalanceAdeudado,cu.FechaVencimiento,cu.Estado CuotaEstado,cu.DVH CuotaDVH,c.Codigo CodigoComision,cur.Nombre Curso,
  @codigo NumeroReciboInstitucional,@concepto ConceptoFactura,@MontoRecibido TotalFactura,@FechaPago FechaTransaccion,(SELECT IdFactura FROM dbo.FacturaCUN07 WHERE IdPagoInscripcion=@idPago) IdFactura
  FROM dbo.PagoInscripcion p JOIN dbo.Alumno a ON a.IdAlumno=p.IdAlumno JOIN dbo.SolicitudInscripcion si ON si.IdSolicitudInscripcion=p.IdSolicitudInscripcion
  JOIN dbo.Cuota cu ON cu.IdCuota=p.IdCuota JOIN dbo.Comision c ON c.IdComision=si.IdComision JOIN dbo.Curso cur ON cur.IdCurso=c.IdCurso WHERE p.IdPagoInscripcion=@idPago;

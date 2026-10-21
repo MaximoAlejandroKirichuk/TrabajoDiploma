@@ -215,7 +215,7 @@ CREATE PROCEDURE dbo.sp_CUN03_ObtenerPlanesComision
 AS
 BEGIN
     SET NOCOUNT ON;
-    SELECT pp.IdPlanDePago, pp.Nombre, pp.EstadoActivo, pp.RecargoPorcentaje
+    SELECT pp.IdPlanDePago, pp.Nombre, pp.EstadoActivo, pp.RecargoPorcentaje, pp.CantidadCuotas
     FROM dbo.Comision c
     INNER JOIN dbo.PlanesDePago pp ON pp.IdPlanDePago = c.IdPlanDePago
     WHERE c.IdComision = @IdComision AND pp.EstadoActivo = 1;
@@ -249,7 +249,7 @@ BEGIN
 
         SELECT @Recargo = pp.RecargoPorcentaje
         FROM dbo.Comision c
-        INNER JOIN dbo.PlanesDePago pp ON pp.IdPlanDePago = c.IdPlanDePago
+        INNER JOIN dbo.PlanesDePago pp WITH(HOLDLOCK) ON pp.IdPlanDePago = c.IdPlanDePago
         WHERE c.IdComision = @IdComision AND pp.IdPlanDePago = @IdPlanDePago AND pp.EstadoActivo = 1;
 
         IF @Recargo IS NULL THROW 52002, N'Errores.PlanDePagoNoDisponible', 1;
@@ -293,6 +293,7 @@ BEGIN
         INSERT INTO dbo.Cuota (IdSolicitudInscripcion, NumeroCuota, MontoOriginal, BalanceAdeudado, FechaVencimiento, Estado, DVH)
         VALUES (@IdSolicitud, 1, @MontoMatricula, @MontoMatricula, DATEADD(day, 7, CONVERT(date, GETDATE())), N'pendiente', N'');
         SET @IdCuota = SCOPE_IDENTITY();
+        EXEC dbo.sp_Financiacion_GenerarCuotas @IdSolicitud;
 
         SET @VacantesDisponibles = @VacantesDisponibles - 1;
 
@@ -307,11 +308,12 @@ BEGIN
            a.Email AS AlumnoEmail, a.Telefono AS AlumnoTelefono, a.FechaAlta AS AlumnoFechaAlta, a.Estado AS AlumnoEstado, a.DVH AS AlumnoDVH,
            si.IdSolicitudInscripcion, si.Codigo, si.IdLeadOrigen, si.IdComision, si.IdPlanDePago, si.RecargoPlanSnapshot,
            si.FechaSolicitud, si.Estado AS SolicitudEstado, si.Observaciones, si.DVH AS SolicitudDVH,
+           si.ArancelCursoSnapshot,si.CantidadCuotasSnapshot,si.TotalCursoSnapshot,si.FechaPrimerVencimientoSnapshot,si.NombrePlanSnapshot,
            cu.IdCuota, cu.NumeroCuota, cu.MontoOriginal, cu.BalanceAdeudado, cu.FechaVencimiento, cu.Estado AS CuotaEstado, cu.DVH AS CuotaDVH,
            @VacantesDisponibles AS VacantesDisponibles
     FROM dbo.SolicitudInscripcion si
     INNER JOIN dbo.Alumno a ON a.IdAlumno = si.IdAlumno
-    INNER JOIN dbo.Cuota cu ON cu.IdSolicitudInscripcion = si.IdSolicitudInscripcion AND cu.NumeroCuota = 1
+    INNER JOIN dbo.Cuota cu ON cu.IdSolicitudInscripcion = si.IdSolicitudInscripcion AND cu.TipoConcepto = N'matricula'
     WHERE si.IdSolicitudInscripcion = @IdSolicitud;
 END
 GO

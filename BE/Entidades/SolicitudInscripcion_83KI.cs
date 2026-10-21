@@ -21,10 +21,16 @@ namespace BE.Entidades
         public string Estado { get; private set; }
         public string Observaciones { get; private set; }
         public string DVH { get; private set; }
+        public decimal? ArancelCursoSnapshot { get; private set; }
+        public int? CantidadCuotasSnapshot { get; private set; }
+        public decimal? TotalCursoSnapshot { get; private set; }
+        public DateTime? FechaPrimerVencimientoSnapshot { get; private set; }
+        public string NombrePlanSnapshot { get; private set; }
 
         private SolicitudInscripcion_83KI() { }
 
-        public static SolicitudInscripcion_83KI ReconstruirDesdePersistencia(int idSolicitudInscripcion, string codigo, int idAlumno, int? idLeadOrigen, int idComision, int idPlanDePago, decimal recargoPlanSnapshot, DateTime fechaSolicitud, string estado, string observaciones, string dvh)
+        public static SolicitudInscripcion_83KI ReconstruirDesdePersistencia(int idSolicitudInscripcion, string codigo, int idAlumno, int? idLeadOrigen, int idComision, int idPlanDePago, decimal recargoPlanSnapshot, DateTime fechaSolicitud, string estado, string observaciones, string dvh,
+            decimal? arancelCursoSnapshot = null, int? cantidadCuotasSnapshot = null, decimal? totalCursoSnapshot = null, DateTime? fechaPrimerVencimientoSnapshot = null, string nombrePlanSnapshot = null)
         {
             if (idSolicitudInscripcion <= 0) throw new ArgumentException("Errores.SolicitudInscripcionNoRegistrada", nameof(idSolicitudInscripcion));
             if (idAlumno <= 0) throw new ArgumentException("Errores.AlumnoObligatorio", nameof(idAlumno));
@@ -43,7 +49,12 @@ namespace BE.Entidades
                 FechaSolicitud = fechaSolicitud,
                 Estado = string.IsNullOrWhiteSpace(estado) ? EstadoPendiente : estado,
                 Observaciones = observaciones ?? string.Empty,
-                DVH = dvh ?? string.Empty
+                DVH = dvh ?? string.Empty,
+                ArancelCursoSnapshot = arancelCursoSnapshot,
+                CantidadCuotasSnapshot = cantidadCuotasSnapshot,
+                TotalCursoSnapshot = totalCursoSnapshot,
+                FechaPrimerVencimientoSnapshot = fechaPrimerVencimientoSnapshot,
+                NombrePlanSnapshot = nombrePlanSnapshot
             };
         }
     }

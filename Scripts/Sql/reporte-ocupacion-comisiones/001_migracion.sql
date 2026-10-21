@@ -82,13 +82,13 @@ BEGIN
     FROM dbo.Comision c
     INNER JOIN dbo.Curso cur ON cur.IdCurso = c.IdCurso
     INNER JOIN dbo.Profesor p ON p.IdProfesor = c.IdProfesor
-    -- inscriptos y cuantos pagaron la cuota 1
+    -- Inscriptions and paid enrollment fees, independently of course installments.
     -- (si la comision se cancelo, las solicitudes quedan 'cancelada' y la cuota en 'reintegro_pendiente')
     OUTER APPLY (
         SELECT COUNT(1) AS Inscriptos,
                SUM(CASE WHEN cu.Estado IN (N'pagada', N'reintegro_pendiente') THEN 1 ELSE 0 END) AS Pagaron
         FROM dbo.SolicitudInscripcion si
-        LEFT JOIN dbo.Cuota cu ON cu.IdSolicitudInscripcion = si.IdSolicitudInscripcion AND cu.NumeroCuota = 1
+        LEFT JOIN dbo.Cuota cu ON cu.IdSolicitudInscripcion = si.IdSolicitudInscripcion AND cu.TipoConcepto = N'matricula'
         WHERE si.IdComision = c.IdComision
           AND si.Estado IN (N'pendiente', N'confirmada', N'activa', N'cancelada')
     ) ins

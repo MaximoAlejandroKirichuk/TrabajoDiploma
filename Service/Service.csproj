@@ -104,6 +104,8 @@
     <Compile Include="Interfaces\IAlumnoDAL_83KI.cs" />
     <Compile Include="Interfaces\IPagoInscripcionBLL_83KI.cs" />
     <Compile Include="Interfaces\IPagoInscripcionDAL_83KI.cs" />
+    <Compile Include="Interfaces\IPagoCuotaBLL_83KI.cs" />
+    <Compile Include="Interfaces\IPagoCuotaDAL_83KI.cs" />
     <Compile Include="Interfaces\IEstadoDefinitivoComisionBLL_83KI.cs" />
     <Compile Include="Interfaces\IEstadoDefinitivoComisionDAL_83KI.cs" />
     <Compile Include="Interfaces\IReporteOcupacionComisionBLL_83KI.cs" />

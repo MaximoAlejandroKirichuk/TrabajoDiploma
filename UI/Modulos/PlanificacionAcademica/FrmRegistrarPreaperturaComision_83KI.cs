@@ -15,12 +15,22 @@ namespace UI.Modulos.PlanificacionAcademica
         private readonly IGestorIdioma_83KI _gestorIdioma;
         private bool _actualizandoProfesores;
         private bool _actualizandoPlanes;
+        private readonly NumericUpDown _nudMontoMatricula = new NumericUpDown { DecimalPlaces = 2, Maximum = 999999999, Width = 160, Dock = DockStyle.Left };
+        private readonly Label _lblMontoMatricula = new Label { AutoSize = true, Anchor = AnchorStyles.Left };
 
         public FrmRegistrarPreaperturaComision_83KI(IGestorComision_83KI gestor)
         {
             _gestor = gestor;
             _gestorIdioma = ServiceFactory_83KI.GetGestorIdioma();
             InitializeComponent();
+            pnlArancel.Height = 88;
+            tblArancel.RowCount = 2;
+            tblArancel.RowStyles.Clear();
+            tblArancel.RowStyles.Add(new RowStyle(SizeType.Percent, 50));
+            tblArancel.RowStyles.Add(new RowStyle(SizeType.Percent, 50));
+            tblArancel.Controls.Add(_lblMontoMatricula, 0, 1);
+            tblArancel.Controls.Add(_nudMontoMatricula, 1, 1);
+            Height += 44;
             InicializarValoresPredeterminados();
             CargarCursos();
             CargarPlanes();
@@ -73,6 +83,7 @@ namespace UI.Modulos.PlanificacionAcademica
             nudArancelBase.TextChanged += (s, e) => ValidarArancelYActualizarPlanes();
             nudArancelBase.Leave += (s, e) => ValidarArancelYActualizarPlanes();
             nudArancelBase.Validated += (s, e) => ValidarArancelYActualizarPlanes();
+            _nudMontoMatricula.ValueChanged += (s, e) => ActualizarEstadoRegistrar();
             clbPlanes.ItemCheck += clbPlanes_ItemCheck;
         }
 
@@ -198,7 +209,7 @@ namespace UI.Modulos.PlanificacionAcademica
 
         private void ActualizarEstadoRegistrar()
         {
-            btnRegistrar.Enabled = IdProfesorSeleccionado > 0 && ArancelBaseEditado > 0 && PlanSeleccionado != null;
+            btnRegistrar.Enabled = IdProfesorSeleccionado > 0 && ArancelBaseEditado > 0 && _nudMontoMatricula.Value > 0 && PlanSeleccionado != null;
         }
 
         private void btnRegistrar_Click(object sender, EventArgs e)
@@ -242,7 +253,7 @@ namespace UI.Modulos.PlanificacionAcademica
                     return;
                 }
 
-                string codigo = _gestor.RegistrarPreapertura(IdCursoSeleccionado, IdProfesorSeleccionado, DiaSeleccionado, HoraInicio, HoraFin, (int)nudCupoMinimo.Value, (int)nudCupoMaximo.Value, dtpFechaLimitePago.Value.Date, dtpFechaInicio.Value.Date, dtpFechaFin.Value.Date, ArancelBase, plan.IdPlanDePago, plan.RecargoPorcentaje);
+                string codigo = _gestor.RegistrarPreapertura(IdCursoSeleccionado, IdProfesorSeleccionado, DiaSeleccionado, HoraInicio, HoraFin, (int)nudCupoMinimo.Value, (int)nudCupoMaximo.Value, dtpFechaLimitePago.Value.Date, dtpFechaInicio.Value.Date, dtpFechaFin.Value.Date, ArancelBase, plan.IdPlanDePago, plan.RecargoPorcentaje, _nudMontoMatricula.Value);
 
                 MessageBox.Show(this, IdiomaUiHelper_83KI.Texto("FrmRegistrarPreaperturaComision.Registrada", codigo), IdiomaUiHelper_83KI.Texto("Comun.Informacion"), MessageBoxButtons.OK, MessageBoxIcon.Information);
                 DialogResult = DialogResult.OK;
@@ -312,6 +323,7 @@ namespace UI.Modulos.PlanificacionAcademica
             lblFechaFin.Text = IdiomaUiHelper_83KI.Texto("FrmRegistrarPreaperturaComision.FechaFin");
             lblProfesor.Text = IdiomaUiHelper_83KI.Texto("FrmRegistrarPreaperturaComision.Profesor");
             lblArancelBase.Text = IdiomaUiHelper_83KI.Texto("FrmRegistrarPreaperturaComision.ArancelBase");
+            _lblMontoMatricula.Text = IdiomaUiHelper_83KI.Texto("FrmRegistrarPreaperturaComision.MontoMatricula");
             lblPlanes.Text = IdiomaUiHelper_83KI.Texto("FrmRegistrarPreaperturaComision.PlanDePago");
             btnRegistrar.Text = IdiomaUiHelper_83KI.Texto("FrmRegistrarPreaperturaComision.Registrar");
             CargarDias();

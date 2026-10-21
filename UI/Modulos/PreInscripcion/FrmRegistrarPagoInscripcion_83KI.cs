@@ -14,7 +14,6 @@ namespace UI.Modulos.PreInscripcion
         private readonly IPagoInscripcionBLL_83KI _pagoBLL;
         private readonly IGestorIdioma_83KI _gestorIdioma;
         private BusquedaPagoInscripcionResultado_83KI _resultadoBusqueda;
-        private PagoInscripcionResultado_83KI _pagoPendienteDeGuardarFactura;
 
         public FrmRegistrarPagoInscripcion_83KI(IPagoInscripcionBLL_83KI pagoBLL)
         {
@@ -23,7 +22,7 @@ namespace UI.Modulos.PreInscripcion
             InitializeComponent();
             ConfigurarGrid();
             CargarMetodosPago();
-            ConfigurarFechas();
+            dtpFechaPago.MaxDate = DateTime.Today;
             HabilitarFormularioPago(false);
             _gestorIdioma.Suscribir(this);
         }
@@ -31,34 +30,6 @@ namespace UI.Modulos.PreInscripcion
         private void btnBuscar_Click(object sender, EventArgs e)
         {
             BuscarCuotasPendientes();
-        }
-
-        private void txtDni_TextChanged(object sender, EventArgs e)
-        {
-            cmbComision.DataSource = null;
-            _resultadoBusqueda = null;
-            dgvCuotas.Rows.Clear();
-            lblAlumno.Text = string.Empty;
-            lblSolicitud.Text = string.Empty;
-            lblMensaje.Text = string.Empty;
-            HabilitarFormularioPago(false);
-        }
-
-        private void txtDni_Leave(object sender, EventArgs e)
-        {
-            cmbComision.DataSource = null;
-            if (string.IsNullOrWhiteSpace(txtDni.Text)) return;
-            try
-            {
-                var opciones = _pagoBLL.ListarComisionesConCuotasPendientes(txtDni.Text).ToList();
-                cmbComision.DataSource = opciones;
-                cmbComision.DisplayMember = nameof(ComisionPagoOpcion_83KI.Descripcion);
-                cmbComision.ValueMember = nameof(ComisionPagoOpcion_83KI.Codigo);
-                if (opciones.Count == 0)
-                    lblMensaje.Text = IdiomaUiHelper_83KI.Texto("FrmRegistrarPagoInscripcion.SinCuotasPendientes");
-                else lblMensaje.Text = string.Empty;
-            }
-            catch (Exception ex) { MostrarError(ex); }
         }
 
         private void btnGuardar_Click(object sender, EventArgs e)
@@ -80,7 +51,9 @@ namespace UI.Modulos.PreInscripcion
         {
             dgvCuotas.Columns.Clear();
             dgvCuotas.Columns.Add(new DataGridViewTextBoxColumn { Name = "IdCuota", DataPropertyName = "IdCuota", Visible = false });
-            dgvCuotas.Columns.Add(new DataGridViewTextBoxColumn { Name = "NumeroCuota", HeaderText = "Cuota", DataPropertyName = "NumeroCuota", ReadOnly = true });
+            dgvCuotas.Columns.Add(new DataGridViewTextBoxColumn { Name = "NumeroCuota", HeaderText = IdiomaUiHelper_83KI.Texto("FrmRegistrarPagoInscripcion.Concepto"), ReadOnly = true });
+            dgvCuotas.Columns.Add(new DataGridViewTextBoxColumn { Name = "Inscripcion", HeaderText = IdiomaUiHelper_83KI.Texto("FrmRegistrarPagoInscripcion.Inscripcion"), ReadOnly = true });
+            dgvCuotas.Columns.Add(new DataGridViewTextBoxColumn { Name = "Comision", HeaderText = IdiomaUiHelper_83KI.Texto("FrmRegistrarPagoInscripcion.Comision"), ReadOnly = true });
             dgvCuotas.Columns.Add(new DataGridViewTextBoxColumn { Name = "MontoOriginal", HeaderText = "Monto original", DataPropertyName = "MontoOriginal", ReadOnly = true });
             dgvCuotas.Columns.Add(new DataGridViewTextBoxColumn { Name = "BalanceAdeudado", HeaderText = "Balance adeudado", DataPropertyName = "BalanceAdeudado", ReadOnly = true });
             dgvCuotas.Columns.Add(new DataGridViewTextBoxColumn { Name = "FechaVencimiento", HeaderText = "Vencimiento", DataPropertyName = "FechaVencimiento", ReadOnly = true });
@@ -96,25 +69,6 @@ namespace UI.Modulos.PreInscripcion
             dtpFechaPago.Value = DateTime.Today;
         }
 
-        private void ConfigurarFechas()
-        {
-            DateTime hoy = DateTime.Today;
-            dtpFechaPago.MaxDate = hoy;
-            dtpFechaAcreditacion.MaxDate = hoy;
-            dtpFechaPago.Value = hoy;
-            dtpFechaAcreditacion.MinDate = dtpFechaPago.Value.Date;
-            dtpFechaAcreditacion.Value = hoy;
-            dtpFechaPago.ValueChanged += dtpFechaPago_ValueChanged;
-        }
-
-        private void dtpFechaPago_ValueChanged(object sender, EventArgs e)
-        {
-            DateTime fechaPago = dtpFechaPago.Value.Date;
-            dtpFechaAcreditacion.MinDate = fechaPago;
-            if (dtpFechaAcreditacion.Value.Date < fechaPago)
-                dtpFechaAcreditacion.Value = fechaPago;
-        }
-
         private void BuscarCuotasPendientes()
         {
             try
@@ -126,8 +80,7 @@ namespace UI.Modulos.PreInscripcion
                     return;
                 }
 
-                if (cmbComision.SelectedValue == null) throw new InvalidOperationException("Errores.PagoComisionObligatoria");
-                _resultadoBusqueda = _pagoBLL.BuscarCuotasPendientes(txtDni.Text, cmbComision.SelectedValue.ToString());
+                _resultadoBusqueda = _pagoBLL.BuscarCuotasPendientes(txtDni.Text);
                 if (_resultadoBusqueda == null || _resultadoBusqueda.CuotasPendientes == null || _resultadoBusqueda.CuotasPendientes.Count == 0)
                 {
                     lblAlumno.Text = string.Empty;
@@ -142,12 +95,15 @@ namespace UI.Modulos.PreInscripcion
                 lblSolicitud.Text = IdiomaUiHelper_83KI.Texto("FrmRegistrarPagoInscripcion.SolicitudEncontrada", _resultadoBusqueda.Solicitud.Codigo, _resultadoBusqueda.CodigoComision, _resultadoBusqueda.Curso);
 
                 dgvCuotas.Rows.Clear();
-                foreach (var cuota in _resultadoBusqueda.CuotasPendientes)
+                foreach (var matricula in _resultadoBusqueda.MatriculasPendientes)
                 {
-                    dgvCuotas.Rows.Add(cuota.IdCuota, cuota.NumeroCuota, cuota.MontoOriginal, cuota.BalanceAdeudado, cuota.FechaVencimiento.ToShortDateString());
+                    var cuota = matricula.Cuota;
+                    int indice = dgvCuotas.Rows.Add(cuota.IdCuota, IdiomaUiHelper_83KI.Texto("FrmRegistrarPagoInscripcion.Matricula"), matricula.Solicitud.Codigo, matricula.CodigoComision, cuota.MontoOriginal, cuota.BalanceAdeudado, cuota.FechaVencimiento.ToShortDateString());
+                    dgvCuotas.Rows[indice].Tag = matricula;
                 }
 
                 if (dgvCuotas.Rows.Count > 0) dgvCuotas.Rows[0].Selected = true;
+                CargarCuotaSeleccionada();
                 HabilitarFormularioPago(true);
                 lblMensaje.Text = string.Empty;
             }
@@ -162,17 +118,15 @@ namespace UI.Modulos.PreInscripcion
         {
             if (dgvCuotas.SelectedRows.Count == 0) return;
             var row = dgvCuotas.SelectedRows[0];
+            var matricula = row.Tag as MatriculaPendiente_83KI;
+            if (matricula != null)
+                lblSolicitud.Text = IdiomaUiHelper_83KI.Texto("FrmRegistrarPagoInscripcion.SolicitudEncontrada", matricula.Solicitud.Codigo, matricula.CodigoComision, matricula.Curso);
             if (row.Cells["BalanceAdeudado"].Value != null)
                 txtMonto.Text = row.Cells["BalanceAdeudado"].Value.ToString();
         }
 
         private void GuardarPago()
         {
-            if (_pagoPendienteDeGuardarFactura != null)
-            {
-                MostrarConfirmacion(_pagoPendienteDeGuardarFactura);
-                return;
-            }
             try
             {
                 if (dgvCuotas.SelectedRows.Count == 0)
@@ -185,13 +139,11 @@ namespace UI.Modulos.PreInscripcion
                 var resultado = _pagoBLL.RegistrarPagoInscripcion(new PagoInscripcionRequest_83KI
                 {
                     DNI = txtDni.Text,
-                    CodigoComision = cmbComision.SelectedValue != null ? cmbComision.SelectedValue.ToString() : string.Empty,
                     IdCuota = idCuota,
                     MetodoPago = cmbMetodoPago.SelectedItem != null ? cmbMetodoPago.SelectedItem.ToString() : string.Empty,
                     MontoRecibido = decimal.TryParse(txtMonto.Text, out decimal monto) ? monto : 0,
                     NumeroReferencia = txtNumeroReferencia.Text,
-                    FechaPago = dtpFechaPago.Value,
-                    FechaAcreditacion = dtpFechaAcreditacion.Value
+                    FechaPago = dtpFechaPago.Value
                 });
 
                 MostrarConfirmacion(resultado);
@@ -209,7 +161,7 @@ namespace UI.Modulos.PreInscripcion
         private void MostrarConfirmacion(PagoInscripcionResultado_83KI resultado)
         {
             string mensaje = IdiomaUiHelper_83KI.Texto(
-                "FrmRegistrarPagoInscripcion.Registrado",
+                "FrmRegistrarPagoInscripcion.MatriculaRegistrada",
                 resultado.Alumno.Nombre,
                 resultado.Alumno.DNI,
                 resultado.CodigoSolicitud,
@@ -217,25 +169,13 @@ namespace UI.Modulos.PreInscripcion
                 resultado.Pago.MontoPagado,
                 resultado.Pago.MetodoPago,
                 resultado.Pago.NumeroReferencia);
-            _pagoPendienteDeGuardarFactura = resultado;
 
             if (resultado.AuditoriaFallida)
                 mensaje += Environment.NewLine + IdiomaUiHelper_83KI.Texto("FrmRegistrarPagoInscripcion.AuditoriaFallida");
 
-            string errorFactura = null;
-            bool facturaGuardada = false;
-            using (var dialogo = new SaveFileDialog { Filter = "Archivo PDF (*.pdf)|*.pdf", DefaultExt = "pdf", AddExtension = true, FileName = resultado.NumeroReciboInstitucional + ".pdf", Title = "Guardar factura" })
-            {
-                if (dialogo.ShowDialog(this) == DialogResult.OK)
-                {
-                    try { new FacturaPagoPdfExporter_83KI().Exportar(resultado, dialogo.FileName); facturaGuardada = true; }
-                    catch (Exception ex) { errorFactura = ex.Message; }
-                }
-            }
-            if (errorFactura != null) mensaje += Environment.NewLine + "El pago quedó registrado, pero no se pudo guardar la factura: " + errorFactura + " Podés volver a intentar con Guardar.";
-            else if (!facturaGuardada) mensaje += Environment.NewLine + "El pago quedó registrado, pero la factura no se guardó. Podés volver a intentar con Guardar.";
             MessageBox.Show(this, mensaje, IdiomaUiHelper_83KI.Texto("Comun.Informacion"), MessageBoxButtons.OK, MessageBoxIcon.Information);
-            if (facturaGuardada) { _pagoPendienteDeGuardarFactura = null; DialogResult = DialogResult.OK; Close(); }
+            DialogResult = DialogResult.OK;
+            Close();
         }
 
         private void MostrarError(Exception ex)
@@ -247,13 +187,10 @@ namespace UI.Modulos.PreInscripcion
         private void LimpiarFormulario()
         {
             txtDni.Clear();
-            cmbComision.DataSource = null;
             txtMonto.Clear();
             txtNumeroReferencia.Clear();
             cmbMetodoPago.SelectedIndex = 0;
             dtpFechaPago.Value = DateTime.Today;
-            dtpFechaAcreditacion.MinDate = dtpFechaPago.Value.Date;
-            dtpFechaAcreditacion.Value = DateTime.Today;
             dgvCuotas.Rows.Clear();
             lblAlumno.Text = string.Empty;
             lblSolicitud.Text = string.Empty;
@@ -265,16 +202,16 @@ namespace UI.Modulos.PreInscripcion
         public void ActualizarIdioma(IIdioma idioma)
         {
             Text = IdiomaUiHelper_83KI.Texto("FrmRegistrarPagoInscripcion.Titulo");
+            dgvCuotas.Columns["Inscripcion"].HeaderText = IdiomaUiHelper_83KI.Texto("FrmRegistrarPagoInscripcion.Inscripcion");
+            dgvCuotas.Columns["Comision"].HeaderText = IdiomaUiHelper_83KI.Texto("FrmRegistrarPagoInscripcion.Comision");
             grpBusqueda.Text = IdiomaUiHelper_83KI.Texto("FrmRegistrarPagoInscripcion.Busqueda");
             lblDni.Text = IdiomaUiHelper_83KI.Texto("Comun.Dni");
-            lblCodigoComision.Text = IdiomaUiHelper_83KI.Texto("FrmRegistrarPagoInscripcion.Comision");
             btnBuscar.Text = IdiomaUiHelper_83KI.Texto("FrmRegistrarPagoInscripcion.Buscar");
             grpPago.Text = IdiomaUiHelper_83KI.Texto("FrmRegistrarPagoInscripcion.DatosPago");
             lblMonto.Text = IdiomaUiHelper_83KI.Texto("FrmRegistrarPagoInscripcion.MontoRecibido");
             lblMetodoPago.Text = IdiomaUiHelper_83KI.Texto("FrmRegistrarPagoInscripcion.MetodoPago");
             lblNumeroReferencia.Text = IdiomaUiHelper_83KI.Texto("FrmRegistrarPagoInscripcion.NumeroReferencia");
             lblFechaPago.Text = IdiomaUiHelper_83KI.Texto("FrmRegistrarPagoInscripcion.FechaPago");
-            lblFechaAcreditacion.Text = IdiomaUiHelper_83KI.Texto("FrmRegistrarPagoInscripcion.FechaAcreditacion");
             btnGuardar.Text = IdiomaUiHelper_83KI.Texto("Comun.Guardar");
             btnLimpiar.Text = IdiomaUiHelper_83KI.Texto("Comun.Limpiar");
         }

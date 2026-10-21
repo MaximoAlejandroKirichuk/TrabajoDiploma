@@ -92,6 +92,7 @@ namespace UI
             registrarSolicitudInscripcionToolStripMenuItem.Visible = puedeRegistrarSolicitudInscripcion;
             registrarDecisionBecaToolStripMenuItem.Visible = puedeRegistrarDecisionBeca;
             registrarPagoInscripcionToolStripMenuItem.Visible = puedeRegistrarPagoInscripcion;
+            registrarPagoCuotaToolStripMenuItem.Visible = puedeRegistrarPagoInscripcion;
             registrarEstadoDefinitivoComisionToolStripMenuItem.Visible = puedeRegistrarEstadoDefinitivo;
             planificacionAcademicaToolStripMenuItem.Visible = puedePlanificacionAcademica;
             cobrosMorosidadActasToolStripMenuItem.Visible = puedeRegistrarPagoInscripcion;
@@ -124,6 +125,7 @@ namespace UI
             registrarSolicitudInscripcionToolStripMenuItem.Text = Texto("FrmPrincipal.RegistrarSolicitudInscripcion");
             registrarDecisionBecaToolStripMenuItem.Text = Texto("FrmPrincipal.RegistrarDecisionBeca");
             registrarPagoInscripcionToolStripMenuItem.Text = Texto("FrmPrincipal.RegistrarPagoInscripcion");
+            registrarPagoCuotaToolStripMenuItem.Text = Texto("FrmPrincipal.RegistrarPagoCuota");
             registrarEstadoDefinitivoComisionToolStripMenuItem.Text = Texto("FrmPrincipal.RegistrarEstadoDefinitivoComision");
             cobrosMorosidadActasToolStripMenuItem.Text = Texto("FrmPrincipal.CobrosMorosidadActas");
             reportesToolStripMenuItem.Text = Texto("FrmPrincipal.Reportes");
@@ -458,6 +460,24 @@ namespace UI
             using (var formulario = new FrmRegistrarPagoInscripcion_83KI(
                 new KI68PagoInscripcionBLL(
                     new PagoInscripcionDAL_83KI(),
+                    SessionManager_83KI.Instancia,
+                    new BitacoraBLL_83KI(new BitacoraEventoDAL_83KI()))))
+            {
+                formulario.ShowDialog(this);
+            }
+        }
+
+        private void registrarPagoCuotaToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarPagoInscripcion))
+            {
+                IdiomaUiHelper_83KI.MostrarAdvertencia(this, "Errores.SinPermisos", "Comun.Seguridad");
+                return;
+            }
+
+            using (var formulario = new FrmRegistrarPagoCuota_83KI(
+                new KI68PagoCuotaBLL_83KI(
+                    new PagoCuotaDAL_83KI(),
                     SessionManager_83KI.Instancia,
                     new BitacoraBLL_83KI(new BitacoraEventoDAL_83KI()))))
             {

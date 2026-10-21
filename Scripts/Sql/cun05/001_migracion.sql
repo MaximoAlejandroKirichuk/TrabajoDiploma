@@ -106,6 +106,8 @@ BEGIN
         si.DVH AS SolicitudDVH,
         cu.IdCuota,
         cu.NumeroCuota,
+        cu.TipoConcepto,
+        cu.Periodo,
         cu.MontoOriginal,
         cu.BalanceAdeudado,
         cu.FechaVencimiento,
@@ -120,6 +122,7 @@ BEGIN
     INNER JOIN dbo.Curso cur ON cur.IdCurso = c.IdCurso
     WHERE a.DNI = @DniNormalizado
       AND cu.Estado = N'pendiente'
+      AND cu.TipoConcepto = N'matricula'
       AND si.Estado IN (N'pendiente', N'confirmada', N'activa')
     ORDER BY cu.NumeroCuota, cu.FechaVencimiento;
 END
@@ -142,12 +145,15 @@ BEGIN
     DECLARE @StartedTransaction BIT = 0, @IdPago INT;
     DECLARE @NumeroCuota INT, @BalanceAdeudado DECIMAL(18,2);
 
+    IF @FechaPago IS NULL THROW 52606, N'Errores.PagoFechaObligatoria', 1;
+    IF CONVERT(date,@FechaPago)>CONVERT(date,GETDATE()) THROW 52607, N'Errores.PagoFechaFutura', 1;
+
     IF @@TRANCOUNT = 0 BEGIN SET @StartedTransaction = 1; BEGIN TRANSACTION; END
 
     BEGIN TRY
         SELECT @BalanceAdeudado = BalanceAdeudado, @NumeroCuota = NumeroCuota
         FROM dbo.Cuota WITH (UPDLOCK, HOLDLOCK)
-        WHERE IdCuota = @IdCuota AND IdSolicitudInscripcion = @IdSolicitudInscripcion;
+        WHERE IdCuota = @IdCuota AND IdSolicitudInscripcion = @IdSolicitudInscripcion AND TipoConcepto=N'matricula';
 
         IF @BalanceAdeudado IS NULL
             THROW 52601, N'Errores.PagoCuotaNoPendiente', 1;
@@ -184,7 +190,7 @@ BEGIN
         SET BalanceAdeudado = 0, Estado = N'pagada', DVH = N''
         WHERE IdCuota = @IdCuota;
 
-        IF @NumeroCuota = 1
+        IF EXISTS(SELECT 1 FROM dbo.Cuota WHERE IdCuota=@IdCuota AND TipoConcepto=N'matricula')
         BEGIN
             UPDATE dbo.SolicitudInscripcion
             SET Estado = N'activa', DVH = N''
@@ -227,6 +233,8 @@ BEGIN
         si.Observaciones AS SolicitudObservaciones,
         si.DVH AS SolicitudDVH,
         cu.NumeroCuota,
+        cu.TipoConcepto,
+        cu.Periodo,
         cu.MontoOriginal,
         cu.BalanceAdeudado,
         cu.FechaVencimiento,

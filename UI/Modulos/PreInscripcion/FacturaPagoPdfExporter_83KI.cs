@@ -48,7 +48,7 @@ namespace UI.Modulos.PreInscripcion
                 float y = area.Top + 18;
                 e.Graphics.DrawString("Factura", titulo, colorTitulo, area.Left, y);
                 y += 42;
-                e.Graphics.DrawString("Comprobante de pago de inscripción", subtitulo, Brushes.DimGray, area.Left, y);
+                e.Graphics.DrawString("Comprobante de pago de cuota del curso", subtitulo, Brushes.DimGray, area.Left, y);
                 y += 28;
                 e.Graphics.DrawLine(separador, area.Left, y, area.Right, y);
                 y += 28;

@@ -152,7 +152,7 @@ BEGIN
     OUTER APPLY (
         SELECT COUNT(1) AS VacantesRegularizadas
         FROM dbo.SolicitudInscripcion si
-        INNER JOIN dbo.Cuota cu ON cu.IdSolicitudInscripcion = si.IdSolicitudInscripcion AND cu.NumeroCuota = 1 AND cu.Estado = N'pagada'
+        INNER JOIN dbo.Cuota cu ON cu.IdSolicitudInscripcion = si.IdSolicitudInscripcion AND cu.TipoConcepto = N'matricula' AND cu.Estado = N'pagada'
         WHERE si.IdComision = c.IdComision AND si.Estado = N'activa'
     ) v
     WHERE c.Estado = N'preapertura'
@@ -173,7 +173,7 @@ BEGIN
     OUTER APPLY (
         SELECT COUNT(1) AS VacantesRegularizadas
         FROM dbo.SolicitudInscripcion si
-        INNER JOIN dbo.Cuota cu ON cu.IdSolicitudInscripcion = si.IdSolicitudInscripcion AND cu.NumeroCuota = 1 AND cu.Estado = N'pagada'
+        INNER JOIN dbo.Cuota cu ON cu.IdSolicitudInscripcion = si.IdSolicitudInscripcion AND cu.TipoConcepto = N'matricula' AND cu.Estado = N'pagada'
         WHERE si.IdComision = c.IdComision AND si.Estado = N'activa'
     ) v
     WHERE c.IdComision = @IdComision
@@ -198,7 +198,7 @@ BEGIN
 
         SELECT @Regularizadas = COUNT(1)
         FROM dbo.SolicitudInscripcion si WITH (UPDLOCK, HOLDLOCK)
-        INNER JOIN dbo.Cuota cu WITH (UPDLOCK, HOLDLOCK) ON cu.IdSolicitudInscripcion = si.IdSolicitudInscripcion AND cu.NumeroCuota = 1 AND cu.Estado = N'pagada'
+        INNER JOIN dbo.Cuota cu WITH (UPDLOCK, HOLDLOCK) ON cu.IdSolicitudInscripcion = si.IdSolicitudInscripcion AND cu.TipoConcepto = N'matricula' AND cu.Estado = N'pagada'
         WHERE si.IdComision = @IdComision AND si.Estado = N'activa';
 
         IF @Regularizadas < @CupoMinimo THROW 52702, N'Errores.EstadoDefinitivoQuorumInsuficiente', 1;
@@ -238,7 +238,7 @@ BEGIN
 
         SELECT @Regularizadas = COUNT(1)
         FROM dbo.SolicitudInscripcion si WITH (UPDLOCK, HOLDLOCK)
-        INNER JOIN dbo.Cuota cu WITH (UPDLOCK, HOLDLOCK) ON cu.IdSolicitudInscripcion = si.IdSolicitudInscripcion AND cu.NumeroCuota = 1 AND cu.Estado = N'pagada'
+        INNER JOIN dbo.Cuota cu WITH (UPDLOCK, HOLDLOCK) ON cu.IdSolicitudInscripcion = si.IdSolicitudInscripcion AND cu.TipoConcepto = N'matricula' AND cu.Estado = N'pagada'
         WHERE si.IdComision = @IdComision AND si.Estado = N'activa';
 
         IF @Regularizadas >= @CupoMinimo THROW 52703, N'Errores.EstadoDefinitivoQuorumAlcanzado', 1;

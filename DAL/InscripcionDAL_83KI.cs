@@ -43,7 +43,11 @@ namespace DAL
                 RegistrarAuditoriaTransaccional(resultado, request.AuditoriaUsername, conn, tran);
                 RecomputarIntegridad("Alumno", "IdAlumno", resultado.Alumno.IdAlumno, conn, tran);
                 RecomputarIntegridad("SolicitudInscripcion", "IdSolicitudInscripcion", resultado.Solicitud.IdSolicitudInscripcion, conn, tran);
-                RecomputarIntegridad("Cuota", "IdCuota", resultado.CuotaInicial.IdCuota, conn, tran);
+                var cuotas = AccesoDAL_83KI.LeerTransaccional(conn, tran,
+                    "SELECT IdCuota FROM dbo.Cuota WHERE IdSolicitudInscripcion = @id",
+                    new List<SqlParameter> { new SqlParameter("@id", resultado.Solicitud.IdSolicitudInscripcion) });
+                foreach (DataRow cuota in cuotas.Tables[0].Rows)
+                    RecomputarIntegridad("Cuota", "IdCuota", Convert.ToInt32(cuota["IdCuota"]), conn, tran);
             });
             return resultado;
         }
@@ -69,7 +73,8 @@ namespace DAL
         {
             var alumno = Alumno_83KI.ReconstruirDesdePersistencia(Convert.ToInt32(row["IdAlumno"]), row["AlumnoDNI"].ToString(), row["AlumnoNombre"].ToString(), row["AlumnoApellido"].ToString(), row["AlumnoEmail"].ToString(), row["AlumnoTelefono"].ToString(), Convert.ToDateTime(row["AlumnoFechaAlta"]), row["AlumnoEstado"].ToString(), row["AlumnoDVH"].ToString());
             int? idLead = row["IdLeadOrigen"] == DBNull.Value ? (int?)null : Convert.ToInt32(row["IdLeadOrigen"]);
-            var solicitud = SolicitudInscripcion_83KI.ReconstruirDesdePersistencia(Convert.ToInt32(row["IdSolicitudInscripcion"]), row["Codigo"].ToString(), alumno.IdAlumno, idLead, Convert.ToInt32(row["IdComision"]), Convert.ToInt32(row["IdPlanDePago"]), Convert.ToDecimal(row["RecargoPlanSnapshot"]), Convert.ToDateTime(row["FechaSolicitud"]), row["SolicitudEstado"].ToString(), row["Observaciones"].ToString(), row["SolicitudDVH"].ToString());
+            var solicitud = SolicitudInscripcion_83KI.ReconstruirDesdePersistencia(Convert.ToInt32(row["IdSolicitudInscripcion"]), row["Codigo"].ToString(), alumno.IdAlumno, idLead, Convert.ToInt32(row["IdComision"]), Convert.ToInt32(row["IdPlanDePago"]), Convert.ToDecimal(row["RecargoPlanSnapshot"]), Convert.ToDateTime(row["FechaSolicitud"]), row["SolicitudEstado"].ToString(), row["Observaciones"].ToString(), row["SolicitudDVH"].ToString(),
+                Convert.ToDecimal(row["ArancelCursoSnapshot"]), Convert.ToInt32(row["CantidadCuotasSnapshot"]), Convert.ToDecimal(row["TotalCursoSnapshot"]), Convert.ToDateTime(row["FechaPrimerVencimientoSnapshot"]), row["NombrePlanSnapshot"].ToString());
             var cuota = Cuota_83KI.ReconstruirDesdePersistencia(Convert.ToInt32(row["IdCuota"]), solicitud.IdSolicitudInscripcion, Convert.ToInt32(row["NumeroCuota"]), Convert.ToDecimal(row["MontoOriginal"]), Convert.ToDecimal(row["BalanceAdeudado"]), Convert.ToDateTime(row["FechaVencimiento"]), row["CuotaEstado"].ToString(), row["CuotaDVH"].ToString());
             return new SolicitudInscripcionResultado_83KI { Alumno = alumno, Solicitud = solicitud, CuotaInicial = cuota, CodigoSolicitud = solicitud.Codigo, VacantesDisponibles = Convert.ToInt32(row["VacantesDisponibles"]) };
         }
@@ -78,7 +83,7 @@ namespace DAL
         {
             var planes = new List<PlanDePago_83KI>();
             if (ds == null || ds.Tables.Count == 0) return planes;
-            foreach (DataRow row in ds.Tables[0].Rows) planes.Add(PlanDePago_83KI.ReconstruirDesdePersistencia(Convert.ToInt32(row["IdPlanDePago"]), row["Nombre"].ToString(), Convert.ToBoolean(row["EstadoActivo"]), Convert.ToDecimal(row["RecargoPorcentaje"])));
+            foreach (DataRow row in ds.Tables[0].Rows) planes.Add(PlanDePago_83KI.ReconstruirDesdePersistencia(Convert.ToInt32(row["IdPlanDePago"]), row["Nombre"].ToString(), Convert.ToBoolean(row["EstadoActivo"]), Convert.ToDecimal(row["RecargoPorcentaje"]), Convert.ToInt32(row["CantidadCuotas"])));
             return planes;
         }
 
