@@ -41,6 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Negocio\KI68ResultadoEvaluacionBLL.cs" />
     <Compile Include="BitacoraBLL_83KI.cs" />
     <Compile Include="ConsultaBitacoraEventos_83KI.cs" />
     <Compile Include="BootstrapBaseDatosBLL_83KI.cs" />

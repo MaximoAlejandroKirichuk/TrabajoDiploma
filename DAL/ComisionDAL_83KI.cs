@@ -80,6 +80,38 @@ namespace DAL
             return MapearComision(ds.Tables[0].Rows[0]);
         }
 
+        public Comision_83KI ObtenerComisionPorCursoYNumero(int idCurso, string numeroComision)
+        {
+            var ds = _accesoDAL.Leer("SELECT * FROM dbo.Comision WHERE IdCurso=@curso AND Codigo=@numero",
+                new List<SqlParameter> { new SqlParameter("@curso", idCurso), new SqlParameter("@numero", numeroComision) });
+            if (ds.Tables[0].Rows.Count == 0) return null;
+            if (ds.Tables[0].Rows.Count != 1) throw new InvalidOperationException("Cun08.ComisionAmbigua");
+            return MapearComision(ds.Tables[0].Rows[0]);
+        }
+
+        public int ObtenerProfesorPorDni(string dni)
+        {
+            var ds = _accesoDAL.Leer("SELECT IdProfesor FROM dbo.Profesor WHERE CONVERT(nvarchar(50),DNI) COLLATE Latin1_General_100_BIN2=@dni AND DATALENGTH(CONVERT(nvarchar(50),DNI))=DATALENGTH(@dni) AND EstadoActivo=1",
+                new List<SqlParameter> { new SqlParameter("@dni", dni) });
+            return ds.Tables[0].Rows.Count == 1 ? Convert.ToInt32(ds.Tables[0].Rows[0][0]) : 0;
+        }
+
+        public IEnumerable<ComisionListado_83KI> ListarComisionesAsignadasParaEvaluacion(int idProfesor)
+        {
+            return MapearListado(_accesoDAL.Leer(@"SELECT c.*, cu.Nombre AS Curso,
+                p.Apellido + N', ' + p.Nombre AS Profesor
+                FROM dbo.Comision c
+                JOIN dbo.Curso cu ON cu.IdCurso=c.IdCurso
+                JOIN dbo.Profesor p ON p.IdProfesor=c.IdProfesor AND p.EstadoActivo=1
+                WHERE c.IdProfesor=@profesor ORDER BY cu.Nombre,c.Codigo,c.FechaInicio,c.IdComision",
+                new List<SqlParameter> { new SqlParameter("@profesor", idProfesor) }));
+        }
+
+        public DateTime ObtenerFechaActual()
+        {
+            return Convert.ToDateTime(_accesoDAL.LeerEscalar("SELECT CONVERT(date,GETDATE())")).Date;
+        }
+
         public void ModificarComision(Comision_83KI comision)
         {
             _accesoDAL.EjecutarTransaccion((conn, tran) =>

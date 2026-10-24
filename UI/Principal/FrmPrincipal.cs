@@ -86,6 +86,8 @@ namespace UI
             bool puedeRegistrarPagoInscripcion = PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarPagoInscripcion);
             bool puedeRegistrarEstadoDefinitivo = PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarEstadoDefinitivoComision);
             bool puedePlanificacionAcademica = puedeRegistrarPreapertura || puedeVerComisiones || puedeRegistrarConsulta || puedeRegistrarSolicitudInscripcion || puedeRegistrarDecisionBeca || puedeRegistrarEstadoDefinitivo;
+            bool puedeRegistrarResultados = PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarResultadosEvaluacion);
+            registrarResultadosEvaluacionToolStripMenuItem.Visible = puedeRegistrarResultados;
             gestionComisionesToolStripMenuItem.Visible = puedeVerComisiones;
             registrarPreaperturaComisionToolStripMenuItem.Visible = puedeRegistrarPreapertura;
             registrarConsultaToolStripMenuItem.Visible = puedeRegistrarConsulta;
@@ -95,7 +97,7 @@ namespace UI
             registrarPagoCuotaToolStripMenuItem.Visible = puedeRegistrarPagoInscripcion;
             registrarEstadoDefinitivoComisionToolStripMenuItem.Visible = puedeRegistrarEstadoDefinitivo;
             planificacionAcademicaToolStripMenuItem.Visible = puedePlanificacionAcademica;
-            cobrosMorosidadActasToolStripMenuItem.Visible = puedeRegistrarPagoInscripcion;
+            cobrosMorosidadActasToolStripMenuItem.Visible = puedeRegistrarPagoInscripcion || puedeRegistrarResultados;
             bool puedeVerReporteOcupacion = PermisosUi_83KI.Tiene(PermisoSistema_83KI.VerReporteOcupacionComisiones);
             reporteOcupacionComisionesToolStripMenuItem.Visible = puedeVerReporteOcupacion;
             reportesToolStripMenuItem.Visible = puedeVerReporteOcupacion;
@@ -127,6 +129,7 @@ namespace UI
             registrarPagoInscripcionToolStripMenuItem.Text = Texto("FrmPrincipal.RegistrarPagoInscripcion");
             registrarPagoCuotaToolStripMenuItem.Text = Texto("FrmPrincipal.RegistrarPagoCuota");
             registrarEstadoDefinitivoComisionToolStripMenuItem.Text = Texto("FrmPrincipal.RegistrarEstadoDefinitivoComision");
+            registrarResultadosEvaluacionToolStripMenuItem.Text = Texto("Cun08.Titulo");
             cobrosMorosidadActasToolStripMenuItem.Text = Texto("FrmPrincipal.CobrosMorosidadActas");
             reportesToolStripMenuItem.Text = Texto("FrmPrincipal.Reportes");
             reporteOcupacionComisionesToolStripMenuItem.Text = Texto("FrmPrincipal.ReporteOcupacionComisiones");
@@ -509,6 +512,17 @@ namespace UI
             {
                 formulario.ShowDialog(this);
             }
+        }
+
+        private void registrarResultadosEvaluacionToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarResultadosEvaluacion))
+            {
+                IdiomaUiHelper_83KI.MostrarAdvertencia(this, "Errores.SinPermisos", "Comun.Seguridad");
+                return;
+            }
+            using (var formulario = new FrmRegistrarResultadosEvaluacion_83KI(ServiceFactory_83KI.CrearResultadoEvaluacionBLL()))
+                formulario.ShowDialog(this);
         }
 
         private void reporteOcupacionComisionesToolStripMenuItem_Click(object sender, EventArgs e)

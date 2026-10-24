@@ -24,6 +24,11 @@ namespace BLL
             _bitacora = bitacora ?? throw new ArgumentNullException(nameof(bitacora));
         }
 
+        public void ActualizarDVHyDVVResultados(List<int> idsResultado, System.Data.SqlClient.SqlConnection conn, System.Data.SqlClient.SqlTransaction tran)
+        {
+            _integridadDal.ActualizarDVHyDVVResultados(idsResultado, conn, tran);
+        }
+
         /// <summary>
         /// verifica la integridad de todas las tablas protegidas comparando el dvv
         /// almacenado contra el dvv calculado desde los datos vivos de las filas.

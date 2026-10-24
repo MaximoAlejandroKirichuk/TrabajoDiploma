@@ -101,6 +101,9 @@ namespace Service.DTOs
                 new IntegridadTablaConfig_83KI("AltaOficialComision",
                     "FechaAlta", "FechaRegistro", "IdAltaOficialComision", "IdComision", "NumeroActa", "Observaciones", "UsuarioRegistro"),
 
+                new IntegridadTablaConfig_83KI("ResultadoEvaluacion",
+                    "Calificacion", "CondicionFinal", "FechaEvaluacion", "IdComision", "IdInscripcion", "IdResultadoEvaluacion", "Observaciones"),
+
                 new IntegridadTablaConfig_83KI("ActaCierreComision",
                     "FechaCierre", "FechaRegistro", "IdActaCierreComision", "IdComision", "Motivo", "NumeroActa", "Observaciones", "UsuarioRegistro"),
             };

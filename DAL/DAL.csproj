@@ -41,6 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ResultadoEvaluacionDAL_83KI.cs" />
     <Compile Include="AccesoDAL_83KI.cs" />
     <Compile Include="AlumnoDAL_83KI.cs" />
     <Compile Include="BecaDAL_83KI.cs" />

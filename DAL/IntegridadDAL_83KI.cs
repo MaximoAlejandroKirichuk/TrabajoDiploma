@@ -37,6 +37,7 @@ namespace DAL
         private static readonly IReadOnlyDictionary<string, string[]> PK =
             new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
             {
+                { "ResultadoEvaluacion", new[] { "IdResultadoEvaluacion" } },
                 { "Usuarios",        new[] { "DNI" } },
                 { "Roles",           new[] { "CodigoRol" } },
                 { "Familias",        new[] { "CodigoFamilia" } },
@@ -71,6 +72,19 @@ namespace DAL
             var config = ResolverConfig(nombreTabla);
             string canonical = CanonicalizarFila(config, valoresColumna);
             return _encriptador.CalcularHashIntegridad(canonical);
+        }
+
+        public void ActualizarDVHyDVVResultados(List<int> idsResultado, SqlConnection conn, SqlTransaction tran)
+        {
+            foreach (int id in idsResultado)
+            {
+                var parametros = new List<SqlParameter> { new SqlParameter("@id", id) };
+                var valores = LeerFilaTransaccional("ResultadoEvaluacion", "IdResultadoEvaluacion=@id", parametros, conn, tran);
+                if (valores.Count == 0) throw new InvalidOperationException("Cun08.NoRegistrado");
+                // Las instancias de SqlParameter pertenecen a una única colección de parámetros de comando, incluso después de liberar sus recursos.
+                ActualizarDVHyDVVTransaccional("ResultadoEvaluacion", valores, "IdResultadoEvaluacion=@id",
+                    new List<SqlParameter> { new SqlParameter("@id", id) }, conn, tran);
+            }
         }
 
         public Dictionary<string, string> ObtenerDVVActuales()

@@ -42,6 +42,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DTOs\BusquedaResultadoEvaluacionRequest_83KI.cs" />
+    <Compile Include="DTOs\AlumnoEvaluacionListado_83KI.cs" />
+    <Compile Include="DTOs\ResultadoAlumnoRequest_83KI.cs" />
+    <Compile Include="DTOs\ResultadoEvaluacionRequest_83KI.cs" />
+    <Compile Include="Interfaces\IResultadoEvaluacionDAL_83KI.cs" />
     <Compile Include="DTOs\BitacoraEventoVista_83KI.cs" />
     <Compile Include="DTOs\BusquedaDecisionBecaResultado_83KI.cs" />
     <Compile Include="DTOs\BusquedaPagoInscripcionResultado_83KI.cs" />

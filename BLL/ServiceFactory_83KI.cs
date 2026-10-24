@@ -42,6 +42,15 @@ namespace Service
             return _gestorUsuario;
         }
 
+        public static KI68ResultadoEvaluacionBLL CrearResultadoEvaluacionBLL()
+        {
+            var session = SessionManager_83KI.Instancia;
+            var integridad = GetIntegridadDatosService();
+            return new KI68ResultadoEvaluacionBLL(new KI68ComisionBLL(new ComisionDAL_83KI(), session),
+                new ResultadoEvaluacionDAL_83KI(() => session.UsuarioActivo == null || session.RequiereRecuperacionIntegridad
+                    ? 0 : session.UsuarioActivo.DNI, integridad.ActualizarDVHyDVVResultados), session, GetBitacoraManager());
+        }
+
         public static IGestorIdioma_83KI GetGestorIdioma()
         {
             if (_gestorIdioma == null)

@@ -6,6 +6,7 @@
         /// Required designer variable.
         /// </summary>
         private System.ComponentModel.IContainer components = null;
+        private System.Windows.Forms.ToolStripMenuItem registrarResultadosEvaluacionToolStripMenuItem;
 
         /// <summary>
         /// Clean up any resources being used.
@@ -52,6 +53,10 @@
             this.registrarPagoInscripcionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.registrarPagoCuotaToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.registrarEstadoDefinitivoComisionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.registrarResultadosEvaluacionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.registrarResultadosEvaluacionToolStripMenuItem.Name = "registrarResultadosEvaluacionToolStripMenuItem";
+            this.registrarResultadosEvaluacionToolStripMenuItem.Text = "Registrar resultados de evaluación";
+            this.registrarResultadosEvaluacionToolStripMenuItem.Click += new System.EventHandler(this.registrarResultadosEvaluacionToolStripMenuItem_Click);
             this.cobrosMorosidadActasToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.reportesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.reporteOcupacionComisionesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -262,7 +267,8 @@
             // 
             this.cobrosMorosidadActasToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.registrarPagoInscripcionToolStripMenuItem,
-            this.registrarPagoCuotaToolStripMenuItem});
+            this.registrarPagoCuotaToolStripMenuItem,
+            this.registrarResultadosEvaluacionToolStripMenuItem});
             this.cobrosMorosidadActasToolStripMenuItem.Name = "cobrosMorosidadActasToolStripMenuItem";
             this.cobrosMorosidadActasToolStripMenuItem.Size = new System.Drawing.Size(208, 24);
             this.cobrosMorosidadActasToolStripMenuItem.Text = "Cobros, Morosidad y Actas";

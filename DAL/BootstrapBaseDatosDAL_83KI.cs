@@ -185,7 +185,7 @@ namespace DAL
                 // La validación de la conexión nunca migra una base de datos existente.
                 foreach (string relative in new[] { "financiacion-cuotas/001_modelo.sql", "cun03/001_migracion.sql",
                     "cun05/001_migracion.sql", "cun06/001_migracion.sql", "reporte-ocupacion-comisiones/001_migracion.sql",
-                    "cun07/001_migracion.sql", "financiacion-cuotas/002_completar_inscripciones.sql" })
+                    "cun07/001_migracion.sql", "financiacion-cuotas/002_completar_inscripciones.sql", "cun08/001_migracion.sql" })
                 {
                     string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Scripts", "Sql", relative.Replace('/', Path.DirectorySeparatorChar));
                     if (!File.Exists(path)) return (false, "No se encontró el script de instalación: " + path);

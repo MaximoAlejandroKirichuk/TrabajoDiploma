@@ -8,6 +8,8 @@ namespace Service.Interfaces
     /// </summary>
     public interface IIntegridadDatosService_83KI
     {
+        void ActualizarDVHyDVVResultados(System.Collections.Generic.List<int> idsResultado,
+            System.Data.SqlClient.SqlConnection conn, System.Data.SqlClient.SqlTransaction tran);
         /// <summary>
         /// verifica la integridad de todas las tablas protegidas comparando el dvv
         /// almacenado contra el dvv calculado desde los valores dvh actuales.
