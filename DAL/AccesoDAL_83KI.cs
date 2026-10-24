@@ -94,9 +94,14 @@ namespace DAL
                             operacion(conn, tran);
                             tran.Commit();
                         }
-                        catch
+                        catch (Exception original)
                         {
-                            tran.Rollback();
+                            try { tran.Rollback(); }
+                            catch (Exception rollback)
+                            {
+                                // Conservar el error de negocio o de confirmación y su traza de pila; la limpieza es evidencia secundaria.
+                                original.Data["RollbackException"] = rollback;
+                            }
                             throw;
                         }
                     }

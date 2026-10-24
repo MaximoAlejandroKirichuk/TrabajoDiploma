@@ -1,4 +1,7 @@
 SET NOCOUNT ON;
+-- Ejecutar todos los lotes en una misma conexión y detenerse ante el primer error (sqlcmd -b).
+SET XACT_ABORT ON;
+BEGIN TRANSACTION;
 GO
 
 IF OBJECT_ID(N'dbo.CUN07_Migraciones',N'U') IS NULL
@@ -24,15 +27,27 @@ IF COL_LENGTH(N'dbo.PagoInscripcion', N'NumeroReciboInstitucional') IS NULL
     ALTER TABLE dbo.PagoInscripcion ADD NumeroReciboInstitucional NVARCHAR(40) NULL;
 GO
 
+CREATE TABLE #Cun07ChangedPayments(IdPagoInscripcion INT NOT NULL);
+DECLARE @legacyBase BIGINT, @missing BIGINT;
+-- Serializar la asignación con las operaciones de escritura; nunca reutilizar un número histórico ya asignado.
+SELECT @legacyBase=COALESCE(MAX(TRY_CONVERT(BIGINT,SUBSTRING(NumeroReciboInstitucional,11,12))),0)
+FROM dbo.PagoInscripcion WITH(TABLOCKX,HOLDLOCK)
+WHERE NumeroReciboInstitucional LIKE N'CUN07-LEG-%' AND LEN(NumeroReciboInstitucional)=22
+  AND SUBSTRING(NumeroReciboInstitucional,11,12) COLLATE Latin1_General_100_BIN2 NOT LIKE N'%[^0-9]%';
+SELECT @missing=COUNT_BIG(*) FROM dbo.PagoInscripcion WHERE NumeroReciboInstitucional IS NULL;
+IF @legacyBase+@missing>999999999999
+    THROW 52710,N'CUN07: espacio de recibos historicos agotado; no se modificaron los recibos.',1;
 ;WITH faltantes AS (
     SELECT IdPagoInscripcion, ROW_NUMBER() OVER(ORDER BY IdPagoInscripcion) AS rn
     FROM dbo.PagoInscripcion WHERE NumeroReciboInstitucional IS NULL
 )
 UPDATE p SET FechaAcreditacion=COALESCE(p.FechaAcreditacion,p.FechaPago),
-    NumeroReciboInstitucional=CONCAT(N'CUN07-LEG-',RIGHT(REPLICATE(N'0',12)+CONVERT(NVARCHAR(20),f.rn),12))
+    NumeroReciboInstitucional=CONCAT(N'CUN07-LEG-',RIGHT(REPLICATE(N'0',12)+CONVERT(NVARCHAR(20),@legacyBase+f.rn),12))
+OUTPUT inserted.IdPagoInscripcion INTO #Cun07ChangedPayments
 FROM dbo.PagoInscripcion p JOIN faltantes f ON f.IdPagoInscripcion=p.IdPagoInscripcion;
 UPDATE dbo.PagoInscripcion SET FechaAcreditacion=COALESCE(FechaAcreditacion,FechaPago)
-WHERE FechaAcreditacion IS NULL;
+OUTPUT inserted.IdPagoInscripcion INTO #Cun07ChangedPayments
+WHERE FechaAcreditacion IS NULL AND FechaPago IS NOT NULL;
 IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.PagoInscripcion') AND name=N'UX_PagoInscripcion_ReciboInstitucional')
     CREATE UNIQUE INDEX UX_PagoInscripcion_ReciboInstitucional ON dbo.PagoInscripcion(NumeroReciboInstitucional) WHERE NumeroReciboInstitucional IS NOT NULL;
 GO
@@ -60,18 +75,21 @@ IF OBJECT_ID(N'dbo.DigitoVerificador_83KI', N'U') IS NOT NULL AND NOT EXISTS(SEL
     INSERT dbo.DigitoVerificador_83KI(NombreTabla,DVV,FechaActualizacion) VALUES(N'FacturaCUN07','',GETDATE());
 GO
 
--- New payment hash inputs require recalculating all historical payment hashes before DVV.
-IF NOT EXISTS(SELECT 1 FROM dbo.CUN07_Migraciones WHERE Version=1)
+-- Los nuevos datos de entrada para el hash de pagos requieren recalcular todos los hashes de pagos históricos antes del DVV.
+DECLARE @firstApplication BIT=CASE WHEN NOT EXISTS(SELECT 1 FROM dbo.CUN07_Migraciones WHERE Version=1) THEN 1 ELSE 0 END;
+IF @firstApplication=1 OR EXISTS(SELECT 1 FROM #Cun07ChangedPayments)
 BEGIN
 UPDATE p SET DVH=LOWER(CONVERT(VARCHAR(64),HASHBYTES('SHA2_256',CONVERT(NVARCHAR(MAX),
-    N'FechaAcreditacion='+CONVERT(NVARCHAR(23),p.FechaAcreditacion,126)+N'|FechaPago='+CONVERT(NVARCHAR(23),p.FechaPago,126)+
+    N'FechaAcreditacion='+REPLACE(CONVERT(NVARCHAR(23),p.FechaAcreditacion,121),N' ',N'T')+N'|FechaPago='+REPLACE(CONVERT(NVARCHAR(23),p.FechaPago,121),N' ',N'T')+
     N'|IdAlumno='+CONVERT(NVARCHAR(20),p.IdAlumno)+N'|IdCuota='+CONVERT(NVARCHAR(20),p.IdCuota)+
     N'|IdPagoInscripcion='+CONVERT(NVARCHAR(20),p.IdPagoInscripcion)+N'|IdSolicitudInscripcion='+CONVERT(NVARCHAR(20),p.IdSolicitudInscripcion)+
     N'|MetodoPago='+LTRIM(RTRIM(p.MetodoPago))+N'|MontoPagado='+CONVERT(NVARCHAR(40),p.MontoPagado)+
     N'|NumeroReciboInstitucional='+LTRIM(RTRIM(p.NumeroReciboInstitucional))+N'|NumeroReferencia='+LTRIM(RTRIM(p.NumeroReferencia)))),2))
-FROM dbo.PagoInscripcion p;
+FROM dbo.PagoInscripcion p
+WHERE @firstApplication=1 OR EXISTS(SELECT 1 FROM #Cun07ChangedPayments c WHERE c.IdPagoInscripcion=p.IdPagoInscripcion);
+IF @firstApplication=1
 UPDATE f SET DVH=LOWER(CONVERT(VARCHAR(64),HASHBYTES('SHA2_256',CONVERT(NVARCHAR(MAX),
-    N'Concepto='+LTRIM(RTRIM(f.Concepto))+N'|FechaTransaccion='+CONVERT(NVARCHAR(23),f.FechaTransaccion,126)+
+    N'Concepto='+LTRIM(RTRIM(f.Concepto))+N'|FechaTransaccion='+REPLACE(CONVERT(NVARCHAR(23),f.FechaTransaccion,121),N' ',N'T')+
     N'|IdFactura='+CONVERT(NVARCHAR(20),f.IdFactura)+N'|IdPagoInscripcion='+CONVERT(NVARCHAR(20),f.IdPagoInscripcion)+
     N'|NumeroReciboInstitucional='+LTRIM(RTRIM(f.NumeroReciboInstitucional))+N'|Total='+CONVERT(NVARCHAR(40),f.Total))),2))
 FROM dbo.FacturaCUN07 f;
@@ -79,9 +97,13 @@ DECLARE @paymentHashes NVARCHAR(MAX),@invoiceHashes NVARCHAR(MAX);
 SELECT @paymentHashes=COALESCE((SELECT CONVERT(NVARCHAR(MAX),DVH) AS [text()] FROM dbo.PagoInscripcion ORDER BY DVH FOR XML PATH(''),TYPE).value('.','NVARCHAR(MAX)'),N'');
 SELECT @invoiceHashes=COALESCE((SELECT CONVERT(NVARCHAR(MAX),DVH) AS [text()] FROM dbo.FacturaCUN07 ORDER BY DVH FOR XML PATH(''),TYPE).value('.','NVARCHAR(MAX)'),N'');
 UPDATE dbo.DigitoVerificador_83KI SET DVV=LOWER(CONVERT(VARCHAR(64),HASHBYTES('SHA2_256',@paymentHashes),2)),FechaActualizacion=GETDATE() WHERE NombreTabla=N'PagoInscripcion';
-UPDATE dbo.DigitoVerificador_83KI SET DVV=LOWER(CONVERT(VARCHAR(64),HASHBYTES('SHA2_256',@invoiceHashes),2)),FechaActualizacion=GETDATE() WHERE NombreTabla=N'FacturaCUN07';
-INSERT dbo.CUN07_Migraciones(Version,FechaAplicacion) VALUES(1,GETDATE());
+IF @firstApplication=1
+BEGIN
+    UPDATE dbo.DigitoVerificador_83KI SET DVV=LOWER(CONVERT(VARCHAR(64),HASHBYTES('SHA2_256',@invoiceHashes),2)),FechaActualizacion=GETDATE() WHERE NombreTabla=N'FacturaCUN07';
+    INSERT dbo.CUN07_Migraciones(Version,FechaAplicacion) VALUES(1,GETDATE());
 END
+END
+DROP TABLE #Cun07ChangedPayments;
 GO
 
 IF OBJECT_ID(N'dbo.sp_CUN03_RegistrarSolicitudInscripcion', N'P') IS NOT NULL
@@ -233,7 +255,7 @@ BEGIN
  VALUES(@IdAlumno,@IdSolicitudInscripcion,@IdCuota,@MetodoPago,@MontoRecibido,@NumeroReferencia,@FechaPago,@FechaAcreditacion,@codigo,'');
  SET @idPago=SCOPE_IDENTITY();
  UPDATE dbo.Cuota SET BalanceAdeudado=0,Estado=N'pagada',DVH='' WHERE IdCuota=@IdCuota;
-  -- Financial standing is separate from the academic enrollment state used by quorum/cancellation.
+  -- La situación financiera es independiente del estado académico de inscripción utilizado para el cupo mínimo y la cancelación.
  INSERT dbo.FacturaCUN07(IdPagoInscripcion,NumeroReciboInstitucional,Concepto,Total,FechaTransaccion,DVH) VALUES(@idPago,@codigo,@concepto,@MontoRecibido,@FechaPago,'');
  COMMIT TRANSACTION;
   SELECT p.IdPagoInscripcion,p.IdAlumno,p.IdSolicitudInscripcion,p.IdCuota,p.MetodoPago,p.MontoPagado,p.NumeroReferencia,p.FechaPago,p.FechaAcreditacion,p.DVH PagoDVH,
@@ -250,4 +272,6 @@ BEGIN
  THROW;
  END CATCH
 END
+GO
+COMMIT TRANSACTION;
 GO

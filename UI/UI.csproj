@@ -323,6 +323,30 @@
       <Link>Scripts\Sql\EsquemaCompleto.sql</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="..\Scripts\Sql\financiacion-cuotas\001_modelo.sql">
+      <Link>Scripts\Sql\financiacion-cuotas\001_modelo.sql</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Scripts\Sql\financiacion-cuotas\002_completar_inscripciones.sql">
+      <Link>Scripts\Sql\financiacion-cuotas\002_completar_inscripciones.sql</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Scripts\Sql\cun03\001_migracion.sql">
+      <Link>Scripts\Sql\cun03\001_migracion.sql</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Scripts\Sql\cun05\001_migracion.sql">
+      <Link>Scripts\Sql\cun05\001_migracion.sql</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Scripts\Sql\cun06\001_migracion.sql">
+      <Link>Scripts\Sql\cun06\001_migracion.sql</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Scripts\Sql\reporte-ocupacion-comisiones\001_migracion.sql">
+      <Link>Scripts\Sql\reporte-ocupacion-comisiones\001_migracion.sql</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="..\Scripts\Sql\cun07\001_migracion.sql">
       <Link>Scripts\Sql\cun07\001_migracion.sql</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
