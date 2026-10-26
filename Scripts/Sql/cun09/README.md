@@ -14,7 +14,7 @@ Academic coordinators can issue one certificate per enrollment after the commiss
    ```
 
 3. Assign **72 — Generar certificado de finalización** to the academic coordinator's role/family through existing permission administration. No role receives this permission automatically. Sign out/in to refresh session permissions.
-4. Build and open **Planificación Académica → Generar certificado de finalización**. `Microsoft Print to PDF` must be installed for PDF saving; issuance itself does not require that printer.
+4. Build and open **RF2: Cobros, Morosidad y Actas → Generar certificado de finalización**. `Microsoft Print to PDF` must be installed for PDF saving; issuance itself does not require that printer.
 
 New-database installation through the application now packages and executes the financing dependency chain followed by CUN08/CUN09. Connection validation does **not** migrate an existing database. No migration is automatically executed merely by opening this screen.
 
