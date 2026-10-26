@@ -9,23 +9,22 @@ namespace UI
     /// </summary>
     public class ProveedorConfiguracionBD_83KI : IProveedorConfiguracionConexion_83KI
     {
-        //ESTO ES LO QUE ME DA LA CONNECTION STRING INICIAL (NO TOCAR CUANDO SE ESTA DESARROLLANDO)
-        private const string DefaultServerInstance = @"(localdb)\ProjectModels";
-        private const string DefaultDatabaseName = "TrabajoDiploma9/13";
-
         public ConfiguracionConexionBD_83KI Cargar()
         {
             return new ConfiguracionConexionBD_83KI
             {
-                InstanciaServidor = DefaultServerInstance,
-                NombreBaseDatos = DefaultDatabaseName
+                InstanciaServidor = Properties.Settings.Default.DatabaseServerInstance,
+                NombreBaseDatos = Properties.Settings.Default.DatabaseName
             };
         }
 
         public void Guardar(ConfiguracionConexionBD_83KI settings)
         {
-            Properties.Settings.Default.DatabaseServerInstance = DefaultServerInstance;
-            Properties.Settings.Default.DatabaseName = DefaultDatabaseName;
+            if (settings == null)
+                throw new System.ArgumentNullException(nameof(settings));
+
+            Properties.Settings.Default.DatabaseServerInstance = settings.InstanciaServidor;
+            Properties.Settings.Default.DatabaseName = settings.NombreBaseDatos;
             Properties.Settings.Default.Save();
         }
     }

@@ -13,6 +13,10 @@ public static class FinanciacionCuotasBllTests
     {
         var dal = new FakeDal { Data = data };
         var bll = new KI68PagoCuotaBLL_83KI(dal, new FakeSession(), null);
+        var enrollmentPermissionOnly = new KI68PagoCuotaBLL_83KI(dal,
+            new FakeSession(PermisoSistema_83KI.RegistrarPagoInscripcion), null);
+        Reject(enrollmentPermissionOnly, Request(data.Cuotas.OrderBy(c => c.NumeroCuota).First()), "Errores.SinPermisos");
+        if (dal.Writes != 0) throw new Exception("Enrollment payment permission granted course installment access.");
         var first = data.Cuotas.OrderBy(c => c.NumeroCuota).First();
         var next = data.Cuotas.OrderBy(c => c.NumeroCuota).Skip(1).First();
         Reject(bll, Request(next), "Errores.PagoCuotaAnteriorPendiente");
@@ -48,7 +52,13 @@ public static class FinanciacionCuotasBllTests
         if (selected.Solicitud.IdSolicitudInscripcion == data.Solicitud.IdSolicitudInscripcion)
             throw new Exception("The regression must select a fee outside the first enrollment.");
         var dal = new FakeEnrollmentDal { Data = data };
-        var bll = new KI68PagoInscripcionBLL(dal, new FakeSession(), null);
+        var wrongPermissionBll = new KI68PagoInscripcionBLL(dal,
+            new FakeSession(PermisoSistema_83KI.RegistrarPagoCuotas), null);
+        var unauthorizedRequest = Request(selected.Cuota);
+        unauthorizedRequest.DNI = data.Alumno.DNI;
+        try { wrongPermissionBll.RegistrarPagoInscripcion(unauthorizedRequest); throw new Exception("Installment payment permission granted enrollment payment access."); }
+        catch (InvalidOperationException ex) { if (ex.Message != "Errores.SinPermisos") throw; }
+        var bll = new KI68PagoInscripcionBLL(dal, new FakeSession(PermisoSistema_83KI.RegistrarPagoInscripcion), null);
         var request = Request(selected.Cuota);
         request.DNI = data.Alumno.DNI;
         request.FechaPago = DateTime.Today.AddDays(1);
@@ -87,10 +97,12 @@ public static class FinanciacionCuotasBllTests
 
     private sealed class FakeSession : ISessionManager_83KI
     {
+        private readonly PermisoSistema_83KI _permission;
+        public FakeSession(PermisoSistema_83KI permission = PermisoSistema_83KI.RegistrarPagoCuotas) { _permission = permission; }
         public Usuario_83KI UsuarioActivo { get { return null; } }
         public bool RequiereRecuperacionIntegridad { get { return false; } }
         public IReadOnlyList<string> TablasAfectadasIntegridad { get { return new string[0]; } }
-        public bool TienePermiso(PermisoSistema_83KI permiso) { return true; }
+        public bool TienePermiso(PermisoSistema_83KI permiso) { return permiso == _permission; }
         public void IniciarSesion(Usuario_83KI usuario) { }
         public void CerrarSesion() { }
         public IEnumerable<Patente_83KI> ObtenerPermisos() { return new Patente_83KI[0]; }

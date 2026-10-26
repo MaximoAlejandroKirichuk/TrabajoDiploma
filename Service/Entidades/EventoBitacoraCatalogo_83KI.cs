@@ -86,7 +86,13 @@ namespace Service.Entidades
 
             // --- PreInscripcion ---
             new EventoBitacoraOpcion_83KI(Modulo.PreInscripcion, "Registro de consulta lead", "Registro de consulta lead:"),
-            new EventoBitacoraOpcion_83KI(Modulo.PreInscripcion, "Registro de solicitud de inscripción", "Registro de solicitud de inscripción:", "Registro de solicitud de inscripcion:")
+            new EventoBitacoraOpcion_83KI(Modulo.PreInscripcion, "Registro de solicitud de inscripción", "Registro de solicitud de inscripción:", "Registro de solicitud de inscripcion:"),
+
+            // --- Cobros, morosidad y actas ---
+            new EventoBitacoraOpcion_83KI(Modulo.CobrosMorosidadActas, "Registro de pago de cuota", "Registro de pago de cuota:"),
+            new EventoBitacoraOpcion_83KI(Modulo.PlanificacionAcademica, "Evaluaciones", "Evaluaciones:"),
+            new EventoBitacoraOpcion_83KI(Modulo.PlanificacionAcademica, "CUN08", "CUN08:"),
+            new EventoBitacoraOpcion_83KI(Modulo.PlanificacionAcademica, "CUN09", "CUN09:")
         };
 
         public static IEnumerable<EventoBitacoraOpcion_83KI> ObtenerPorModulo(Modulo modulo)

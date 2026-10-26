@@ -11,6 +11,7 @@ namespace DAL.interfaces
     /// </summary>
     public interface IIntegridadDAL_83KI
     {
+        void ActualizarDVHyDVVResultados(List<int> idsResultado, SqlConnection conn, SqlTransaction tran);
         /// <summary>
         /// calcula el dvh sha-256 hex en minuscula para una sola fila.
         /// </summary>

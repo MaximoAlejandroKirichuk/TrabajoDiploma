@@ -187,11 +187,11 @@ BEGIN TRY
         N'CupoMinimo=', CONVERT(NVARCHAR(128), CupoMinimo), N'|',
         N'DiaSemana=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), DiaSemana), N'∅'))), N'|',
         N'Estado=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Estado), N'∅'))), N'|',
-        N'FechaFin=', ISNULL(CONVERT(NVARCHAR(23), CAST(FechaFin AS DATETIME), 126), N'∅'), N'|',
-        N'FechaInicio=', ISNULL(CONVERT(NVARCHAR(23), CAST(FechaInicio AS DATETIME), 126), N'∅'), N'|',
-        N'FechaLimitePago=', ISNULL(CONVERT(NVARCHAR(23), CAST(FechaLimitePago AS DATETIME), 126), N'∅'), N'|',
-        N'HoraFin=', CONVERT(NVARCHAR(128), HoraFin), N'|',
-        N'HoraInicio=', CONVERT(NVARCHAR(128), HoraInicio), N'|',
+        N'FechaFin=', ISNULL(REPLACE(CONVERT(NVARCHAR(23), CAST(FechaFin AS DATETIME), 121), N' ', N'T'), N'∅'), N'|',
+        N'FechaInicio=', ISNULL(REPLACE(CONVERT(NVARCHAR(23), CAST(FechaInicio AS DATETIME), 121), N' ', N'T'), N'∅'), N'|',
+        N'FechaLimitePago=', ISNULL(REPLACE(CONVERT(NVARCHAR(23), CAST(FechaLimitePago AS DATETIME), 121), N' ', N'T'), N'∅'), N'|',
+        N'HoraFin=', ISNULL(CONVERT(NVARCHAR(8), HoraFin, 108), N'∅'), N'|',
+        N'HoraInicio=', ISNULL(CONVERT(NVARCHAR(8), HoraInicio, 108), N'∅'), N'|',
         N'IdComision=', CONVERT(NVARCHAR(128), IdComision), N'|',
         N'IdCurso=', CONVERT(NVARCHAR(128), IdCurso), N'|',
         N'IdPlanDePago=', CONVERT(NVARCHAR(128), IdPlanDePago), N'|',
@@ -206,7 +206,7 @@ BEGIN TRY
         N'DNI=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), DNI), N'∅'))), N'|',
         N'Email=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Email), N'∅'))), N'|',
         N'Estado=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Estado), N'∅'))), N'|',
-        N'FechaAlta=', ISNULL(CONVERT(NVARCHAR(23), FechaAlta, 126), N'∅'), N'|',
+        N'FechaAlta=', ISNULL(REPLACE(CONVERT(NVARCHAR(23), FechaAlta, 121), N' ', N'T'), N'∅'), N'|',
         N'IdAlumno=', CONVERT(NVARCHAR(128), IdAlumno), N'|',
         N'Nombre=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Nombre), N'∅'))), N'|',
         N'Telefono=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Telefono), N'∅')))
@@ -214,38 +214,47 @@ BEGIN TRY
 
     UPDATE dbo.SolicitudInscripcion
     SET DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+        N'ArancelCursoSnapshot=', ISNULL(CONVERT(NVARCHAR(40), ArancelCursoSnapshot), N'∅'), N'|',
+        N'CantidadCuotasSnapshot=', ISNULL(CONVERT(NVARCHAR(20), CantidadCuotasSnapshot), N'∅'), N'|',
         N'Codigo=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Codigo), N'∅'))), N'|',
         N'Estado=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Estado), N'∅'))), N'|',
-        N'FechaSolicitud=', ISNULL(CONVERT(NVARCHAR(23), FechaSolicitud, 126), N'∅'), N'|',
+        N'FechaPrimerVencimientoSnapshot=', ISNULL(REPLACE(CONVERT(NVARCHAR(23), CAST(FechaPrimerVencimientoSnapshot AS DATETIME), 121), N' ', N'T'), N'∅'), N'|',
+        N'FechaSolicitud=', ISNULL(REPLACE(CONVERT(NVARCHAR(23), FechaSolicitud, 121), N' ', N'T'), N'∅'), N'|',
         N'IdAlumno=', CONVERT(NVARCHAR(128), IdAlumno), N'|',
         N'IdComision=', CONVERT(NVARCHAR(128), IdComision), N'|',
         N'IdLeadOrigen=', ISNULL(CONVERT(NVARCHAR(128), IdLeadOrigen), N'∅'), N'|',
         N'IdPlanDePago=', CONVERT(NVARCHAR(128), IdPlanDePago), N'|',
         N'IdSolicitudInscripcion=', CONVERT(NVARCHAR(128), IdSolicitudInscripcion), N'|',
+        N'NombrePlanSnapshot=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), NombrePlanSnapshot), N'∅'))), N'|',
         N'Observaciones=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Observaciones), N'∅'))), N'|',
-        N'RecargoPlanSnapshot=', CONVERT(NVARCHAR(128), RecargoPlanSnapshot)
+        N'RecargoPlanSnapshot=', CONVERT(NVARCHAR(128), RecargoPlanSnapshot), N'|',
+        N'TotalCursoSnapshot=', ISNULL(CONVERT(NVARCHAR(40), TotalCursoSnapshot), N'∅')
     )), 2));
 
     UPDATE dbo.Cuota
     SET DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
         N'BalanceAdeudado=', CONVERT(NVARCHAR(128), BalanceAdeudado), N'|',
         N'Estado=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Estado), N'∅'))), N'|',
-        N'FechaVencimiento=', ISNULL(CONVERT(NVARCHAR(23), CAST(FechaVencimiento AS DATETIME), 126), N'∅'), N'|',
+        N'FechaVencimiento=', ISNULL(REPLACE(CONVERT(NVARCHAR(23), CAST(FechaVencimiento AS DATETIME), 121), N' ', N'T'), N'∅'), N'|',
         N'IdCuota=', CONVERT(NVARCHAR(128), IdCuota), N'|',
         N'IdSolicitudInscripcion=', CONVERT(NVARCHAR(128), IdSolicitudInscripcion), N'|',
         N'MontoOriginal=', CONVERT(NVARCHAR(128), MontoOriginal), N'|',
-        N'NumeroCuota=', CONVERT(NVARCHAR(128), NumeroCuota)
+        N'NumeroCuota=', CONVERT(NVARCHAR(128), NumeroCuota), N'|',
+        N'Periodo=', ISNULL(REPLACE(CONVERT(NVARCHAR(23), CAST(Periodo AS DATETIME), 121), N' ', N'T'), N'∅'), N'|',
+        N'TipoConcepto=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), TipoConcepto), N'∅')))
     )), 2));
 
     UPDATE dbo.PagoInscripcion
     SET DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
-        N'FechaPago=', ISNULL(CONVERT(NVARCHAR(23), FechaPago, 126), N'∅'), N'|',
+        N'FechaAcreditacion=', ISNULL(REPLACE(CONVERT(NVARCHAR(23), FechaAcreditacion, 121), N' ', N'T'), N'∅'), N'|',
+        N'FechaPago=', ISNULL(REPLACE(CONVERT(NVARCHAR(23), FechaPago, 121), N' ', N'T'), N'∅'), N'|',
         N'IdAlumno=', CONVERT(NVARCHAR(128), IdAlumno), N'|',
         N'IdCuota=', CONVERT(NVARCHAR(128), IdCuota), N'|',
         N'IdPagoInscripcion=', CONVERT(NVARCHAR(128), IdPagoInscripcion), N'|',
         N'IdSolicitudInscripcion=', CONVERT(NVARCHAR(128), IdSolicitudInscripcion), N'|',
         N'MetodoPago=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), MetodoPago), N'∅'))), N'|',
         N'MontoPagado=', CONVERT(NVARCHAR(128), MontoPagado), N'|',
+        N'NumeroReciboInstitucional=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), NumeroReciboInstitucional), N'∅'))), N'|',
         N'NumeroReferencia=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), NumeroReferencia), N'∅')))
     )), 2));
 

@@ -1,4 +1,5 @@
 using BE.Entidades;
+using BE.DTOs.Inscripciones;
 using Service;
 using Service.DTOs;
 using Service.Entidades;
@@ -9,7 +10,7 @@ using System.Windows.Forms;
 
 namespace UI.Modulos.PreInscripcion
 {
-    public partial class FrmRegistrarSolicitudInscripcion_83KI : Form, IObservadorIdioma
+    public partial class FrmRegistrarSolicitudInscripcion_83KI : FormConAyuda_83KI, IObservadorIdioma
     {
         private readonly IInscripcionBLL_83KI _inscripcionBLL;
         private readonly IGestorIdioma_83KI _gestorIdioma;

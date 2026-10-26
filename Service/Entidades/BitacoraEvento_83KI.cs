@@ -19,7 +19,7 @@ namespace Service.Entidades
         {
             return new BitacoraEvento_83KI
             {
-                Fecha = DateTime.UtcNow,
+                Fecha = DateTime.Now,
                 Descripcion = ValidarTextoObligatorio(descripcion, nameof(descripcion)),
                 Criticidad = ValidarCriticidad(criticidad),
                 Modulo = ValidarModulo(modulo),

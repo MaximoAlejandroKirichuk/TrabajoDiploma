@@ -52,7 +52,7 @@ namespace BLL
             var profesor = Profesor_83KI.CrearNuevo(dni, nombre, apellido, email);
             if (_dal.ExisteDniParaOtroProfesor(profesor.DNI, 0)) throw new DniProfesorDuplicadoException_83KI();
             int id = _dal.Crear(profesor);
-            RegistrarAuditoriaSegura($"Profesor creado: DNI {profesor.DNI}. Id: {id}. Actor: {UsuarioActual}", Criticidad.Alto, UsuarioActual);
+            ExigirAuditoria(RegistrarAuditoriaSegura($"Profesor creado: DNI {profesor.DNI}. Id: {id}. Actor: {UsuarioActual}", Criticidad.Alto, UsuarioActual));
         }
 
         public void ModificarProfesor(int idProfesor, string nombre, string apellido, string email)
@@ -61,7 +61,7 @@ namespace BLL
             var profesor = _dal.ObtenerPorId(idProfesor) ?? throw new ProfesorNoEncontradoException_83KI();
             profesor.Modificar(nombre, apellido, email);
             _dal.Modificar(profesor);
-            RegistrarAuditoriaSegura($"Profesor modificado: DNI {profesor.DNI}. Id: {profesor.IdProfesor}. Actor: {UsuarioActual}", Criticidad.Alto, UsuarioActual);
+            ExigirAuditoria(RegistrarAuditoriaSegura($"Profesor modificado: DNI {profesor.DNI}. Id: {profesor.IdProfesor}. Actor: {UsuarioActual}", Criticidad.Alto, UsuarioActual));
         }
 
         public void ActivarProfesor(int idProfesor) { CambiarEstado(idProfesor, true); }
@@ -81,7 +81,7 @@ namespace BLL
             var disponibilidad = DisponibilidadProfesor_83KI.CrearNueva(idProfesor, diaSemana, horaInicio, horaFin);
             ValidarDisponibilidadActivaNoDuplicada(disponibilidad);
             int id = _disponibilidadDal.Insertar(disponibilidad);
-            RegistrarAuditoriaSegura($"Disponibilidad de profesor creada. IdProfesor: {idProfesor}. IdDisponibilidad: {id}. Actor: {UsuarioActual}", Criticidad.Alto, UsuarioActual);
+            ExigirAuditoria(RegistrarAuditoriaSegura($"Disponibilidad de profesor creada. IdProfesor: {idProfesor}. IdDisponibilidad: {id}. Actor: {UsuarioActual}", Criticidad.Alto, UsuarioActual));
         }
 
         public void ModificarDisponibilidad(int idDisponibilidadProfesor, int idProfesor, DayOfWeek diaSemana, TimeSpan horaInicio, TimeSpan horaFin)
@@ -91,7 +91,7 @@ namespace BLL
             disponibilidad.ModificarHorario(diaSemana, horaInicio, horaFin);
             ValidarDisponibilidadActivaNoDuplicada(disponibilidad);
             _disponibilidadDal.Actualizar(disponibilidad);
-            RegistrarAuditoriaSegura($"Disponibilidad de profesor modificada. IdProfesor: {idProfesor}. IdDisponibilidad: {idDisponibilidadProfesor}. Actor: {UsuarioActual}", Criticidad.Alto, UsuarioActual);
+            ExigirAuditoria(RegistrarAuditoriaSegura($"Disponibilidad de profesor modificada. IdProfesor: {idProfesor}. IdDisponibilidad: {idDisponibilidadProfesor}. Actor: {UsuarioActual}", Criticidad.Alto, UsuarioActual));
         }
 
         public void ActivarDisponibilidad(int idDisponibilidadProfesor, int idProfesor)
@@ -111,7 +111,7 @@ namespace BLL
             if (profesor.EstadoActivo == activo) throw new InvalidOperationException(activo ? "Errores.ProfesorYaActivo" : "Errores.ProfesorYaInactivo");
             if (activo) profesor.Activar(); else profesor.Desactivar();
             _dal.ActualizarEstadoActivo(idProfesor, profesor.EstadoActivo);
-            RegistrarAuditoriaSegura($"Profesor {(activo ? "activado" : "desactivado")}: DNI {profesor.DNI}. Id: {profesor.IdProfesor}. Actor: {UsuarioActual}", Criticidad.Alto, UsuarioActual);
+            ExigirAuditoria(RegistrarAuditoriaSegura($"Profesor {(activo ? "activado" : "desactivado")}: DNI {profesor.DNI}. Id: {profesor.IdProfesor}. Actor: {UsuarioActual}", Criticidad.Alto, UsuarioActual));
         }
 
         private string UsuarioActual => _sessionManager.UsuarioActivo != null ? _sessionManager.UsuarioActivo.UserName : "Sistema";
@@ -123,7 +123,7 @@ namespace BLL
             if (activo) disponibilidad.Activar(); else disponibilidad.Desactivar();
             ValidarDisponibilidadActivaNoDuplicada(disponibilidad);
             _disponibilidadDal.Actualizar(disponibilidad);
-            RegistrarAuditoriaSegura($"Disponibilidad de profesor {(activo ? "activada" : "desactivada")}. IdProfesor: {idProfesor}. IdDisponibilidad: {idDisponibilidadProfesor}. Actor: {UsuarioActual}", Criticidad.Alto, UsuarioActual);
+            ExigirAuditoria(RegistrarAuditoriaSegura($"Disponibilidad de profesor {(activo ? "activada" : "desactivada")}. IdProfesor: {idProfesor}. IdDisponibilidad: {idDisponibilidadProfesor}. Actor: {UsuarioActual}", Criticidad.Alto, UsuarioActual));
         }
 
         private void ValidarDisponibilidadActivaNoDuplicada(DisponibilidadProfesor_83KI disponibilidad)
@@ -176,10 +176,15 @@ namespace BLL
             }
         }
 
-        private void RegistrarAuditoriaSegura(string descripcion, Criticidad criticidad, string username)
+        private bool RegistrarAuditoriaSegura(string descripcion, Criticidad criticidad, string username)
         {
-            try { _bitacora.RegistrarEvento(BitacoraEvento_83KI.CrearNuevo(descripcion, criticidad, Modulo.Admin, username)); }
-            catch { }
+            try { _bitacora.RegistrarEvento(BitacoraEvento_83KI.CrearNuevo(descripcion, criticidad, Modulo.Admin, username)); return true; }
+            catch { return false; }
+        }
+
+        private static void ExigirAuditoria(bool registrada)
+        {
+            if (!registrada) throw new InvalidOperationException("Errores.AuditoriaFallidaCambioConfirmado");
         }
     }
 }

@@ -1,6 +1,7 @@
 using BE.Entidades;
 using Service;
 using Service.DTOs;
+using BE.DTOs.Comisiones;
 using Service.Entidades;
 using Service.Interfaces;
 using System;
@@ -30,6 +31,36 @@ namespace BLL
         public IEnumerable<ComisionListado_83KI> ListarComisionesPreapertura()
         {
             return _comisionDAL.ListarComisionesPreapertura();
+        }
+
+        public IEnumerable<ComisionListado_83KI> ListarComisionesAsignadasParaEvaluacion()
+        {
+            var usuario = _sessionManager.UsuarioActivo;
+            if (usuario == null || !usuario.Activo || usuario.Bloqueado || _sessionManager.RequiereRecuperacionIntegridad
+                || !_sessionManager.TienePermiso(PermisoSistema_83KI.RegistrarResultadosEvaluacion))
+                throw new InvalidOperationException("Cun08.SinAutorizacion");
+            int profesor = ObtenerProfesorPorDni(usuario.DNI.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            return profesor <= 0 ? new List<ComisionListado_83KI>() : _comisionDAL.ListarComisionesAsignadasParaEvaluacion(profesor);
+        }
+
+        public Comision_83KI ObtenerComisionPorCursoYNumero(string codigoCurso, string numeroComision)
+        {
+            int idCurso;
+            if (!int.TryParse(codigoCurso, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out idCurso)
+                || idCurso <= 0 || string.IsNullOrWhiteSpace(numeroComision))
+                throw new InvalidOperationException("Cun08.CriteriosInvalidos");
+            return _comisionDAL.ObtenerComisionPorCursoYNumero(idCurso, numeroComision.Trim());
+        }
+
+        public Comision_83KI ObtenerComision(int idComision) { return _comisionDAL.ObtenerComision(idComision); }
+        public int ObtenerProfesorPorDni(string dni) { return _comisionDAL.ObtenerProfesorPorDni(dni); }
+        public DateTime ObtenerFechaActual() { return _comisionDAL.ObtenerFechaActual(); }
+
+        public void ValidarProfesorAsignado(int idComision, int idProfesor)
+        {
+            var comision = _comisionDAL.ObtenerComision(idComision);
+            if (comision == null || idProfesor <= 0 || comision.IdProfesor != idProfesor)
+                throw new InvalidOperationException("Cun08.SinAutorizacion");
         }
 
         public void ValidarComisionPreapertura(int idComision)

@@ -42,7 +42,7 @@ namespace DAL
 
         public void EjecutarBackup(string rutaArchivo)
         {
-            string consulta = $"BACKUP DATABASE [{DatabaseName}] TO DISK = @ruta WITH INIT";
+            string consulta = $"BACKUP DATABASE {EscaparIdentificador(DatabaseName)} TO DISK = @ruta WITH INIT";
             var parametros = new List<SqlParameter>
             {
                 new SqlParameter("@ruta", rutaArchivo)
@@ -52,14 +52,16 @@ namespace DAL
 
         public void EjecutarRestore(string rutaArchivo)
         {
-            string rutaSegura = rutaArchivo.Replace("'", "''");
             string dbName = DatabaseName;
 
             try
             {
                 // paso 1: leer los nombres logicos de los archivos dentro del backup
-                string fileListQuery = $"RESTORE FILELISTONLY FROM DISK = N'{rutaSegura}'";
-                var fileList = _acceso.LeerDesdeMaster(fileListQuery);
+                string fileListQuery = "RESTORE FILELISTONLY FROM DISK = @ruta";
+                var fileList = _acceso.LeerDesdeMaster(fileListQuery, new List<SqlParameter>
+                {
+                    new SqlParameter("@ruta", rutaArchivo)
+                });
 
                 // paso 2: encontrar los nombres logicos de datos (Type=D) y log (Type=L)
                 string dataLogical = null, logLogical = null;
@@ -90,12 +92,15 @@ namespace DAL
                 }
 
                 // paso 5: ejecutar restore con move
-                string consulta = string.Format(
-                    "ALTER DATABASE [{0}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; " +
-                    "RESTORE DATABASE [{0}] FROM DISK = N'{1}' WITH REPLACE{2}; " +
-                    "ALTER DATABASE [{0}] SET MULTI_USER;",
-                    dbName, rutaSegura, moveClauses);
-                _acceso.EjecutarEnMaster(consulta);
+                string escapedDbName = EscaparIdentificador(dbName);
+                string consulta =
+                    $"ALTER DATABASE {escapedDbName} SET SINGLE_USER WITH ROLLBACK IMMEDIATE; " +
+                    $"RESTORE DATABASE {escapedDbName} FROM DISK = @ruta WITH REPLACE{moveClauses}; " +
+                    $"ALTER DATABASE {escapedDbName} SET MULTI_USER;";
+                _acceso.EjecutarEnMaster(consulta, new List<SqlParameter>
+                {
+                    new SqlParameter("@ruta", rutaArchivo)
+                });
             }
             catch (SqlException ex) when (ex.Number == 3169)
             {
@@ -104,6 +109,11 @@ namespace DAL
                     "El archivo de backup fue creado con una version de SQL Server mas reciente " +
                     "que la del servidor actual. Restaurelo en una instancia de SQL Server compatible.", ex);
             }
+        }
+
+        private static string EscaparIdentificador(string databaseName)
+        {
+            return "[" + databaseName.Replace("]", "]]" ) + "]";
         }
 
         /// <summary>

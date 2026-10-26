@@ -1,5 +1,6 @@
 ﻿using Service;
 using Service.DTOs;
+using BE.DTOs.Comisiones;
 using Service.Entidades;
 using Service.Interfaces;
 using System;
@@ -11,7 +12,7 @@ using System.Windows.Forms;
 
 namespace UI.Modulos.Reportes
 {
-    public partial class FrmReporteOcupacionComisiones_83KI : Form, IObservadorIdioma
+    public partial class FrmReporteOcupacionComisiones_83KI : FormConAyuda_83KI, IObservadorIdioma
     {
         private readonly IReporteOcupacionComisionBLL_83KI _bll;
         private readonly IGestorIdioma_83KI _gestorIdioma;

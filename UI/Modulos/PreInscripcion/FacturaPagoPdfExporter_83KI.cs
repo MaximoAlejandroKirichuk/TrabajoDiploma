@@ -1,3 +1,4 @@
+using BE.DTOs.Pagos;
 using Service.DTOs;
 using System;
 using System.Drawing;

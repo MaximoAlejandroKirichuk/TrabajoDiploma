@@ -1,5 +1,7 @@
 using BE.Entidades;
+using BE.DTOs.Pagos;
 using Service.DTOs;
+using BE.DTOs.Comisiones;
 using Service.Entidades;
 using Service.Interfaces;
 using System;
@@ -58,7 +60,7 @@ namespace BLL
             {
                 string descripcion = string.Format("Registro de pago de cuota: inscripción {0}, alumno {1}, comisión {2}, cuota {3}, referencia {4}.",
                     resultado.CodigoSolicitud, resultado.Alumno.IdAlumno, resultado.CodigoComision, resultado.Cuota.IdCuota, resultado.Pago.NumeroReferencia);
-                _bitacora.RegistrarEvento(BitacoraEvento_83KI.CrearNuevo(descripcion, Criticidad.Medio, Modulo.PreInscripcion,
+                _bitacora.RegistrarEvento(BitacoraEvento_83KI.CrearNuevo(descripcion, Criticidad.Medio, Modulo.CobrosMorosidadActas,
                     _sessionManager.UsuarioActivo != null ? _sessionManager.UsuarioActivo.UserName : "Sistema"));
                 resultado.AuditoriaFallida = false;
             }
@@ -68,7 +70,7 @@ namespace BLL
 
         private void ValidarPermiso()
         {
-            if (!_sessionManager.TienePermiso(PermisoSistema_83KI.RegistrarPagoInscripcion))
+            if (!_sessionManager.TienePermiso(PermisoSistema_83KI.RegistrarPagoCuotas))
                 throw new InvalidOperationException("Errores.SinPermisos");
         }
 

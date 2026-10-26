@@ -13,13 +13,13 @@ namespace DAL
 {
     /// <summary>
     /// dal nucleo para operaciones de integridad dvh/dvv.
-    /// la canonicalizacion sha-256 refleja el script sql de backfill (002_backfill.sql):
-    ///   - encoding: utf-16 le (coincide con sql server nvarchar / hashbytes)
+    /// la canonicalizacion sha-256 refleja el script sql de relleno de datos (002_backfill.sql):
+    ///   - codificación: utf-16 le (coincide con sql server nvarchar / hashbytes)
     ///   - null → '∅' (u+2205)
     ///   - bool → '1'/'0'
     ///   - datetime → iso-8601 (yyyy-MM-ddTHH:mm:ss.fff)
     ///   - numeros → cultura invariante
-    ///   - strings → trim
+    ///   - cadenas → eliminación de espacios en los extremos
     ///   - formato: Col=Val|Col=Val|... (orden alfabetico segun IntegridadTablaConfig)
     /// </summary>
     public class IntegridadDAL_83KI : IIntegridadDAL_83KI
@@ -37,6 +37,8 @@ namespace DAL
         private static readonly IReadOnlyDictionary<string, string[]> PK =
             new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
             {
+                { "CertificadoFinalizacion", new[] { "IdCertificado" } },
+                { "ResultadoEvaluacion", new[] { "IdResultadoEvaluacion" } },
                 { "Usuarios",        new[] { "DNI" } },
                 { "Roles",           new[] { "CodigoRol" } },
                 { "Familias",        new[] { "CodigoFamilia" } },
@@ -71,6 +73,28 @@ namespace DAL
             var config = ResolverConfig(nombreTabla);
             string canonical = CanonicalizarFila(config, valoresColumna);
             return _encriptador.CalcularHashIntegridad(canonical);
+        }
+
+        public void ActualizarDVHyDVVResultados(List<int> idsResultado, SqlConnection conn, SqlTransaction tran)
+        {
+            foreach (int id in idsResultado)
+            {
+                var parametros = new List<SqlParameter> { new SqlParameter("@id", id) };
+                var valores = LeerFilaTransaccional("ResultadoEvaluacion", "IdResultadoEvaluacion=@id", parametros, conn, tran);
+                if (valores.Count == 0) throw new InvalidOperationException("Cun08.NoRegistrado");
+                // Las instancias de SqlParameter pertenecen a una única colección de parámetros de comando, incluso después de liberar sus recursos.
+                ActualizarDVHyDVVTransaccional("ResultadoEvaluacion", valores, "IdResultadoEvaluacion=@id",
+                    new List<SqlParameter> { new SqlParameter("@id", id) }, conn, tran);
+            }
+        }
+
+        public void ActualizarCertificado(int id, SqlConnection conn, SqlTransaction tran)
+        {
+            var valores = LeerFilaTransaccional("CertificadoFinalizacion", "IdCertificado=@id",
+                new List<SqlParameter> { new SqlParameter("@id", id) }, conn, tran);
+            if (valores.Count == 0) throw new InvalidOperationException("Cun09.Error");
+            ActualizarDVHyDVVTransaccional("CertificadoFinalizacion", valores, "IdCertificado=@id",
+                new List<SqlParameter> { new SqlParameter("@id", id) }, conn, tran);
         }
 
         public Dictionary<string, string> ObtenerDVVActuales()
@@ -152,7 +176,7 @@ namespace DAL
 
                 if (!string.Equals(dvhCalculado, dvhAlmacenado, StringComparison.OrdinalIgnoreCase))
                 {
-                    // construye string de pk
+                    // construye la cadena de la clave primaria
                     var pkParts = new List<string>();
                     foreach (var pkCol in pkCols)
                     {
@@ -209,7 +233,7 @@ namespace DAL
         }
 
         // ------------------------------------------------------------------ //
-        //  helpers internos usables por UsuarioDAL / RolDAL (mismo namespace)
+        //  métodos auxiliares internos utilizables por UsuarioDAL / RolDAL (mismo espacio de nombres)
         // ------------------------------------------------------------------ //
 
         /// <summary>
@@ -307,7 +331,7 @@ namespace DAL
         }
 
         // ------------------------------------------------------------------ //
-        //  helpers privados
+        //  métodos auxiliares privados
         // ------------------------------------------------------------------ //
 
         private static IntegridadTablaConfig_83KI ResolverConfig(string nombreTabla)
@@ -326,8 +350,8 @@ namespace DAL
         }
 
         /// <summary>
-        /// canonicaliza una fila al formato string deterministico usado para dvh.
-        /// formato: Col=Val|Col=Val|...  (columnas en orden alfabetico segun config,
+        /// canonicaliza una fila al formato de cadena deterministico usado para dvh.
+        /// formato: Col=Val|Col=Val|...  (columnas en orden alfabetico segun la configuración,
         /// excluyendo dvh). las reglas coinciden exactamente con 002_backfill.sql.
         /// </summary>
         private static string CanonicalizarFila(
@@ -359,7 +383,7 @@ namespace DAL
         }
 
         /// <summary>
-        /// convierte un valor de columna a su representacion string canonica.
+        /// convierte un valor de columna a su representacion de cadena canonica.
         /// </summary>
         private static string CanonicalizarValor(object valor)
         {
@@ -387,12 +411,12 @@ namespace DAL
         /// 
         /// - modificacion: dvh almacenado no vacio y distinto del dvh calculado
         ///   → los datos de la fila fueron alterados sin actualizar el hash.
-        /// - insercion:    dvh almacenado es null/vacio/whitespace y el calculado es valido
+        /// - insercion:    dvh almacenado es null/vacio/solo espacios en blanco y el calculado es valido
         ///   → la fila fue insertada (prob. via sql directo) sin setear el dvh.
         /// - desconocido:  caso ambiguo (ambos vacios, ambos null, etc.).
         /// 
         /// es inherentemente heuristico porque sha-256 es un hash unidireccional;
-        /// no podemos revertir el diff para identificar que columnas especificas cambiaron.
+        /// no podemos revertir la diferencia para identificar que columnas especificas cambiaron.
         /// </summary>
         private static TipoInconsistenciaFilas_83KI ClasificarInconsistencia(
             string dvhAlmacenado,
@@ -414,7 +438,7 @@ namespace DAL
         /// <summary>
         /// lee todas las filas de una tabla protegida (excluyendo dvh), calcula dvh
         /// fresco para cada fila desde los datos vivos de columna, y devuelve la lista
-        /// de strings dvh hex. usado tanto para verificacion (comparacion dvv) como
+        /// de cadenas dvh hexadecimales. usado tanto para verificacion (comparacion dvv) como
         /// para deteccion de inconsistencias a nivel fila.
         /// </summary>
         private List<string> LeerDVHFresco(IntegridadTablaConfig_83KI config)
@@ -524,7 +548,7 @@ namespace DAL
                     }
                     filas.Add(rowValues);
                 }
-            } // el reader debe cerrarse antes del siguiente comando
+            } // el lector debe cerrarse antes del siguiente comando
 
             // 2. actualiza dvh para cada fila
             foreach (var row in filas)

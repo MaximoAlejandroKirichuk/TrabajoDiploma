@@ -1,6 +1,8 @@
 using BE.Entidades;
+using BE.DTOs.Leads;
 using Service;
 using Service.DTOs;
+using BE.DTOs.Comisiones;
 using Service.Entidades;
 using Service.Interfaces;
 using System;
@@ -10,7 +12,7 @@ using System.Windows.Forms;
 
 namespace UI.Modulos.PreInscripcion
 {
-    public partial class FrmRegistrarConsultaLead_83KI : Form, IObservadorIdioma
+    public partial class FrmRegistrarConsultaLead_83KI : FormConAyuda_83KI, IObservadorIdioma
     {
         private readonly ILeadBLL_83KI _leadBLL;
         private readonly IComisionConsultaBLL_83KI _comisionBLL;
@@ -142,6 +144,10 @@ namespace UI.Modulos.PreInscripcion
                     Motivo = txtMotivo.Text,
                     Observaciones = txtObservaciones.Text
                 });
+                if (resultado.AuditoriaFallida)
+                {
+                    MessageBox.Show(this, IdiomaUiHelper_83KI.Texto("Errores.AuditoriaFallidaCambioConfirmado"), IdiomaUiHelper_83KI.Texto("Comun.Informacion"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
                 MessageBox.Show(this, IdiomaUiHelper_83KI.Texto("FrmRegistrarConsultaLead.Registrada", resultado.Consulta.Codigo), IdiomaUiHelper_83KI.Texto("Comun.Informacion"), MessageBoxButtons.OK, MessageBoxIcon.Information);
                 DialogResult = DialogResult.OK;
                 Close();

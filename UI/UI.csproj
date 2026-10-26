@@ -44,12 +44,17 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Windows.Forms.DataVisualization" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Ayuda\CatalogoAyuda_83KI.cs" />
+    <Compile Include="Ayuda\FormConAyuda_83KI.cs" />
+    <Compile Include="Ayuda\FrmAyuda_83KI.cs" />
     <Compile Include="Administracion\Auditoria\BitacoraEventosPdfExporter_83KI.cs" />
     <Compile Include="Administracion\Auditoria\IBitacoraEventosExporter_83KI.cs" />
     <Compile Include="Aplicacion\ProveedorConfiguracionBD_83KI.cs" />
+    <Compile Include="Aplicacion\ServiceFactory_83KI.cs" />
     <Compile Include="Configuracion\FrmConfiguracionBD_83KI.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -71,6 +76,19 @@
     <Compile Include="Compartido\IdiomaUiHelper_83KI.cs" />
     <Compile Include="Compartido\PermisosUi_83KI.cs" />
     <Compile Include="Modulos\Maestros\ComposicionMaestros_83KI.cs" />
+    <Compile Include="Modulos\PlanificacionAcademica\FrmEvaluaciones_83KI.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Modulos\PlanificacionAcademica\CertificadoPdfExporter_83KI.cs" />
+    <Compile Include="Modulos\PlanificacionAcademica\FrmGenerarCertificado_83KI.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Modulos\PlanificacionAcademica\FrmRegistrarResultadosEvaluacion_83KI.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Modulos\PlanificacionAcademica\FrmRegistrarResultadosEvaluacion_83KI.Designer.cs">
+      <DependentUpon>FrmRegistrarResultadosEvaluacion_83KI.cs</DependentUpon>
+    </Compile>
     <Compile Include="Modulos\PlanificacionAcademica\FrmRegistrarPreaperturaComision_83KI.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -85,6 +103,15 @@
     </Compile>
     <Compile Include="Modulos\Reportes\FrmReporteOcupacionComisiones_83KI.Designer.cs">
       <DependentUpon>FrmReporteOcupacionComisiones_83KI.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Modulos\CobrosMorosidadActas\FrmDetalleMorosidad_83KI.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Modulos\CobrosMorosidadActas\FrmReporteMorosidad_83KI.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Modulos\CobrosMorosidadActas\FrmReporteMorosidad_83KI.Designer.cs">
+      <DependentUpon>FrmReporteMorosidad_83KI.cs</DependentUpon>
     </Compile>
     <Compile Include="Modulos\PreInscripcion\FrmRegistrarConsultaLead_83KI.cs">
       <SubType>Form</SubType>
@@ -266,6 +293,9 @@
     <EmbeddedResource Include="Modulos\PlanificacionAcademica\FrmEditarComision_83KI.resx">
       <DependentUpon>FrmEditarComision_83KI.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Modulos\CobrosMorosidadActas\FrmReporteMorosidad_83KI.resx">
+      <DependentUpon>FrmReporteMorosidad_83KI.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Principal\FrmPrincipal.resx">
       <DependentUpon>FrmPrincipal.cs</DependentUpon>
       <LogicalName>UI.FrmPrincipal.resources</LogicalName>
@@ -323,15 +353,57 @@
       <Link>Scripts\Sql\EsquemaCompleto.sql</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="..\Scripts\Sql\financiacion-cuotas\001_modelo.sql">
+      <Link>Scripts\Sql\financiacion-cuotas\001_modelo.sql</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Scripts\Sql\financiacion-cuotas\002_completar_inscripciones.sql">
+      <Link>Scripts\Sql\financiacion-cuotas\002_completar_inscripciones.sql</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Scripts\Sql\pagos-cuotas\001_permiso.sql">
+      <Link>Scripts\Sql\pagos-cuotas\001_permiso.sql</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Scripts\Sql\cun03\001_migracion.sql">
+      <Link>Scripts\Sql\cun03\001_migracion.sql</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Scripts\Sql\cun05\001_migracion.sql">
+      <Link>Scripts\Sql\cun05\001_migracion.sql</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Scripts\Sql\cun06\001_migracion.sql">
+      <Link>Scripts\Sql\cun06\001_migracion.sql</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Scripts\Sql\reporte-ocupacion-comisiones\001_migracion.sql">
+      <Link>Scripts\Sql\reporte-ocupacion-comisiones\001_migracion.sql</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Scripts\Sql\cun08\006_evaluaciones.sql">
+      <Link>Scripts\Sql\cun08\006_evaluaciones.sql</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Scripts\Sql\cun09\001_migracion.sql">
+      <Link>Scripts\Sql\cun09\001_migracion.sql</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Scripts\Sql\cun08\001_migracion.sql">
+      <Link>Scripts\Sql\cun08\001_migracion.sql</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="..\Scripts\Sql\cun07\001_migracion.sql">
       <Link>Scripts\Sql\cun07\001_migracion.sql</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Scripts\Sql\reporte-morosidad\001_migracion.sql">
+      <Link>Scripts\Sql\reporte-morosidad\001_migracion.sql</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Modulos\Ayuda\" />
-    <Folder Include="Modulos\CobrosMorosidadActas\" />
-    <Folder Include="Modulos\Reportes\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

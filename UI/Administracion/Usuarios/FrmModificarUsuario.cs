@@ -8,7 +8,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 
 namespace UI
 {
-    public partial class FrmModificarUsuario : Form, IObservadorIdioma
+    public partial class FrmModificarUsuario : FormConAyuda_83KI, IObservadorIdioma
     {
         private readonly IGestorUsuario_83KI _gestorUsuario;
         private readonly IGestorRol_83KI _gestorRol;
@@ -22,7 +22,7 @@ namespace UI
             _usuarioOriginal = usuario ?? throw new ArgumentNullException(nameof(usuario));
 
             InitializeComponent();
-            _gestorIdioma = Service.ServiceFactory_83KI.GetGestorIdioma();
+            _gestorIdioma = ServiceFactory_83KI.GetGestorIdioma();
             CargarRoles();
             CargarDatos();
             _gestorIdioma.Suscribir(this);

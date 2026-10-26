@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Service.DTOs
 {
     /// <summary>
-    /// metadatos canonicos para una tabla protegida: nombre y orden de columnas usado para hashing dvh.
+    /// metadatos canonicos para una tabla protegida: nombre y orden de columnas usado para el cálculo del hash dvh.
     /// el orden de columnas definido aqui DEBE coincidir con la canonicalizacion en los scripts sql
     /// (002_backfill.sql) y el calculo dvh en c# en IntegridadDAL_83KI.
     /// las columnas se listan alfabeticamente. la columna dvh se excluye del conjunto canonico.
@@ -45,7 +45,7 @@ namespace Service.DTOs
                 new IntegridadTablaConfig_83KI("Patentes",
                     "CodigoPatente", "Nombre"),
 
-                // tablas de join — columnas fk, alfabetico
+                // tablas de asociación — columnas fk, alfabetico
                 new IntegridadTablaConfig_83KI("RolPatente",
                     "CodigoPatente", "CodigoRol"),
 
@@ -101,12 +101,18 @@ namespace Service.DTOs
                 new IntegridadTablaConfig_83KI("AltaOficialComision",
                     "FechaAlta", "FechaRegistro", "IdAltaOficialComision", "IdComision", "NumeroActa", "Observaciones", "UsuarioRegistro"),
 
+                new IntegridadTablaConfig_83KI("CertificadoFinalizacion",
+                    "Apellido", "Cargo", "Curso", "Email", "Fecha", "Firmante", "Folio", "IdCertificado", "IdInscripcion", "Mencion", "Modalidad", "Nombre", "Observaciones", "Promedio"),
+
+                new IntegridadTablaConfig_83KI("ResultadoEvaluacion",
+                    "Calificacion", "CondicionFinal", "FechaEvaluacion", "IdComision", "IdInscripcion", "IdResultadoEvaluacion", "Observaciones"),
+
                 new IntegridadTablaConfig_83KI("ActaCierreComision",
                     "FechaCierre", "FechaRegistro", "IdActaCierreComision", "IdComision", "Motivo", "NumeroActa", "Observaciones", "UsuarioRegistro"),
             };
 
         /// <summary>
-        /// busca una config de tabla protegida por nombre. devuelve null si no se encuentra.
+        /// busca una configuración de tabla protegida por nombre. devuelve null si no se encuentra.
         /// </summary>
         public static IntegridadTablaConfig_83KI ObtenerPorNombre(string nombreTabla)
         {

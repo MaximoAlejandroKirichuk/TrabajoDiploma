@@ -13,7 +13,7 @@ namespace BLL
     /// logica de negocio para verificacion de integridad y recalculo de hashes.
     /// implementa IIntegridadDatosService_83KI — la puerta de login y el contrato de recuperacion del admin.
     /// </summary>
-    internal class IntegridadBLL_83KI : IIntegridadDatosService_83KI
+    public class IntegridadBLL_83KI : IIntegridadDatosService_83KI
     {
         private readonly IIntegridadDAL_83KI _integridadDal;
         private readonly IBitacoraManager_83KI _bitacora;
@@ -22,6 +22,11 @@ namespace BLL
         {
             _integridadDal = integridadDal ?? throw new ArgumentNullException(nameof(integridadDal));
             _bitacora = bitacora ?? throw new ArgumentNullException(nameof(bitacora));
+        }
+
+        public void ActualizarDVHyDVVResultados(List<int> idsResultado, System.Data.SqlClient.SqlConnection conn, System.Data.SqlClient.SqlTransaction tran)
+        {
+            _integridadDal.ActualizarDVHyDVVResultados(idsResultado, conn, tran);
         }
 
         /// <summary>

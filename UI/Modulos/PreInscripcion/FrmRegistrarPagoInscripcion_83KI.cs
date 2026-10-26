@@ -1,5 +1,6 @@
 using BE.Entidades;
 using Service;
+using BE.DTOs.Pagos;
 using Service.DTOs;
 using Service.Entidades;
 using Service.Interfaces;
@@ -9,7 +10,7 @@ using System.Windows.Forms;
 
 namespace UI.Modulos.PreInscripcion
 {
-    public partial class FrmRegistrarPagoInscripcion_83KI : Form, IObservadorIdioma
+    public partial class FrmRegistrarPagoInscripcion_83KI : FormConAyuda_83KI, IObservadorIdioma
     {
         private readonly IPagoInscripcionBLL_83KI _pagoBLL;
         private readonly IGestorIdioma_83KI _gestorIdioma;

@@ -9,7 +9,7 @@ using System.Windows.Forms;
 
 namespace UI.Modulos.Maestros
 {
-    public class FrmGestionCursoProfesor_83KI : Form, IObservadorIdioma
+    public class FrmGestionCursoProfesor_83KI : FormConAyuda_83KI, IObservadorIdioma
     {
         private readonly IGestorCursoProfesor_83KI _gestorCursoProfesor;
         private readonly IGestorIdioma_83KI _gestorIdioma;

@@ -16,7 +16,7 @@ using System.Windows.Forms;
 
 namespace UI
 {
-    public partial class FrmCrearUsuario : Form, IObservadorIdioma
+    public partial class FrmCrearUsuario : FormConAyuda_83KI, IObservadorIdioma
     {
         private readonly IGestorUsuario_83KI _usuarioService;
         private readonly IGestorRol_83KI _gestorRol;
@@ -27,7 +27,7 @@ namespace UI
             InitializeComponent();
             _usuarioService = gestorUsuario;
             _gestorRol = gestorRol;
-            _gestorIdioma = Service.ServiceFactory_83KI.GetGestorIdioma();
+            _gestorIdioma = ServiceFactory_83KI.GetGestorIdioma();
             CargarRoles();
             _gestorIdioma.Suscribir(this);
         }

@@ -1,5 +1,8 @@
 using BE.Entidades;
+using BE.DTOs.Inscripciones;
+using BE.DTOs.Pagos;
 using Service.DTOs;
+using BE.DTOs.Comisiones;
 using Service.Entidades;
 using Service.Interfaces;
 using System;
@@ -14,15 +17,13 @@ namespace BLL
         private readonly IComisionDAL_83KI _comisionDAL;
         private readonly ICuotaBLL_83KI _cuotaBLL;
         private readonly ISessionManager_83KI _sessionManager;
-        private readonly IBitacoraManager_83KI _bitacora;
 
-        public KI68InscripcionBLL(IInscripcionDAL_83KI inscripcionDAL, IComisionDAL_83KI comisionDAL, ICuotaBLL_83KI cuotaBLL, ISessionManager_83KI sessionManager, IBitacoraManager_83KI bitacora)
+        public KI68InscripcionBLL(IInscripcionDAL_83KI inscripcionDAL, IComisionDAL_83KI comisionDAL, ICuotaBLL_83KI cuotaBLL, ISessionManager_83KI sessionManager)
         {
             _inscripcionDAL = inscripcionDAL;
             _comisionDAL = comisionDAL;
             _cuotaBLL = cuotaBLL;
             _sessionManager = sessionManager;
-            _bitacora = bitacora;
         }
 
         public IEnumerable<BusquedaInscripcionPersonaResultado_83KI> BuscarPersonas(string texto)

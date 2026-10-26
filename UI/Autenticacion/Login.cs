@@ -17,15 +17,15 @@ using Service;
 
 namespace UI
 {
-    public partial class Login : Form
+    public partial class Login : FormConAyuda_83KI
     {
         private readonly IGestorUsuario_83KI _gestor;
         private readonly IGestorRol_83KI _gestorRol;
 
         public Login()
         {
-            _gestor = Service.ServiceFactory_83KI.GetGestorUsuario();
-            _gestorRol = Service.ServiceFactory_83KI.GetGestorRol();
+            _gestor = ServiceFactory_83KI.GetGestorUsuario();
+            _gestorRol = ServiceFactory_83KI.GetGestorRol();
             InitializeComponent();
         }
 

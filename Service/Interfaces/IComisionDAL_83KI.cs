@@ -1,5 +1,6 @@
 using BE.Entidades;
 using Service.DTOs;
+using BE.DTOs.Comisiones;
 using System;
 using System.Collections.Generic;
 
@@ -7,6 +8,10 @@ namespace Service.Interfaces
 {
     public interface IComisionDAL_83KI
     {
+        IEnumerable<ComisionListado_83KI> ListarComisionesAsignadasParaEvaluacion(int idProfesor);
+        Comision_83KI ObtenerComisionPorCursoYNumero(int idCurso, string numeroComision);
+        int ObtenerProfesorPorDni(string dni);
+        DateTime ObtenerFechaActual();
         IEnumerable<Curso_83KI> ObtenerCursosActivosParaPreapertura();
         IEnumerable<Profesor_83KI> ObtenerProfesoresActivosParaFiltro();
         IEnumerable<Profesor_83KI> ObtenerProfesoresDisponibles(int idCurso, DayOfWeek diaSemana, TimeSpan horaInicio, TimeSpan horaFin);

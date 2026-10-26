@@ -1,6 +1,7 @@
 using BE.Entidades;
 using Service;
 using Service.DTOs;
+using BE.DTOs.Becas;
 using Service.Entidades;
 using Service.Interfaces;
 using System;
@@ -9,7 +10,7 @@ using System.Windows.Forms;
 
 namespace UI.Modulos.PreInscripcion
 {
-    public partial class FrmRegistrarDecisionBeca_83KI : Form, IObservadorIdioma
+    public partial class FrmRegistrarDecisionBeca_83KI : FormConAyuda_83KI, IObservadorIdioma
     {
         private readonly IGestorBeca_83KI _gestorBecaBLL;
         private readonly IGestorIdioma_83KI _gestorIdioma;

@@ -1,5 +1,6 @@
 using Service;
 using Service.DTOs;
+using BE.DTOs.Comisiones;
 using Service.Entidades;
 using Service.Interfaces;
 using System;
@@ -8,7 +9,7 @@ using System.Windows.Forms;
 
 namespace UI.Modulos.PlanificacionAcademica
 {
-    public partial class FrmRegistrarEstadoDefinitivoComision_83KI : Form, IObservadorIdioma
+    public partial class FrmRegistrarEstadoDefinitivoComision_83KI : FormConAyuda_83KI, IObservadorIdioma
     {
         private readonly IEstadoDefinitivoComisionBLL_83KI _bll;
         private readonly IGestorIdioma_83KI _gestorIdioma;

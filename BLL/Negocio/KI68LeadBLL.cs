@@ -1,3 +1,4 @@
+using BE.DTOs.Leads;
 using Service.DTOs;
 using Service.Entidades;
 using Service.Interfaces;
@@ -35,7 +36,7 @@ namespace BLL
             _alumnoPersonaBLL.ResolverLeadUnico(request);
             _comisionBLL.ValidarComisionPreapertura(request.IdComision);
             var resultado = _consultaLeadDAL.RegistrarConsulta(request);
-            RegistrarAuditoriaSegura($"Registro de consulta lead: {resultado.Consulta.Codigo}. Lead {resultado.Lead.IdLead}. Actor: {UsuarioActual}", Criticidad.Medio, UsuarioActual);
+            resultado.AuditoriaFallida = !RegistrarAuditoriaSegura($"Registro de consulta lead: {resultado.Consulta.Codigo}. Lead {resultado.Lead.IdLead}. Actor: {UsuarioActual}");
             return resultado;
         }
 
@@ -59,10 +60,10 @@ namespace BLL
 
         private string UsuarioActual { get { return _sessionManager.UsuarioActivo != null ? _sessionManager.UsuarioActivo.UserName : "Sistema"; } }
 
-        private void RegistrarAuditoriaSegura(string descripcion, Criticidad criticidad, string username)
+        private bool RegistrarAuditoriaSegura(string descripcion)
         {
-            try { _bitacora.RegistrarEvento(BitacoraEvento_83KI.CrearNuevo(descripcion, criticidad, Modulo.PreInscripcion, username)); }
-            catch { }
+            try { _bitacora.RegistrarEvento(BitacoraEvento_83KI.CrearNuevo(descripcion, Criticidad.Medio, Modulo.PreInscripcion, UsuarioActual)); return true; }
+            catch { return false; }
         }
     }
 }

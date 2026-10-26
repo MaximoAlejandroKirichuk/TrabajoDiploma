@@ -8,7 +8,7 @@ using System.Windows.Forms;
 
 namespace UI.Modulos.Maestros
 {
-    public class FrmModificarProfesor_83KI : Form, IObservadorIdioma
+    public class FrmModificarProfesor_83KI : FormConAyuda_83KI, IObservadorIdioma
     {
         private readonly IGestorProfesor_83KI _gestorProfesor;
         private readonly IGestorIdioma_83KI _gestorIdioma;

@@ -1,5 +1,8 @@
 using BE.Entidades;
+using BE.DTOs.Pagos;
+using BE.DTOs.Inscripciones;
 using Service.DTOs;
+using BE.DTOs.Comisiones;
 using System.Collections.Generic;
 
 namespace Service.Interfaces

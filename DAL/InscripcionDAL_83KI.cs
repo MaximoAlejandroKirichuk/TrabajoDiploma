@@ -1,7 +1,9 @@
 using BE.Entidades;
+using BE.DTOs.Inscripciones;
 using DAL.DAL;
 using Service;
 using Service.DTOs;
+using BE.DTOs.Comisiones;
 using Service.Entidades;
 using Service.Interfaces;
 using System;
@@ -74,7 +76,7 @@ namespace DAL
             var alumno = Alumno_83KI.ReconstruirDesdePersistencia(Convert.ToInt32(row["IdAlumno"]), row["AlumnoDNI"].ToString(), row["AlumnoNombre"].ToString(), row["AlumnoApellido"].ToString(), row["AlumnoEmail"].ToString(), row["AlumnoTelefono"].ToString(), Convert.ToDateTime(row["AlumnoFechaAlta"]), row["AlumnoEstado"].ToString(), row["AlumnoDVH"].ToString());
             int? idLead = row["IdLeadOrigen"] == DBNull.Value ? (int?)null : Convert.ToInt32(row["IdLeadOrigen"]);
             var solicitud = SolicitudInscripcion_83KI.ReconstruirDesdePersistencia(Convert.ToInt32(row["IdSolicitudInscripcion"]), row["Codigo"].ToString(), alumno.IdAlumno, idLead, Convert.ToInt32(row["IdComision"]), Convert.ToInt32(row["IdPlanDePago"]), Convert.ToDecimal(row["RecargoPlanSnapshot"]), Convert.ToDateTime(row["FechaSolicitud"]), row["SolicitudEstado"].ToString(), row["Observaciones"].ToString(), row["SolicitudDVH"].ToString(),
-                Convert.ToDecimal(row["ArancelCursoSnapshot"]), Convert.ToInt32(row["CantidadCuotasSnapshot"]), Convert.ToDecimal(row["TotalCursoSnapshot"]), Convert.ToDateTime(row["FechaPrimerVencimientoSnapshot"]), row["NombrePlanSnapshot"].ToString());
+                SnapshotMapper_83KI.Decimal(row["ArancelCursoSnapshot"]), SnapshotMapper_83KI.Integer(row["CantidadCuotasSnapshot"]), SnapshotMapper_83KI.Decimal(row["TotalCursoSnapshot"]), SnapshotMapper_83KI.Date(row["FechaPrimerVencimientoSnapshot"]), SnapshotMapper_83KI.Text(row["NombrePlanSnapshot"]));
             var cuota = Cuota_83KI.ReconstruirDesdePersistencia(Convert.ToInt32(row["IdCuota"]), solicitud.IdSolicitudInscripcion, Convert.ToInt32(row["NumeroCuota"]), Convert.ToDecimal(row["MontoOriginal"]), Convert.ToDecimal(row["BalanceAdeudado"]), Convert.ToDateTime(row["FechaVencimiento"]), row["CuotaEstado"].ToString(), row["CuotaDVH"].ToString());
             return new SolicitudInscripcionResultado_83KI { Alumno = alumno, Solicitud = solicitud, CuotaInicial = cuota, CodigoSolicitud = solicitud.Codigo, VacantesDisponibles = Convert.ToInt32(row["VacantesDisponibles"]) };
         }
@@ -139,6 +141,7 @@ namespace DAL
                 new SqlParameter("@username", string.IsNullOrWhiteSpace(username) ? "Sistema" : username.Trim())
             };
 
+            // Mantener esta inserción directa dentro de la transacción de inscripción para que la auditoría y la persistencia sean atómicas.
             AccesoDAL_83KI.EscribirTransaccional(conn, tran, sql, parametros);
         }
 

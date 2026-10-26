@@ -6,6 +6,9 @@
         /// Required designer variable.
         /// </summary>
         private System.ComponentModel.IContainer components = null;
+        private System.Windows.Forms.ToolStripMenuItem registrarResultadosEvaluacionToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem generarCertificadoToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem evaluacionesToolStripMenuItem;
 
         /// <summary>
         /// Clean up any resources being used.
@@ -52,9 +55,22 @@
             this.registrarPagoInscripcionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.registrarPagoCuotaToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.registrarEstadoDefinitivoComisionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.generarCertificadoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.evaluacionesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.evaluacionesToolStripMenuItem.Name = "evaluacionesToolStripMenuItem";
+            this.evaluacionesToolStripMenuItem.Text = "Evaluaciones";
+            this.evaluacionesToolStripMenuItem.Click += new System.EventHandler(this.evaluacionesToolStripMenuItem_Click);
+            this.generarCertificadoToolStripMenuItem.Name = "generarCertificadoToolStripMenuItem";
+            this.generarCertificadoToolStripMenuItem.Text = "Generar certificado de finalización";
+            this.generarCertificadoToolStripMenuItem.Click += new System.EventHandler(this.generarCertificadoToolStripMenuItem_Click);
+            this.registrarResultadosEvaluacionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.registrarResultadosEvaluacionToolStripMenuItem.Name = "registrarResultadosEvaluacionToolStripMenuItem";
+            this.registrarResultadosEvaluacionToolStripMenuItem.Text = "Registrar resultados de evaluación";
+            this.registrarResultadosEvaluacionToolStripMenuItem.Click += new System.EventHandler(this.registrarResultadosEvaluacionToolStripMenuItem_Click);
             this.cobrosMorosidadActasToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.reportesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.reporteOcupacionComisionesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.reporteMorosidadToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuIdioma = new System.Windows.Forms.ToolStripMenuItem();
             this.espanolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.inglesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -192,13 +208,14 @@
             this.gestionCursoProfesorToolStripMenuItem.Click += new System.EventHandler(this.gestionCursoProfesorToolStripMenuItem_Click);
             // 
             // planificacionAcademicaToolStripMenuItem
-            // 
+            //
             this.planificacionAcademicaToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.gestionComisionesToolStripMenuItem,
             this.registrarPreaperturaComisionToolStripMenuItem,
             this.registrarConsultaToolStripMenuItem,
             this.registrarSolicitudInscripcionToolStripMenuItem,
             this.registrarDecisionBecaToolStripMenuItem,
+            this.registrarPagoInscripcionToolStripMenuItem,
             this.registrarEstadoDefinitivoComisionToolStripMenuItem});
             this.planificacionAcademicaToolStripMenuItem.Name = "planificacionAcademicaToolStripMenuItem";
             this.planificacionAcademicaToolStripMenuItem.Size = new System.Drawing.Size(189, 24);
@@ -218,7 +235,7 @@
             this.registrarPreaperturaComisionToolStripMenuItem.Size = new System.Drawing.Size(304, 24);
             this.registrarPreaperturaComisionToolStripMenuItem.Text = "Registro de preapertura de comisión";
             this.registrarPreaperturaComisionToolStripMenuItem.Click += new System.EventHandler(this.registrarPreaperturaComisionToolStripMenuItem_Click);
-            // 
+            //
             // registrarConsultaToolStripMenuItem
             //
             this.registrarConsultaToolStripMenuItem.Name = "registrarConsultaToolStripMenuItem";
@@ -261,12 +278,22 @@
             // cobrosMorosidadActasToolStripMenuItem
             // 
             this.cobrosMorosidadActasToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.registrarPagoInscripcionToolStripMenuItem,
-            this.registrarPagoCuotaToolStripMenuItem});
+            this.registrarPagoCuotaToolStripMenuItem,
+            this.registrarResultadosEvaluacionToolStripMenuItem,
+            this.evaluacionesToolStripMenuItem,
+            this.generarCertificadoToolStripMenuItem,
+            this.reporteMorosidadToolStripMenuItem});
             this.cobrosMorosidadActasToolStripMenuItem.Name = "cobrosMorosidadActasToolStripMenuItem";
             this.cobrosMorosidadActasToolStripMenuItem.Size = new System.Drawing.Size(208, 24);
             this.cobrosMorosidadActasToolStripMenuItem.Text = "Cobros, Morosidad y Actas";
+            //
+            // reporteMorosidadToolStripMenuItem
             // 
+            this.reporteMorosidadToolStripMenuItem.Name = "reporteMorosidadToolStripMenuItem";
+            this.reporteMorosidadToolStripMenuItem.Size = new System.Drawing.Size(304, 24);
+            this.reporteMorosidadToolStripMenuItem.Text = "Informe de morosidad";
+            this.reporteMorosidadToolStripMenuItem.Click += new System.EventHandler(this.reporteMorosidadToolStripMenuItem_Click);
+            //
             // reportesToolStripMenuItem
             // 
             this.reportesToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -353,6 +380,7 @@
         private System.Windows.Forms.ToolStripMenuItem cobrosMorosidadActasToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem reportesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem reporteOcupacionComisionesToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem reporteMorosidadToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem gestionProfesoresToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem gestionCursosToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem gestionCursoProfesorToolStripMenuItem;

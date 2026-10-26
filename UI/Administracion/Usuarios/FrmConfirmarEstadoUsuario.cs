@@ -6,7 +6,7 @@ using System.Windows.Forms;
 
 namespace UI
 {
-    public partial class FrmConfirmarEstadoUsuario : Form, IObservadorIdioma
+    public partial class FrmConfirmarEstadoUsuario : FormConAyuda_83KI, IObservadorIdioma
     {
         private readonly Usuario_83KI _usuario;
         private readonly IGestorIdioma_83KI _gestorIdioma;
@@ -15,7 +15,7 @@ namespace UI
         {
             _usuario = usuario ?? throw new ArgumentNullException(nameof(usuario));
             InitializeComponent();
-            _gestorIdioma = Service.ServiceFactory_83KI.GetGestorIdioma();
+            _gestorIdioma = ServiceFactory_83KI.GetGestorIdioma();
             CargarDatos();
             _gestorIdioma.Suscribir(this);
         }

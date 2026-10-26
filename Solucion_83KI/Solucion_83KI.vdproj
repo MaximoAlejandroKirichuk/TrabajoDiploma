@@ -15,6 +15,66 @@
     {
         "Entry"
         {
+        "MsmKey" = "8:_E8300000000000000000000000000001"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_E8300000000000000000000000000002"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_E8300000000000000000000000000003"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_E8300000000000000000000000000004"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_E8300000000000000000000000000005"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_E8300000000000000000000000000006"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_E8300000000000000000000000000007"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_E8300000000000000000000000000008"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_E8300000000000000000000000000009"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_E830000000000000000000000000000A"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_130FAB8384FD5EB1C51EBE6CAAF6F7E1"
         "OwnerKey" = "8:_CA366A105F294F1EBF6CFF40237DF997"
         "MsmSig" = "8:_UNDEFINED"
@@ -377,6 +437,116 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_E8300000000000000000000000000001"
+            {
+            "SourcePath" = "8:..\\Scripts\\Sql\\financiacion-cuotas\\001_modelo.sql"
+            "TargetName" = "8:001_modelo.sql"
+            "Folder" = "8:_E83F0000000000000000000000000001"
+            "Vital" = "11:TRUE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_E8300000000000000000000000000002"
+            {
+            "SourcePath" = "8:..\\Scripts\\Sql\\financiacion-cuotas\\002_completar_inscripciones.sql"
+            "TargetName" = "8:002_completar_inscripciones.sql"
+            "Folder" = "8:_E83F0000000000000000000000000001"
+            "Vital" = "11:TRUE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_E8300000000000000000000000000003"
+            {
+            "SourcePath" = "8:..\\Scripts\\Sql\\cun03\\001_migracion.sql"
+            "TargetName" = "8:001_migracion.sql"
+            "Folder" = "8:_E83F0000000000000000000000000003"
+            "Vital" = "11:TRUE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_E8300000000000000000000000000004"
+            {
+            "SourcePath" = "8:..\\Scripts\\Sql\\cun05\\001_migracion.sql"
+            "TargetName" = "8:001_migracion.sql"
+            "Folder" = "8:_E83F0000000000000000000000000005"
+            "Vital" = "11:TRUE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_E8300000000000000000000000000005"
+            {
+            "SourcePath" = "8:..\\Scripts\\Sql\\cun06\\001_migracion.sql"
+            "TargetName" = "8:001_migracion.sql"
+            "Folder" = "8:_E83F0000000000000000000000000006"
+            "Vital" = "11:TRUE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_E8300000000000000000000000000006"
+            {
+            "SourcePath" = "8:..\\Scripts\\Sql\\reporte-ocupacion-comisiones\\001_migracion.sql"
+            "TargetName" = "8:001_migracion.sql"
+            "Folder" = "8:_E83F000000000000000000000000000A"
+            "Vital" = "11:TRUE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_E8300000000000000000000000000007"
+            {
+            "SourcePath" = "8:..\\Scripts\\Sql\\cun07\\001_migracion.sql"
+            "TargetName" = "8:001_migracion.sql"
+            "Folder" = "8:_E83F0000000000000000000000000007"
+            "Vital" = "11:TRUE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_E8300000000000000000000000000008"
+            {
+            "SourcePath" = "8:..\\Scripts\\Sql\\cun08\\001_migracion.sql"
+            "TargetName" = "8:001_migracion.sql"
+            "Folder" = "8:_E83F0000000000000000000000000008"
+            "Vital" = "11:TRUE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_E8300000000000000000000000000009"
+            {
+            "SourcePath" = "8:..\\Scripts\\Sql\\cun09\\001_migracion.sql"
+            "TargetName" = "8:001_migracion.sql"
+            "Folder" = "8:_E83F0000000000000000000000000009"
+            "Vital" = "11:TRUE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_E830000000000000000000000000000A"
+            {
+            "SourcePath" = "8:..\\Scripts\\Sql\\cun08\\006_evaluaciones.sql"
+            "TargetName" = "8:006_evaluaciones.sql"
+            "Folder" = "8:_E83F0000000000000000000000000008"
+            "Vital" = "11:TRUE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            }
             "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_62B8A2B9835E76A950FD91D763C3AEC5"
             {
             "AssemblyRegister" = "3:1"
@@ -524,6 +694,78 @@
                             "Property" = "8:_C47DD081A96E4BB4BC3B275D01639787"
                                 "Folders"
                                 {
+                                    "{9EF0B969-E518-4E46-987F-47570745A589}:_E83F0000000000000000000000000001"
+                                    {
+                                    "Name" = "8:financiacion-cuotas"
+                                    "AlwaysCreate" = "11:FALSE"
+                                    "Property" = "8:_E83P0000000000000000000000000001"
+                                    "Folders"
+                                    {
+                                    }
+                                    }
+                                    "{9EF0B969-E518-4E46-987F-47570745A589}:_E83F0000000000000000000000000003"
+                                    {
+                                    "Name" = "8:cun03"
+                                    "AlwaysCreate" = "11:FALSE"
+                                    "Property" = "8:_E83P0000000000000000000000000003"
+                                    "Folders"
+                                    {
+                                    }
+                                    }
+                                    "{9EF0B969-E518-4E46-987F-47570745A589}:_E83F0000000000000000000000000005"
+                                    {
+                                    "Name" = "8:cun05"
+                                    "AlwaysCreate" = "11:FALSE"
+                                    "Property" = "8:_E83P0000000000000000000000000005"
+                                    "Folders"
+                                    {
+                                    }
+                                    }
+                                    "{9EF0B969-E518-4E46-987F-47570745A589}:_E83F0000000000000000000000000006"
+                                    {
+                                    "Name" = "8:cun06"
+                                    "AlwaysCreate" = "11:FALSE"
+                                    "Property" = "8:_E83P0000000000000000000000000006"
+                                    "Folders"
+                                    {
+                                    }
+                                    }
+                                    "{9EF0B969-E518-4E46-987F-47570745A589}:_E83F0000000000000000000000000007"
+                                    {
+                                    "Name" = "8:cun07"
+                                    "AlwaysCreate" = "11:FALSE"
+                                    "Property" = "8:_E83P0000000000000000000000000007"
+                                    "Folders"
+                                    {
+                                    }
+                                    }
+                                    "{9EF0B969-E518-4E46-987F-47570745A589}:_E83F0000000000000000000000000008"
+                                    {
+                                    "Name" = "8:cun08"
+                                    "AlwaysCreate" = "11:FALSE"
+                                    "Property" = "8:_E83P0000000000000000000000000008"
+                                    "Folders"
+                                    {
+                                    }
+                                    }
+                                    "{9EF0B969-E518-4E46-987F-47570745A589}:_E83F0000000000000000000000000009"
+                                    {
+                                    "Name" = "8:cun09"
+                                    "AlwaysCreate" = "11:FALSE"
+                                    "Property" = "8:_E83P0000000000000000000000000009"
+                                    "Folders"
+                                    {
+                                    }
+                                    }
+                                    "{9EF0B969-E518-4E46-987F-47570745A589}:_E83F000000000000000000000000000A"
+                                    {
+                                    "Name" = "8:reporte-ocupacion-comisiones"
+                                    "AlwaysCreate" = "11:FALSE"
+                                    "Property" = "8:_E83P000000000000000000000000000A"
+                                    "Folders"
+                                    {
+                                    }
+                                    }
                                 }
                             }
                         }

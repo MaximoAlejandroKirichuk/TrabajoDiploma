@@ -248,10 +248,10 @@ BEGIN
         SET @IdActa = SCOPE_IDENTITY();
 
         UPDATE dbo.Cuota SET Estado = N'reintegro_pendiente', DVH = N''
-        WHERE Estado = N'pagada' AND IdSolicitudInscripcion IN (SELECT IdSolicitudInscripcion FROM dbo.SolicitudInscripcion WHERE IdComision = @IdComision AND Estado = N'activa');
+        WHERE Estado = N'pagada' AND IdSolicitudInscripcion IN (SELECT IdSolicitudInscripcion FROM dbo.SolicitudInscripcion WHERE IdComision = @IdComision AND Estado IN (N'pendiente', N'confirmada', N'activa'));
         SET @Reintegro = @@ROWCOUNT;
 
-        UPDATE dbo.SolicitudInscripcion SET Estado = N'cancelada', DVH = N'' WHERE IdComision = @IdComision AND Estado = N'activa';
+        UPDATE dbo.SolicitudInscripcion SET Estado = N'cancelada', DVH = N'' WHERE IdComision = @IdComision AND Estado IN (N'pendiente', N'confirmada', N'activa');
         SET @Canceladas = @@ROWCOUNT;
 
         UPDATE dbo.Comision SET Estado = N'cancelada_falta_quorum', DVH = N'' WHERE IdComision = @IdComision;

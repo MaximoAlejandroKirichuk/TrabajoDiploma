@@ -11,7 +11,8 @@ namespace Service.Entidades
         Usuarios,
         Admin,
         PlanificacionAcademica,
-        PreInscripcion
+        PreInscripcion,
+        CobrosMorosidadActas
     }
 
     public enum Criticidad
@@ -87,6 +88,12 @@ namespace Service.Entidades
         RegistrarEstadoDefinitivoComision = 67,
         SerializarComisiones = 68,
         DeserializarComisiones = 69,
-        VerReporteOcupacionComisiones = 70
+        VerReporteOcupacionComisiones = 70,
+        RegistrarResultadosEvaluacion = 71,
+        GenerarCertificadoFinalizacion = 72,
+        VerEvaluaciones = 73,
+        ModificarEvaluaciones = 74,
+        VerReporteMorosidad = 75,
+        RegistrarPagoCuotas = 76
     }
 }

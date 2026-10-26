@@ -1,3 +1,4 @@
+using BE.DTOs.Pagos;
 using Service.DTOs;
 
 namespace Service.Interfaces

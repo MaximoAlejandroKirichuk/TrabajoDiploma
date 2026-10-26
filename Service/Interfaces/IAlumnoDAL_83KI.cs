@@ -1,4 +1,5 @@
 using BE.Entidades;
+using BE.DTOs.Inscripciones;
 using Service.DTOs;
 using System.Collections.Generic;
 
