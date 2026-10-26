@@ -58,6 +58,33 @@
     <Compile Include="Entidades\Lead_83KI.cs" />
     <Compile Include="Entidades\Profesor_83KI.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="DTOs\Becas\BusquedaDecisionBecaResultado_83KI.cs" />
+    <Compile Include="DTOs\Becas\DecisionBecaRequest_83KI.cs" />
+    <Compile Include="DTOs\Becas\DecisionBecaResultado_83KI.cs" />
+    <Compile Include="DTOs\Comisiones\ActaCierreComisionRequest_83KI.cs" />
+    <Compile Include="DTOs\Comisiones\AltaOficialComisionRequest_83KI.cs" />
+    <Compile Include="DTOs\Comisiones\ComisionEstadoDefinitivoListado_83KI.cs" />
+    <Compile Include="DTOs\Comisiones\ComisionListado_83KI.cs" />
+    <Compile Include="DTOs\Comisiones\ComisionPagoOpcion_83KI.cs" />
+    <Compile Include="DTOs\Comisiones\ComisionXml_83KI.cs" />
+    <Compile Include="DTOs\Comisiones\EvaluacionQuorumComision_83KI.cs" />
+    <Compile Include="DTOs\Comisiones\FiltroComision_83KI.cs" />
+    <Compile Include="DTOs\Comisiones\ReporteOcupacionComision_83KI.cs" />
+    <Compile Include="DTOs\Comisiones\ResultadoEstadoDefinitivoComision_83KI.cs" />
+    <Compile Include="DTOs\Evaluaciones\AlumnoEvaluacionListado_83KI.cs" />
+    <Compile Include="DTOs\Evaluaciones\BusquedaResultadoEvaluacionRequest_83KI.cs" />
+    <Compile Include="DTOs\Evaluaciones\ResultadoAlumnoRequest_83KI.cs" />
+    <Compile Include="DTOs\Evaluaciones\ResultadoEvaluacionRequest_83KI.cs" />
+    <Compile Include="DTOs\Inscripciones\BusquedaInscripcionPersonaResultado_83KI.cs" />
+    <Compile Include="DTOs\Inscripciones\SolicitudInscripcionRequest_83KI.cs" />
+    <Compile Include="DTOs\Inscripciones\SolicitudInscripcionResultado_83KI.cs" />
+    <Compile Include="DTOs\Leads\BusquedaLeadResultado_83KI.cs" />
+    <Compile Include="DTOs\Leads\ConsultaLeadRequest_83KI.cs" />
+    <Compile Include="DTOs\Leads\ConsultaLeadResultado_83KI.cs" />
+    <Compile Include="DTOs\Pagos\BusquedaPagoInscripcionResultado_83KI.cs" />
+    <Compile Include="DTOs\Pagos\CuotaPreview_83KI.cs" />
+    <Compile Include="DTOs\Pagos\PagoInscripcionRequest_83KI.cs" />
+    <Compile Include="DTOs\Pagos\PagoInscripcionResultado_83KI.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
