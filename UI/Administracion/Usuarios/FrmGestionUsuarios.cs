@@ -7,7 +7,7 @@ using System.Windows.Forms;
 
 namespace UI
 {
-    public partial class FrmGestionUsuarios : Form, IObservadorIdioma
+    public partial class FrmGestionUsuarios : FormConAyuda_83KI, IObservadorIdioma
     {
         private readonly IGestorUsuario_83KI _gestorUsuario;
         private readonly IGestorRol_83KI _gestorRol;

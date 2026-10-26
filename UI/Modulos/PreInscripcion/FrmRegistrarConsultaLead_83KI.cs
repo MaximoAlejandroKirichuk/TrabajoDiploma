@@ -12,7 +12,7 @@ using System.Windows.Forms;
 
 namespace UI.Modulos.PreInscripcion
 {
-    public partial class FrmRegistrarConsultaLead_83KI : Form, IObservadorIdioma
+    public partial class FrmRegistrarConsultaLead_83KI : FormConAyuda_83KI, IObservadorIdioma
     {
         private readonly ILeadBLL_83KI _leadBLL;
         private readonly IComisionConsultaBLL_83KI _comisionBLL;

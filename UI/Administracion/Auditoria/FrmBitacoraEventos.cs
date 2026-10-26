@@ -10,7 +10,7 @@ using UI.Exportacion;
 
 namespace UI
 {
-    public partial class FrmBitacoraEventos : Form, IObservadorIdioma
+    public partial class FrmBitacoraEventos : FormConAyuda_83KI, IObservadorIdioma
     {
         private const string OpcionTodos = "Todos";
         private const string OpcionCualquiera = "Cualquiera";

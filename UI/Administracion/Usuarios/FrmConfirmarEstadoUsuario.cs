@@ -6,7 +6,7 @@ using System.Windows.Forms;
 
 namespace UI
 {
-    public partial class FrmConfirmarEstadoUsuario : Form, IObservadorIdioma
+    public partial class FrmConfirmarEstadoUsuario : FormConAyuda_83KI, IObservadorIdioma
     {
         private readonly Usuario_83KI _usuario;
         private readonly IGestorIdioma_83KI _gestorIdioma;

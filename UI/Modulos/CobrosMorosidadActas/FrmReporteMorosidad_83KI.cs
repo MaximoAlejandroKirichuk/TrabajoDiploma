@@ -16,7 +16,7 @@ namespace UI.Modulos.CobrosMorosidadActas
 {
     // RF2 - Informe de morosidad por alumno y comisión.
     // El formulario solo muestra: los filtros se validan y el reporte se arma en KI68ReporteMorosidadBLL.
-    public partial class FrmReporteMorosidad_83KI : Form, IObservadorIdioma
+    public partial class FrmReporteMorosidad_83KI : FormConAyuda_83KI, IObservadorIdioma
     {
         private readonly IReporteMorosidadBLL_83KI _bll;
         private readonly IGestorIdioma_83KI _gestorIdioma;

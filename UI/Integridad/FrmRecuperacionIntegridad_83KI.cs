@@ -16,7 +16,7 @@ namespace UI
     /// controladas por los permisos 38 (EjecutarBackup), 39 (EjecutarRestore) y 40 (RecalcularHashes).
     /// todos los textos usan claves de localizacion bajo "RecuperacionIntegridad.*".
     /// </summary>
-    public partial class FrmRecuperacionIntegridad_83KI : Form
+    public partial class FrmRecuperacionIntegridad_83KI : FormConAyuda_83KI
     {
         private readonly IIntegridadDatosService_83KI _integridadService;
         private readonly IRecuperacionBaseDatosService_83KI _recuperacionService;

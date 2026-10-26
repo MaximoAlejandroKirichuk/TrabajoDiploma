@@ -17,7 +17,7 @@ using Service;
 
 namespace UI
 {
-    public partial class Login : Form
+    public partial class Login : FormConAyuda_83KI
     {
         private readonly IGestorUsuario_83KI _gestor;
         private readonly IGestorRol_83KI _gestorRol;

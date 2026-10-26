@@ -13,7 +13,7 @@ using System.Windows.Forms;
 
 namespace UI.Modulos.PlanificacionAcademica
 {
-    public partial class FrmRegistrarResultadosEvaluacion_83KI : Form, IObservadorIdioma
+    public partial class FrmRegistrarResultadosEvaluacion_83KI : FormConAyuda_83KI, IObservadorIdioma
     {
         private readonly KI68ResultadoEvaluacionBLL _bll;
         private readonly Service.Interfaces.IGestorIdioma_83KI _gestorIdioma;

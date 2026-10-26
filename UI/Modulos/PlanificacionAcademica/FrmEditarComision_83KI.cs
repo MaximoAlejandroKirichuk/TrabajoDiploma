@@ -7,7 +7,7 @@ using System.Windows.Forms;
 
 namespace UI.Modulos.PlanificacionAcademica
 {
-    public partial class FrmEditarComision_83KI : Form, IObservadorIdioma
+    public partial class FrmEditarComision_83KI : FormConAyuda_83KI, IObservadorIdioma
     {
         private readonly IGestorComision_83KI _gestor;
         private readonly IGestorIdioma_83KI _gestorIdioma;

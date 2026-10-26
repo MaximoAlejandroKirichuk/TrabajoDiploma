@@ -8,7 +8,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 
 namespace UI
 {
-    public partial class FrmModificarUsuario : Form, IObservadorIdioma
+    public partial class FrmModificarUsuario : FormConAyuda_83KI, IObservadorIdioma
     {
         private readonly IGestorUsuario_83KI _gestorUsuario;
         private readonly IGestorRol_83KI _gestorRol;

@@ -11,7 +11,7 @@ using System.Windows.Forms;
 
 namespace UI.Modulos.PlanificacionAcademica
 {
-    public sealed class FrmGenerarCertificado_83KI : Form, IObservadorIdioma
+    public sealed class FrmGenerarCertificado_83KI : FormConAyuda_83KI, IObservadorIdioma
     {
         private readonly KI68CertificadoBLL _bll;
         private readonly IGestorIdioma_83KI _idioma;

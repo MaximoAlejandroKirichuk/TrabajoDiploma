@@ -48,6 +48,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Ayuda\CatalogoAyuda_83KI.cs" />
+    <Compile Include="Ayuda\FormConAyuda_83KI.cs" />
+    <Compile Include="Ayuda\FrmAyuda_83KI.cs" />
     <Compile Include="Administracion\Auditoria\BitacoraEventosPdfExporter_83KI.cs" />
     <Compile Include="Administracion\Auditoria\IBitacoraEventosExporter_83KI.cs" />
     <Compile Include="Aplicacion\ProveedorConfiguracionBD_83KI.cs" />

@@ -7,7 +7,7 @@ using System.Windows.Forms;
 
 namespace UI
 {
-    public partial class FrmCambiarContrasena : Form, IObservadorIdioma
+    public partial class FrmCambiarContrasena : FormConAyuda_83KI, IObservadorIdioma
     {
         private readonly IGestorUsuario_83KI _gestorUsuario;
         private readonly IGestorIdioma_83KI _gestorIdioma;

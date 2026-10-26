@@ -20,7 +20,7 @@ namespace UI
     /// en el login, no para mantenimiento general del admin.
     /// todos los textos usan claves de localizacion bajo "RecuperacionIntegridad.*".
     /// </summary>
-    public partial class FrmRecuperacionIntegridadLogin_83KI : Form
+    public partial class FrmRecuperacionIntegridadLogin_83KI : FormConAyuda_83KI
     {
         private readonly IIntegridadDatosService_83KI _integridadService;
         private readonly IRecuperacionBaseDatosService_83KI _recuperacionService;

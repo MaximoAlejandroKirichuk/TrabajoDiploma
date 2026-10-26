@@ -11,7 +11,7 @@ namespace UI
     /// permite al usuario seleccionar una instancia SQL Server, ingresar el nombre de la base,
     /// validar la conexion y confirmar la configuracion.
     /// </summary>
-    public partial class FrmConfiguracionBD_83KI : Form
+    public partial class FrmConfiguracionBD_83KI : FormConAyuda_83KI
     {
         private readonly IBootstrapBaseDatosService_83KI _bootstrapService;
         private bool _validacionAprobada;

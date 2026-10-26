@@ -11,7 +11,7 @@ using System.Windows.Forms;
 
 namespace UI.Modulos.PreInscripcion
 {
-    public partial class FrmRegistrarPagoCuota_83KI : Form, IObservadorIdioma
+    public partial class FrmRegistrarPagoCuota_83KI : FormConAyuda_83KI, IObservadorIdioma
     {
         private readonly IPagoCuotaBLL_83KI _pagoBLL;
         private readonly IGestorIdioma_83KI _gestorIdioma;

@@ -21,7 +21,7 @@ using UI.Modulos.Reportes;
 
 namespace UI
 {
-    public partial class FrmPrincipal : Form, IObservadorIdioma
+    public partial class FrmPrincipal : FormConAyuda_83KI, IObservadorIdioma
     {
         private readonly IGestorUsuario_83KI _gestorUsuario;
         private readonly IGestorRol_83KI _gestorRol;
@@ -44,6 +44,12 @@ namespace UI
             _integrityModeTimer.Tick += AplicarBloqueoFormulariosAbiertos;
             _integrityModeTimer.Start();
             AplicarPermisos();
+            reToolStripMenuItem.Click += (s, e) =>
+            {
+                var tema = CatalogoAyuda_83KI.Buscar(nameof(FrmPrincipal));
+                if (!tema.Disponible()) return;
+                using (var ayuda = new FrmAyuda_83KI(nameof(FrmPrincipal))) ayuda.ShowDialog(this);
+            };
             _gestorIdioma.Suscribir(this);
         }
 
@@ -84,7 +90,7 @@ namespace UI
             menuCerrarSesion.Visible = PermisosUi_83KI.Tiene(PermisoSistema_83KI.CerrarSesion);
             iniciarSesionToolStripMenuItem.Visible = PermisosUi_83KI.Tiene(PermisoSistema_83KI.ReLogin);
             cambiarContraseñaToolStripMenuItem.Visible = PermisosUi_83KI.Tiene(PermisoSistema_83KI.CambiarContrasena);
-            reToolStripMenuItem.Visible = PermisosUi_83KI.Tiene(PermisoSistema_83KI.Ayuda);
+            reToolStripMenuItem.Visible = !modoRecuperacion && PermisosUi_83KI.Tiene(PermisoSistema_83KI.Ayuda);
             menuIdioma.Visible = PermisosUi_83KI.Tiene(PermisoSistema_83KI.CambiarIdioma);
             gestionProfesoresToolStripMenuItem.Visible = PermisosUi_83KI.TieneAlguno(
                 PermisoSistema_83KI.GestionProfesores,

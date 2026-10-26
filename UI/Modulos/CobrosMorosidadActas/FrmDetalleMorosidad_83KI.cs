@@ -10,7 +10,7 @@ using System.Windows.Forms;
 namespace UI.Modulos.CobrosMorosidadActas
 {
     // Vista de los datos del reporte: no consulta ni modifica pagos y no envía mensajes.
-    public sealed class FrmDetalleMorosidad_83KI : Form
+    public sealed class FrmDetalleMorosidad_83KI : FormConAyuda_83KI
     {
         public FrmDetalleMorosidad_83KI(ReporteMorosidadFila_83KI fila, DateTime fechaReporte)
         {
