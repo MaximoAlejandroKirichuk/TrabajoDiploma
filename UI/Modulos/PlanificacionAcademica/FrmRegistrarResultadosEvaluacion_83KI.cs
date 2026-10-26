@@ -50,6 +50,11 @@ namespace UI.Modulos.PlanificacionAcademica
 
         public void CargarComisionesAsignadas()
         {
+            dtpFecha.Enabled = false;
+            var hoy = _bll.ObtenerFechaActual().Date;
+            if (dtpFecha.Value > hoy) dtpFecha.Value = hoy;
+            dtpFecha.MaxDate = hoy;
+            dtpFecha.Enabled = true;
             var comisiones = _bll.ListarComisionesAsignadasParaEvaluacion();
             int? curso = CursoSeleccionado?.IdCurso, comision = ComisionSeleccionada?.IdComision;
             _cargandoSelectores = true;

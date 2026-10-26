@@ -81,6 +81,31 @@ BEGIN TRY
         INSERT dbo.DigitoVerificador_83KI(NombreTabla,DVV,FechaActualizacion)
         VALUES(N'ResultadoEvaluacion',LOWER(CONVERT(VARCHAR(64),HASHBYTES('SHA2_256',CONVERT(NVARCHAR(MAX),N'')),2)),GETDATE());
     END;
+    -- No validar ni modificar filas históricas: solamente impedir nuevas altas por encima de dos.
+    -- AFTER conserva OUTPUT/IDENTITY y los valores predeterminados originales. Los bloqueos duran hasta la confirmación de la transacción.
+    EXEC(N'CREATE OR ALTER TRIGGER dbo.TR_ResultadoEvaluacion_MaximoDos
+        ON dbo.ResultadoEvaluacion AFTER INSERT, UPDATE AS
+        BEGIN
+            SET NOCOUNT ON;
+            IF NOT EXISTS(SELECT 1 FROM inserted) RETURN;
+            IF EXISTS(SELECT 1 FROM deleted) AND NOT UPDATE(IdInscripcion) RETURN;
+            DECLARE @id int, @lock int;
+            DECLARE inscripciones CURSOR LOCAL FAST_FORWARD FOR
+                SELECT DISTINCT IdInscripcion FROM inserted ORDER BY IdInscripcion;
+            OPEN inscripciones;
+            FETCH NEXT FROM inscripciones INTO @id;
+            WHILE @@FETCH_STATUS=0
+            BEGIN
+                SELECT @lock=IdSolicitudInscripcion FROM dbo.SolicitudInscripcion WITH(UPDLOCK,HOLDLOCK)
+                    WHERE IdSolicitudInscripcion=@id;
+                IF (SELECT COUNT(*) FROM dbo.ResultadoEvaluacion WITH(UPDLOCK,HOLDLOCK)
+                    WHERE IdInscripcion=@id)>2
+                    THROW 52815,N''CUN08: la inscripción ya tiene dos evaluaciones; no se admite una tercera.'',1;
+                FETCH NEXT FROM inscripciones INTO @id;
+            END;
+            CLOSE inscripciones;
+            DEALLOCATE inscripciones;
+        END;');
     COMMIT TRANSACTION;
 END TRY
 BEGIN CATCH

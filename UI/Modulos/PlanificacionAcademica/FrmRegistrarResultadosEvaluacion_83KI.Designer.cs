@@ -22,7 +22,7 @@ namespace UI.Modulos.PlanificacionAcademica
             lblFecha = new System.Windows.Forms.Label { Location = new System.Drawing.Point(496, 16), Size = new System.Drawing.Size(230, 22) };
             cmbCurso = new System.Windows.Forms.ComboBox { Name = "cmbCurso", Location = new System.Drawing.Point(16, 42), Width = 220, DropDownWidth = 400, DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList, DisplayMember = "Curso", TabIndex = 0 };
             cmbComision = new System.Windows.Forms.ComboBox { Name = "cmbComision", Location = new System.Drawing.Point(256, 42), Width = 220, DropDownWidth = 400, DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList, FormattingEnabled = true, TabIndex = 1 };
-            dtpFecha = new System.Windows.Forms.DateTimePicker { Name = "dtpFecha", Location = new System.Drawing.Point(496, 42), Width = 220, Format = System.Windows.Forms.DateTimePickerFormat.Short, TabIndex = 2 };
+            dtpFecha = new System.Windows.Forms.DateTimePicker { Name = "dtpFecha", Location = new System.Drawing.Point(496, 42), Width = 220, Format = System.Windows.Forms.DateTimePickerFormat.Short, Enabled = false, TabIndex = 2 };
             btnBuscar = new System.Windows.Forms.Button { Name = "btnBuscar", Location = new System.Drawing.Point(736, 36), Size = new System.Drawing.Size(140, 34), TabIndex = 3 };
             dgvAlumnos = new System.Windows.Forms.DataGridView { Name = "dgvAlumnos", Location = new System.Drawing.Point(16, 88), Size = new System.Drawing.Size(860, 270),
                 ReadOnly = true, AllowUserToAddRows = false, AllowUserToDeleteRows = false, MultiSelect = false, RowHeadersVisible = false,

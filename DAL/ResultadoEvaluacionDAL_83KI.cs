@@ -28,7 +28,9 @@ namespace DAL
                 WHERE cu.IdSolicitudInscripcion=si.IdSolicitudInscripcion AND cu.BalanceAdeudado>0
                 AND cu.FechaVencimiento<CONVERT(date,GETDATE()))
             AND NOT EXISTS (SELECT 1 FROM dbo.ResultadoEvaluacion re WITH (UPDLOCK,HOLDLOCK)
-                WHERE re.IdInscripcion=si.IdSolicitudInscripcion AND re.FechaEvaluacion=@fecha)";
+                WHERE re.IdInscripcion=si.IdSolicitudInscripcion AND re.FechaEvaluacion=@fecha)
+            AND (SELECT COUNT(*) FROM dbo.ResultadoEvaluacion re WITH (UPDLOCK,HOLDLOCK)
+                WHERE re.IdInscripcion=si.IdSolicitudInscripcion)<2";
 
         public List<AlumnoEvaluacionListado_83KI> BuscarAlumnosHabilitados(int idComision, DateTime fechaEvaluacion)
         {
@@ -133,8 +135,8 @@ namespace DAL
                 SELECT @inicio=FechaInicio,@fin=FechaFin FROM dbo.Comision WITH (UPDLOCK,HOLDLOCK)
                     WHERE IdComision=@comision AND IdProfesor=@profesor;
                 IF @fin IS NULL THROW 52801,N'Cun08.SinAutorizacion',1;
-                IF CONVERT(date,GETDATE())<@fin THROW 52802,N'Cun08.ComisionNoFinalizada',1;
-                IF @fecha<@inicio OR @fecha>@fin THROW 52803,N'Cun08.FechaInvalida',1;", p);
+                IF @fecha<@inicio OR @fecha>@fin THROW 52803,N'Cun08.FechaInvalida',1;
+                IF @fecha>CONVERT(date,GETDATE()) THROW 52802,N'Cun08.FechaFutura',1;", p);
         }
 
         private static List<SqlParameter> Parametros(int idComision, DateTime fecha)

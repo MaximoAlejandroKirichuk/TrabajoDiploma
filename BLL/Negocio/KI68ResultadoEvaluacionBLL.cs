@@ -31,6 +31,12 @@ namespace BLL
             return _comisionBLL.ListarComisionesAsignadasParaEvaluacion().ToList();
         }
 
+        public DateTime ObtenerFechaActual()
+        {
+            ValidarSesion();
+            return _comisionBLL.ObtenerFechaActual();
+        }
+
         public List<AlumnoEvaluacionListado_83KI> BuscarAlumnosHabilitados(BusquedaResultadoEvaluacionRequest_83KI request)
         {
             if (request == null) throw new InvalidOperationException("Cun08.CriteriosInvalidos");
@@ -88,9 +94,11 @@ namespace BLL
 
         private void ValidarFecha(Comision_83KI comision, DateTime fecha)
         {
-            if (_comisionBLL.ObtenerFechaActual().Date < comision.FechaFin.Date) throw new InvalidOperationException("Cun08.ComisionNoFinalizada");
+            // Las evaluaciones se registran durante la cursada: no se exige que la comisión haya finalizado.
             if (fecha.Date < comision.FechaInicio.Date || fecha.Date > comision.FechaFin.Date)
                 throw new InvalidOperationException("Cun08.FechaInvalida");
+            if (fecha.Date > _comisionBLL.ObtenerFechaActual().Date)
+                throw new InvalidOperationException("Cun08.FechaFutura");
         }
 
         private void ValidarAlumnosHabilitados(ResultadoEvaluacionRequest_83KI request)

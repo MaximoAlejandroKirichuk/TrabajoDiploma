@@ -103,7 +103,8 @@ namespace DAL
                 FROM dbo.Comision c
                 JOIN dbo.Curso cu ON cu.IdCurso=c.IdCurso
                 JOIN dbo.Profesor p ON p.IdProfesor=c.IdProfesor AND p.EstadoActivo=1
-                WHERE c.IdProfesor=@profesor ORDER BY cu.Nombre,c.Codigo,c.FechaInicio,c.IdComision",
+                WHERE c.IdProfesor=@profesor AND CONVERT(date,c.FechaInicio)<=CONVERT(date,GETDATE())
+                ORDER BY cu.Nombre,c.Codigo,c.FechaInicio,c.IdComision",
                 new List<SqlParameter> { new SqlParameter("@profesor", idProfesor) }));
         }
 
