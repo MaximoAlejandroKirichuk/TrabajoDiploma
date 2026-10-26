@@ -9,7 +9,7 @@ namespace UI
     /// </summary>
     public class ProveedorConfiguracionBD_83KI : IProveedorConfiguracionConexion_83KI
     {
-        //ESTO ES LO QUE ME DA LA CONNECTION STRING INICIAL (NO TOCAR CUANDO SE ESTA DESARROLLANDO)
+        // Proporciona la cadena de conexión inicial (no modificar durante el desarrollo).
         private const string DefaultServerInstance = @"(localdb)\ProjectModels";
         private const string DefaultDatabaseName = "TrabajoDiploma9/13";
 
