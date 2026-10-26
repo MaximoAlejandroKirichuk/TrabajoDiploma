@@ -1,15 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using DAL;
 using BLL;
+using Service;
 using Service.Interfaces;
 using DAL.interfaces;
 
 
-namespace Service
+namespace UI
 {
     public static class ServiceFactory_83KI
     {
@@ -142,7 +139,7 @@ namespace Service
             _proveedorConfiguracionConexion = provider;
             // propaga el proveedor a la capa DAL para que todas las clases que usan
             // el constructor sin parametros de AccesoDAL_83KI tambien usen la configuracion persistida.
-            DAL.DAL.AccesoDAL_83KI.EstablecerProveedorPredeterminado(provider);
+            ConfiguracionConexionDAL_83KI.EstablecerProveedorPredeterminado(provider);
         }
 
         /// <summary>

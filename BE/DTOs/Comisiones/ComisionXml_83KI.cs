@@ -2,7 +2,7 @@ using System;
 using System.Globalization;
 using System.Xml.Serialization;
 
-namespace Service.DTOs
+namespace BE.DTOs.Comisiones
 {
     // Clase exclusiva para serializar/deserializar comisiones en XML.
     // XmlSerializer necesita constructor publico sin parametros y propiedades con get/set publicos.

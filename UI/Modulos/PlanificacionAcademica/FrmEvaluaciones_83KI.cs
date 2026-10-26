@@ -2,6 +2,8 @@ using BE.Entidades;
 using BLL;
 using Service;
 using Service.DTOs;
+using BE.DTOs.Comisiones;
+using BE.DTOs.Evaluaciones;
 using Service.Entidades;
 using Service.Interfaces;
 using System;
@@ -133,8 +135,13 @@ namespace UI.Modulos.PlanificacionAcademica
         private void Error(Exception ex)
         {
             string key = (ex.Message ?? "").Split('\r', '\n')[0];
+            if (key == "Errores.SinPermisos")
+            {
+                IdiomaUiHelper_83KI.MostrarAdvertencia(this, key, "Comun.Seguridad");
+                return;
+            }
             Mensaje(key.StartsWith("Evaluaciones.", StringComparison.Ordinal) || key.StartsWith("Cun08.", StringComparison.Ordinal)
-                || key == "Errores.SinPermisos" ? key : "Evaluaciones.Error");
+                ? key : "Evaluaciones.Error");
         }
         public void ActualizarIdioma(IIdioma idioma)
         {

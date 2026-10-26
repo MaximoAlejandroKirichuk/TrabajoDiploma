@@ -66,13 +66,13 @@ namespace BLL
             if (relacion == null)
             {
                 _dal.CrearRelacion(CursoProfesor_83KI.CrearNueva(idCurso, idProfesor));
-                RegistrarAuditoriaSegura($"Relacion Curso-Profesor creada y habilitada: Curso {idCurso}, Profesor {idProfesor}. Actor: {UsuarioActual}", Criticidad.Alto, UsuarioActual);
+                ExigirAuditoria(RegistrarAuditoriaSegura($"Relacion Curso-Profesor creada y habilitada: Curso {idCurso}, Profesor {idProfesor}. Actor: {UsuarioActual}"));
                 return;
             }
 
             if (relacion.EstadoActivo) throw new InvalidOperationException("Errores.CursoProfesorYaActivo");
             _dal.ActualizarEstadoActivo(idCurso, idProfesor, true);
-            RegistrarAuditoriaSegura($"Relacion Curso-Profesor habilitada: Curso {idCurso}, Profesor {idProfesor}. Actor: {UsuarioActual}", Criticidad.Alto, UsuarioActual);
+            ExigirAuditoria(RegistrarAuditoriaSegura($"Relacion Curso-Profesor habilitada: Curso {idCurso}, Profesor {idProfesor}. Actor: {UsuarioActual}"));
         }
 
         public void DeshabilitarProfesorParaCurso(int idCurso, int idProfesor)
@@ -82,7 +82,7 @@ namespace BLL
             if (!relacion.EstadoActivo) throw new InvalidOperationException("Errores.CursoProfesorYaInactivo");
 
             _dal.ActualizarEstadoActivo(idCurso, idProfesor, false);
-            RegistrarAuditoriaSegura($"Relacion Curso-Profesor deshabilitada: Curso {idCurso}, Profesor {idProfesor}. Actor: {UsuarioActual}", Criticidad.Alto, UsuarioActual);
+            ExigirAuditoria(RegistrarAuditoriaSegura($"Relacion Curso-Profesor deshabilitada: Curso {idCurso}, Profesor {idProfesor}. Actor: {UsuarioActual}"));
         }
 
         private void ValidarPartesActivas(int idCurso, int idProfesor)
@@ -107,10 +107,15 @@ namespace BLL
             }
         }
 
-        private void RegistrarAuditoriaSegura(string descripcion, Criticidad criticidad, string username)
+        private bool RegistrarAuditoriaSegura(string descripcion)
         {
-            try { _bitacora.RegistrarEvento(BitacoraEvento_83KI.CrearNuevo(descripcion, criticidad, Modulo.Admin, username)); }
-            catch { }
+            try { _bitacora.RegistrarEvento(BitacoraEvento_83KI.CrearNuevo(descripcion, Criticidad.Alto, Modulo.Admin, UsuarioActual)); return true; }
+            catch { return false; }
+        }
+
+        private static void ExigirAuditoria(bool registrada)
+        {
+            if (!registrada) throw new InvalidOperationException("Errores.AuditoriaFallidaCambioConfirmado");
         }
     }
 }

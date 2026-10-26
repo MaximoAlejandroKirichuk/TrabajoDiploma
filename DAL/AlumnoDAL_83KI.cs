@@ -1,4 +1,5 @@
 using BE.Entidades;
+using BE.DTOs.Inscripciones;
 using DAL.DAL;
 using Service.DTOs;
 using Service.Interfaces;

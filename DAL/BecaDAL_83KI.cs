@@ -2,6 +2,7 @@ using BE.Entidades;
 using DAL.DAL;
 using Service;
 using Service.DTOs;
+using BE.DTOs.Becas;
 using Service.Interfaces;
 using System;
 using System.Collections.Generic;

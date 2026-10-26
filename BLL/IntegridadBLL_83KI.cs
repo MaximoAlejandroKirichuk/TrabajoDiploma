@@ -13,7 +13,7 @@ namespace BLL
     /// logica de negocio para verificacion de integridad y recalculo de hashes.
     /// implementa IIntegridadDatosService_83KI — la puerta de login y el contrato de recuperacion del admin.
     /// </summary>
-    internal class IntegridadBLL_83KI : IIntegridadDatosService_83KI
+    public class IntegridadBLL_83KI : IIntegridadDatosService_83KI
     {
         private readonly IIntegridadDAL_83KI _integridadDal;
         private readonly IBitacoraManager_83KI _bitacora;

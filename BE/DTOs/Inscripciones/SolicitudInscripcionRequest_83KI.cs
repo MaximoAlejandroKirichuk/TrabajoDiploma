@@ -1,4 +1,4 @@
-namespace Service.DTOs
+namespace BE.DTOs.Inscripciones
 {
     public class SolicitudInscripcionRequest_83KI
     {

@@ -1,6 +1,6 @@
 using System;
 
-namespace Service.DTOs
+namespace BE.DTOs.Pagos
 {
     public class PagoInscripcionRequest_83KI
     {

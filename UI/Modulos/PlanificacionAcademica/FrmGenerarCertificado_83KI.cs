@@ -1,7 +1,7 @@
 using BE.Entidades;
+using BE.DTOs.Certificaciones;
 using BLL;
 using Service;
-using Service.DTOs;
 using Service.Entidades;
 using Service.Interfaces;
 using System;

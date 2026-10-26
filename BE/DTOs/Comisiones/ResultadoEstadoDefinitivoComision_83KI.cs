@@ -1,4 +1,4 @@
-namespace Service.DTOs
+namespace BE.DTOs.Comisiones
 {
     public class ResultadoEstadoDefinitivoComision_83KI
     {

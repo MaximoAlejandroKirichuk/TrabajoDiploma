@@ -1,6 +1,8 @@
 using BE.Entidades;
 using DAL.DAL;
 using Service.DTOs;
+using BE.DTOs.Comisiones;
+using BE.DTOs.Evaluaciones;
 using System;
 using System.Collections.Generic;
 using System.Data;

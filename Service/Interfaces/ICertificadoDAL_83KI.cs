@@ -1,5 +1,5 @@
 using BE.Entidades;
-using Service.DTOs;
+using BE.DTOs.Certificaciones;
 using System;
 using System.Collections.Generic;
 

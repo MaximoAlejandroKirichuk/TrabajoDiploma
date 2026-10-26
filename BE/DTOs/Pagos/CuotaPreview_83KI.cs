@@ -1,6 +1,6 @@
 using System;
 
-namespace Service.DTOs
+namespace BE.DTOs.Pagos
 {
     public class CuotaPreview_83KI
     {

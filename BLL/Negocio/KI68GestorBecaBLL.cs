@@ -1,5 +1,7 @@
 using BE.Entidades;
 using Service.DTOs;
+using BE.DTOs.Comisiones;
+using BE.DTOs.Becas;
 using Service.Entidades;
 using Service.Interfaces;
 using System;

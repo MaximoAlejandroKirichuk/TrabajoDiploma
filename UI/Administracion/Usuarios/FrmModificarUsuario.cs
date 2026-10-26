@@ -22,7 +22,7 @@ namespace UI
             _usuarioOriginal = usuario ?? throw new ArgumentNullException(nameof(usuario));
 
             InitializeComponent();
-            _gestorIdioma = Service.ServiceFactory_83KI.GetGestorIdioma();
+            _gestorIdioma = ServiceFactory_83KI.GetGestorIdioma();
             CargarRoles();
             CargarDatos();
             _gestorIdioma.Suscribir(this);

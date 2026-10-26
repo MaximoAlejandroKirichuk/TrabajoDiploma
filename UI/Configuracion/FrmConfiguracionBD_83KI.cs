@@ -192,7 +192,21 @@ namespace UI
                 NombreBaseDatos = database
             };
 
-            _bootstrapService.Guardar(settings);
+            try
+            {
+                _bootstrapService.Guardar(settings);
+            }
+            catch (Exception)
+            {
+                var idioma = ServiceFactory_83KI.GetGestorIdioma();
+                MessageBox.Show(
+                    idioma.ObtenerTexto("ConfiguracionBD.ErrorGuardar"),
+                    idioma.ObtenerTexto("Comun.Error"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return;
+            }
+
             ConfiguracionCompletada = true;
             DialogResult = DialogResult.OK;
             Close();

@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Runtime.CompilerServices;
 
 
 // La información general de un ensamblado se controla mediante el siguiente 

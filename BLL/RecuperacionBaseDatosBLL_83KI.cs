@@ -11,7 +11,7 @@ namespace BLL
     /// logica de negocio para backup y restore completo de la base de datos.
     /// implementa IRecuperacionBaseDatosService_83KI — el contrato de contingencia del admin.
     /// </summary>
-    internal class RecuperacionBaseDatosBLL_83KI : IRecuperacionBaseDatosService_83KI
+    public class RecuperacionBaseDatosBLL_83KI : IRecuperacionBaseDatosService_83KI
     {
         private readonly IRecuperacionDAL_83KI _recuperacionDal;
         private readonly IBitacoraManager_83KI _bitacora;

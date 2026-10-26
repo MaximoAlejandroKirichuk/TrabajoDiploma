@@ -24,8 +24,8 @@ namespace UI
 
         public Login()
         {
-            _gestor = Service.ServiceFactory_83KI.GetGestorUsuario();
-            _gestorRol = Service.ServiceFactory_83KI.GetGestorRol();
+            _gestor = ServiceFactory_83KI.GetGestorUsuario();
+            _gestorRol = ServiceFactory_83KI.GetGestorRol();
             InitializeComponent();
         }
 

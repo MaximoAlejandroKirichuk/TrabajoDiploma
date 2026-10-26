@@ -1,6 +1,6 @@
 using BE.Entidades;
 
-namespace Service.DTOs
+namespace BE.DTOs.Becas
 {
     public class BusquedaDecisionBecaResultado_83KI
     {

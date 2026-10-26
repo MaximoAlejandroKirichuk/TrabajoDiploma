@@ -1,6 +1,7 @@
 using BE.Entidades;
 using DAL.DAL;
 using Service;
+using BE.DTOs.Pagos;
 using Service.DTOs;
 using Service.Interfaces;
 using System;

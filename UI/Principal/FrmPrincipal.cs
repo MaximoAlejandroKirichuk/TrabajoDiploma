@@ -13,6 +13,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using UI.Modulos.CobrosMorosidadActas;
 using UI.Modulos.Maestros;
 using UI.Modulos.PlanificacionAcademica;
 using UI.Modulos.PreInscripcion;
@@ -28,6 +29,8 @@ namespace UI
         private readonly IIntegridadDatosService_83KI _integridadService;
         private readonly IRecuperacionBaseDatosService_83KI _recuperacionService;
         private bool _logoutConfirmado;
+        private readonly Timer _integrityModeTimer;
+        private bool _integrityModeActive;
 
         public FrmPrincipal(IGestorUsuario_83KI gestorUsuario, IGestorRol_83KI gestorRol)
         {
@@ -37,6 +40,9 @@ namespace UI
             _gestorIdioma = ServiceFactory_83KI.GetGestorIdioma();
             _integridadService = ServiceFactory_83KI.GetIntegridadDatosService();
             _recuperacionService = ServiceFactory_83KI.GetRecuperacionBaseDatosService();
+            _integrityModeTimer = new Timer { Interval = 500 };
+            _integrityModeTimer.Tick += AplicarBloqueoFormulariosAbiertos;
+            _integrityModeTimer.Start();
             AplicarPermisos();
             _gestorIdioma.Suscribir(this);
         }
@@ -56,12 +62,23 @@ namespace UI
                 || PermisosUi_83KI.Tiene(PermisoSistema_83KI.EjecutarBackup)
                 || PermisosUi_83KI.Tiene(PermisoSistema_83KI.EjecutarRestore);
 
-            // oculta menus de negocio regulares cuando el estado de recuperacion de integridad esta activo
-            if (SessionManager_83KI.Instancia.RequiereRecuperacionIntegridad)
+            bool modoRecuperacion = SessionManager_83KI.Instancia.RequiereRecuperacionIntegridad;
+
+            // Durante recuperación quedan disponibles recuperación, sesión/login e idioma.
+            // Cambio de contraseña y Ayuda permanecen ocultos intencionalmente.
+            if (modoRecuperacion)
             {
                 gestionDeUsuariosToolStripMenuItem.Visible = false;
                 gestionDeFamiliasToolStripMenuItem.Visible = false;
                 gestionDeRolesToolStripMenuItem.Visible = false;
+                bitacoraEventosToolStripMenuItem.Visible = false;
+                adminToolStripMenuItem.Visible = recuperacionIntegridadToolStripMenuItem.Visible;
+                maestrosToolStripMenuItem.Visible = false;
+                planificacionAcademicaToolStripMenuItem.Visible = false;
+                cobrosMorosidadActasToolStripMenuItem.Visible = false;
+                reportesToolStripMenuItem.Visible = false;
+                cambiarContraseñaToolStripMenuItem.Visible = false;
+                reToolStripMenuItem.Visible = false;
             }
 
             menuCerrarSesion.Visible = PermisosUi_83KI.Tiene(PermisoSistema_83KI.CerrarSesion);
@@ -91,17 +108,20 @@ namespace UI
             generarCertificadoToolStripMenuItem.Visible = puedeCertificar;
             bool puedeVerEvaluaciones = PermisosUi_83KI.Tiene(PermisoSistema_83KI.VerEvaluaciones);
             evaluacionesToolStripMenuItem.Visible = puedeVerEvaluaciones;
-            bool puedePlanificacionAcademica = puedeCertificar || puedeRegistrarPreapertura || puedeVerComisiones || puedeRegistrarConsulta || puedeRegistrarSolicitudInscripcion || puedeRegistrarDecisionBeca || puedeRegistrarEstadoDefinitivo;
+            bool puedeRegistrarPagoCuotas = PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarPagoCuotas);
+            bool puedePlanificacionAcademica = puedeCertificar || puedeRegistrarPreapertura || puedeVerComisiones || puedeRegistrarConsulta || puedeRegistrarSolicitudInscripcion || puedeRegistrarDecisionBeca || puedeRegistrarEstadoDefinitivo || puedeRegistrarPagoInscripcion || puedeRegistrarPagoCuotas;
             gestionComisionesToolStripMenuItem.Visible = puedeVerComisiones;
             registrarPreaperturaComisionToolStripMenuItem.Visible = puedeRegistrarPreapertura;
             registrarConsultaToolStripMenuItem.Visible = puedeRegistrarConsulta;
             registrarSolicitudInscripcionToolStripMenuItem.Visible = puedeRegistrarSolicitudInscripcion;
             registrarDecisionBecaToolStripMenuItem.Visible = puedeRegistrarDecisionBeca;
             registrarPagoInscripcionToolStripMenuItem.Visible = puedeRegistrarPagoInscripcion;
-            registrarPagoCuotaToolStripMenuItem.Visible = puedeRegistrarPagoInscripcion;
+            registrarPagoCuotaToolStripMenuItem.Visible = puedeRegistrarPagoCuotas;
             registrarEstadoDefinitivoComisionToolStripMenuItem.Visible = puedeRegistrarEstadoDefinitivo;
             planificacionAcademicaToolStripMenuItem.Visible = puedePlanificacionAcademica;
-            cobrosMorosidadActasToolStripMenuItem.Visible = puedeRegistrarPagoInscripcion || puedeRegistrarResultados || puedeVerEvaluaciones || puedeCertificar;
+            bool puedeVerReporteMorosidad = PermisosUi_83KI.Tiene(PermisoSistema_83KI.VerReporteMorosidad);
+            reporteMorosidadToolStripMenuItem.Visible = puedeVerReporteMorosidad;
+            cobrosMorosidadActasToolStripMenuItem.Visible = puedeRegistrarPagoInscripcion || puedeRegistrarResultados || puedeVerEvaluaciones || puedeCertificar || puedeVerReporteMorosidad;
             bool puedeVerReporteOcupacion = PermisosUi_83KI.Tiene(PermisoSistema_83KI.VerReporteOcupacionComisiones);
             reporteOcupacionComisionesToolStripMenuItem.Visible = puedeVerReporteOcupacion;
             reportesToolStripMenuItem.Visible = puedeVerReporteOcupacion;
@@ -137,6 +157,7 @@ namespace UI
             generarCertificadoToolStripMenuItem.Text = Texto("Cun09.Titulo");
             evaluacionesToolStripMenuItem.Text = Texto("Evaluaciones.Titulo");
             cobrosMorosidadActasToolStripMenuItem.Text = Texto("FrmPrincipal.CobrosMorosidadActas");
+            reporteMorosidadToolStripMenuItem.Text = Texto("FrmPrincipal.ReporteMorosidad");
             reportesToolStripMenuItem.Text = Texto("FrmPrincipal.Reportes");
             reporteOcupacionComisionesToolStripMenuItem.Text = Texto("FrmPrincipal.ReporteOcupacionComisiones");
             reToolStripMenuItem.Text = Texto("FrmPrincipal.Ayuda");
@@ -152,14 +173,53 @@ namespace UI
 
         protected override void OnFormClosed(FormClosedEventArgs e)
         {
+            _integrityModeTimer.Stop();
+            _integrityModeTimer.Dispose();
             _gestorIdioma.Desuscribir(this);
             base.OnFormClosed(e);
+        }
+
+        private void AplicarBloqueoFormulariosAbiertos(object sender, EventArgs e)
+        {
+            bool modoRecuperacion = SessionManager_83KI.Instancia.RequiereRecuperacionIntegridad;
+            if (modoRecuperacion != _integrityModeActive)
+            {
+                _integrityModeActive = modoRecuperacion;
+                AplicarPermisos();
+            }
+
+            if (!modoRecuperacion) return;
+
+            foreach (Form formulario in Application.OpenForms.Cast<Form>().ToArray())
+            {
+                if (formulario == this
+                    || formulario is Login
+                    || formulario is FrmRecuperacionIntegridad_83KI
+                    || formulario is FrmRecuperacionIntegridadLogin_83KI)
+                {
+                    continue;
+                }
+
+                formulario.Close();
+            }
         }
 
         private string Texto(string clave)
         {
             //Este metodo busca una traduccion en el idioma actual.
             return _gestorIdioma.ObtenerTexto(clave);
+        }
+
+        private bool BloquearSiRequiereRecuperacion()
+        {
+            if (!SessionManager_83KI.Instancia.RequiereRecuperacionIntegridad)
+            {
+                return false;
+            }
+
+            AplicarPermisos();
+            IdiomaUiHelper_83KI.MostrarAdvertencia(this, "RecuperacionIntegridad.Titulo", "Comun.Seguridad");
+            return true;
         }
 
         private void menuCerrarSesion_Click(object sender, EventArgs e)
@@ -211,6 +271,7 @@ namespace UI
 
         private void gestionDeUsuariosToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (BloquearSiRequiereRecuperacion()) return;
             using (var gestion = new FrmGestionUsuarios(_gestorUsuario, _gestorRol))
             {
                 gestion.ShowDialog(this);
@@ -219,6 +280,7 @@ namespace UI
 
         private void gestionDeFamiliasToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (BloquearSiRequiereRecuperacion()) return;
             using (var gestion = new FrmGestionFamilias_83KI(_gestorRol))
             {
                 gestion.ShowDialog(this);
@@ -227,6 +289,7 @@ namespace UI
 
         private void gestionDeRolesToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (BloquearSiRequiereRecuperacion()) return;
             using (var gestion = new FrmGestionRoles_83KI(_gestorRol))
             {
                 gestion.ShowDialog(this);
@@ -235,6 +298,7 @@ namespace UI
 
         private void cambiarContraseñaToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (BloquearSiRequiereRecuperacion()) return;
             var cambiarContrasena = new FrmCambiarContrasena(_gestorUsuario);
             DialogResult resultado = cambiarContrasena.ShowDialog(this);
 
@@ -285,6 +349,7 @@ namespace UI
 
         private void bitacoraEventosToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (BloquearSiRequiereRecuperacion()) return;
             using (var bitacoraEventos = new FrmBitacoraEventos(
                 ServiceFactory_83KI.GetConsultaBitacoraEventos(),
                 new Exportacion.BitacoraEventosPdfExporter_83KI(),
@@ -339,6 +404,7 @@ namespace UI
 
         private void gestionProfesoresToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (BloquearSiRequiereRecuperacion()) return;
             using (var gestion = new FrmGestionProfesores_83KI(ComposicionMaestros_83KI.CrearGestorProfesor()))
             {
                 gestion.ShowDialog(this);
@@ -347,6 +413,7 @@ namespace UI
 
         private void gestionCursosToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (BloquearSiRequiereRecuperacion()) return;
             using (var gestion = new FrmGestionCursos_83KI(ComposicionMaestros_83KI.CrearGestorCurso()))
             {
                 gestion.ShowDialog(this);
@@ -355,6 +422,7 @@ namespace UI
 
         private void gestionCursoProfesorToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (BloquearSiRequiereRecuperacion()) return;
             using (var gestion = new FrmGestionCursoProfesor_83KI(ComposicionMaestros_83KI.CrearGestorCursoProfesor()))
             {
                 gestion.ShowDialog(this);
@@ -368,6 +436,7 @@ namespace UI
 
         private void registrarPreaperturaComisionToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (BloquearSiRequiereRecuperacion()) return;
             if (!PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarPreaperturaComision))
             {
                 IdiomaUiHelper_83KI.MostrarAdvertencia(this, "Errores.SinPermisos", "Comun.Seguridad");
@@ -382,6 +451,7 @@ namespace UI
 
         private void gestionComisionesToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (BloquearSiRequiereRecuperacion()) return;
             if (!PermisosUi_83KI.Tiene(PermisoSistema_83KI.VerComisiones))
             {
                 IdiomaUiHelper_83KI.MostrarAdvertencia(this, "Errores.SinPermisos", "Comun.Seguridad");
@@ -396,6 +466,7 @@ namespace UI
 
         private void registrarConsultaToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (BloquearSiRequiereRecuperacion()) return;
             if (!PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarConsultaLead))
             {
                 IdiomaUiHelper_83KI.MostrarAdvertencia(this, "Errores.SinPermisos", "Comun.Seguridad");
@@ -420,6 +491,7 @@ namespace UI
 
         private void registrarSolicitudInscripcionToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (BloquearSiRequiereRecuperacion()) return;
             if (!PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarSolicitudInscripcion))
             {
                 IdiomaUiHelper_83KI.MostrarAdvertencia(this, "Errores.SinPermisos", "Comun.Seguridad");
@@ -432,8 +504,7 @@ namespace UI
                     new InscripcionDAL_83KI(),
                     comisionDal,
                     new KI68CuotaBLL(),
-                    SessionManager_83KI.Instancia,
-                    new BitacoraBLL_83KI(new BitacoraEventoDAL_83KI()))))
+                    SessionManager_83KI.Instancia)))
             {
                 formulario.ShowDialog(this);
             }
@@ -441,6 +512,7 @@ namespace UI
 
         private void registrarDecisionBecaToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (BloquearSiRequiereRecuperacion()) return;
             if (!PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarDecisionBeca))
             {
                 IdiomaUiHelper_83KI.MostrarAdvertencia(this, "Errores.SinPermisos", "Comun.Seguridad");
@@ -460,6 +532,7 @@ namespace UI
 
         private void registrarPagoInscripcionToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (BloquearSiRequiereRecuperacion()) return;
             if (!PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarPagoInscripcion))
             {
                 IdiomaUiHelper_83KI.MostrarAdvertencia(this, "Errores.SinPermisos", "Comun.Seguridad");
@@ -478,7 +551,8 @@ namespace UI
 
         private void registrarPagoCuotaToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (!PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarPagoInscripcion))
+            if (BloquearSiRequiereRecuperacion()) return;
+            if (!PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarPagoCuotas))
             {
                 IdiomaUiHelper_83KI.MostrarAdvertencia(this, "Errores.SinPermisos", "Comun.Seguridad");
                 return;
@@ -504,6 +578,7 @@ namespace UI
 
         private void registrarEstadoDefinitivoComisionToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (BloquearSiRequiereRecuperacion()) return;
             if (!PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarEstadoDefinitivoComision))
             {
                 IdiomaUiHelper_83KI.MostrarAdvertencia(this, "Errores.SinPermisos", "Comun.Seguridad");
@@ -522,6 +597,7 @@ namespace UI
 
         private void generarCertificadoToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (BloquearSiRequiereRecuperacion()) return;
             if (!PermisosUi_83KI.Tiene(PermisoSistema_83KI.GenerarCertificadoFinalizacion))
             {
                 IdiomaUiHelper_83KI.MostrarAdvertencia(this, "Errores.SinPermisos", "Comun.Seguridad");
@@ -532,6 +608,7 @@ namespace UI
 
         private void evaluacionesToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (BloquearSiRequiereRecuperacion()) return;
             if (!PermisosUi_83KI.Tiene(PermisoSistema_83KI.VerEvaluaciones))
             { MessageBox.Show(Texto("Errores.SinPermisos")); return; }
             using (var formulario = new FrmEvaluaciones_83KI(ServiceFactory_83KI.CrearEvaluacionesBLL())) formulario.ShowDialog(this);
@@ -539,6 +616,7 @@ namespace UI
 
         private void registrarResultadosEvaluacionToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (BloquearSiRequiereRecuperacion()) return;
             if (!PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarResultadosEvaluacion))
             {
                 IdiomaUiHelper_83KI.MostrarAdvertencia(this, "Errores.SinPermisos", "Comun.Seguridad");
@@ -550,6 +628,7 @@ namespace UI
 
         private void reporteOcupacionComisionesToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (BloquearSiRequiereRecuperacion()) return;
             if (!PermisosUi_83KI.Tiene(PermisoSistema_83KI.VerReporteOcupacionComisiones))
             {
                 IdiomaUiHelper_83KI.MostrarAdvertencia(this, "Errores.SinPermisos", "Comun.Seguridad");
@@ -559,6 +638,24 @@ namespace UI
             using (var formulario = new FrmReporteOcupacionComisiones_83KI(
                 new KI68ReporteOcupacionComisionBLL(
                     new ReporteOcupacionComisionDAL_83KI(),
+                    SessionManager_83KI.Instancia)))
+            {
+                formulario.ShowDialog(this);
+            }
+        }
+
+        private void reporteMorosidadToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (BloquearSiRequiereRecuperacion()) return;
+            if (!PermisosUi_83KI.Tiene(PermisoSistema_83KI.VerReporteMorosidad))
+            {
+                IdiomaUiHelper_83KI.MostrarAdvertencia(this, "Errores.SinPermisos", "Comun.Seguridad");
+                return;
+            }
+
+            using (var formulario = new FrmReporteMorosidad_83KI(
+                new KI68ReporteMorosidadBLL(
+                    new ReporteMorosidadDAL_83KI(),
                     SessionManager_83KI.Instancia)))
             {
                 formulario.ShowDialog(this);

@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using System.Runtime.CompilerServices;
 
-// permite que BLL acceda a miembros internal de DAL (ej. AccesoDAL_83KI.EstablecerProveedorPredeterminado)
+// permite que BLL acceda a miembros internal de DAL.
 [assembly: InternalsVisibleTo("BLL")]
 
 // La información general de un ensamblado se controla mediante el siguiente 

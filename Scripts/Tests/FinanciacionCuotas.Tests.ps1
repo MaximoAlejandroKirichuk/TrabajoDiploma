@@ -70,6 +70,15 @@ function VerifyIntegrity {
     'PASS: SQL backfill hashes match the application DVH/DVV implementation.'
 }
 function VerifyLookupAndBusinessRules {
+    $snapshotMapper = [DAL.SnapshotMapper_83KI].GetMethod('Decimal',[System.Reflection.BindingFlags]'NonPublic,Static')
+    if ($null -ne $snapshotMapper.Invoke($null,[object[]]@([DBNull]::Value))) { throw 'A NULL decimal snapshot did not remain null.' }
+    $snapshotMapper = [DAL.SnapshotMapper_83KI].GetMethod('Integer',[System.Reflection.BindingFlags]'NonPublic,Static')
+    if ($null -ne $snapshotMapper.Invoke($null,[object[]]@([DBNull]::Value))) { throw 'A NULL integer snapshot did not remain null.' }
+    $snapshotMapper = [DAL.SnapshotMapper_83KI].GetMethod('Date',[System.Reflection.BindingFlags]'NonPublic,Static')
+    if ($null -ne $snapshotMapper.Invoke($null,[object[]]@([DBNull]::Value))) { throw 'A NULL date snapshot did not remain null.' }
+    $snapshotMapper = [DAL.SnapshotMapper_83KI].GetMethod('Text',[System.Reflection.BindingFlags]'NonPublic,Static')
+    if ($null -ne $snapshotMapper.Invoke($null,[object[]]@([DBNull]::Value))) { throw 'A NULL text snapshot did not remain null.' }
+    'PASS: nullable financing snapshots preserve SQL NULL values.'
     $command = $connection.CreateCommand()
     $command.CommandText = "EXEC dbo.sp_CUN07_BuscarCuotasPendientes N'99776611',N'FIN-LEG-COM'"
     $adapter = New-Object System.Data.SqlClient.SqlDataAdapter($command)

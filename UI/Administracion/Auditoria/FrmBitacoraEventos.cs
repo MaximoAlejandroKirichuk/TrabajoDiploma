@@ -38,7 +38,7 @@ namespace UI
             _consultaBitacoraEventos = consultaBitacoraEventos;
             _exporter = exporter;
             _bitacoraManager = bitacoraManager;
-            _gestorIdioma = Service.ServiceFactory_83KI.GetGestorIdioma();
+            _gestorIdioma = ServiceFactory_83KI.GetGestorIdioma();
             dgvEventos.CellFormatting += dgvEventos_CellFormatting;
             _gestorIdioma.Suscribir(this);
         }

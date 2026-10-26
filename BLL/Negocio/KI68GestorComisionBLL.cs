@@ -1,5 +1,6 @@
 using BE.Entidades;
 using Service.DTOs;
+using BE.DTOs.Comisiones;
 using Service.Entidades;
 using Service.Interfaces;
 using System;
@@ -72,7 +73,8 @@ namespace BLL
                 throw new InvalidOperationException(ClaveErrorSql(ex) ?? "Errores.ComisionNoRegistrada", ex);
             }
 
-            RegistrarAuditoriaSegura($"Registro de preapertura de comisión: {registrada.Codigo}. Curso {idCurso}, Profesor {idProfesor}. Actor: {UsuarioActual}", Criticidad.Alto, UsuarioActual);
+            if (!RegistrarAuditoriaSegura($"Registro de preapertura de comisión: {registrada.Codigo}. Curso {idCurso}, Profesor {idProfesor}. Actor: {UsuarioActual}", Criticidad.Alto, UsuarioActual))
+                throw new InvalidOperationException("Errores.AuditoriaFallidaCambioConfirmado");
             return registrada.Codigo;
         }
 
@@ -111,7 +113,7 @@ namespace BLL
                 RegistrarAuditoriaSegura($"Error técnico al modificar comisión {comision.Codigo}. Actor: {UsuarioActual}. SQL {ex.Number}", Criticidad.Alto, UsuarioActual);
                 throw new InvalidOperationException(ClaveErrorSql(ex) ?? "Errores.ComisionNoModificada", ex);
             }
-            RegistrarAuditoriaSegura($"Modificación de comisión: {comision.Codigo}. Actor: {UsuarioActual}", Criticidad.Medio, UsuarioActual);
+            ExigirAuditoria(RegistrarAuditoriaSegura($"Modificación de comisión: {comision.Codigo}. Actor: {UsuarioActual}", Criticidad.Medio, UsuarioActual));
         }
 
         public void EliminarComision(int idComision)
@@ -130,7 +132,7 @@ namespace BLL
                 RegistrarAuditoriaSegura($"Error técnico al eliminar lógicamente la comisión {comision.Codigo}. Actor: {UsuarioActual}. SQL {ex.Number}", Criticidad.Alto, UsuarioActual);
                 throw new InvalidOperationException(ClaveErrorSql(ex) ?? "Errores.ComisionNoEliminada", ex);
             }
-            RegistrarAuditoriaSegura($"Eliminación lógica de comisión: {comision.Codigo}. Actor: {UsuarioActual}", Criticidad.Alto, UsuarioActual);
+            ExigirAuditoria(RegistrarAuditoriaSegura($"Eliminación lógica de comisión: {comision.Codigo}. Actor: {UsuarioActual}", Criticidad.Alto, UsuarioActual));
         }
 
         private static string ClaveErrorSql(SqlException ex)
@@ -178,10 +180,15 @@ namespace BLL
 
         private string UsuarioActual { get { return _sessionManager.UsuarioActivo != null ? _sessionManager.UsuarioActivo.UserName : "Sistema"; } }
 
-        private void RegistrarAuditoriaSegura(string descripcion, Criticidad criticidad, string username)
+        private bool RegistrarAuditoriaSegura(string descripcion, Criticidad criticidad, string username)
         {
-            try { _bitacora.RegistrarEvento(BitacoraEvento_83KI.CrearNuevo(descripcion, criticidad, Modulo.PlanificacionAcademica, username)); }
-            catch { }
+            try { _bitacora.RegistrarEvento(BitacoraEvento_83KI.CrearNuevo(descripcion, criticidad, Modulo.PlanificacionAcademica, username)); return true; }
+            catch { return false; }
+        }
+
+        private static void ExigirAuditoria(bool registrada)
+        {
+            if (!registrada) throw new InvalidOperationException("Errores.AuditoriaFallidaCambioConfirmado");
         }
     }
 }

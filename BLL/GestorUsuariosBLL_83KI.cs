@@ -14,7 +14,7 @@ using Service.Interfaces;
 
 namespace BLL
 {
-    internal class GestorUsuarioBLL_83KI : IGestorUsuario_83KI
+    public class GestorUsuarioBLL_83KI : IGestorUsuario_83KI
     {
         private const int IntentosPermitidos = 3;
         private const int MinutosParaReiniciarIntentos = 30;
@@ -27,7 +27,7 @@ namespace BLL
         private readonly IGestorIdioma_83KI _gestorIdioma;
         private readonly IIntegridadDatosService_83KI _integridadService;
 
-        public GestorUsuarioBLL_83KI(IUsuarioDAL_83KI dal, IEncriptador_83KI encriptador, ISessionManager_83KI sessionManager, IBitacoraManager_83KI bitacora)
+        internal GestorUsuarioBLL_83KI(IUsuarioDAL_83KI dal, IEncriptador_83KI encriptador, ISessionManager_83KI sessionManager, IBitacoraManager_83KI bitacora)
             : this(dal, encriptador, sessionManager, bitacora, new RolDAL_83KI(), new GestorIdioma_83KI(),
                    new IntegridadBLL_83KI(new IntegridadDAL_83KI(new Encriptador_83KI()), bitacora))
         {

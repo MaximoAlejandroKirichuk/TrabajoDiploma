@@ -1,7 +1,9 @@
 using BE.Entidades;
 using DAL.DAL;
 using Service;
+using BE.DTOs.Pagos;
 using Service.DTOs;
+using BE.DTOs.Comisiones;
 using Service.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -123,8 +125,8 @@ namespace DAL
             return SolicitudInscripcion_83KI.ReconstruirDesdePersistencia(Convert.ToInt32(row["IdSolicitudInscripcion"]), row["CodigoSolicitud"].ToString(), idAlumno, idLead,
                 Convert.ToInt32(row["IdComision"]), Convert.ToInt32(row["IdPlanDePago"]), Convert.ToDecimal(row["RecargoPlanSnapshot"]),
                 Convert.ToDateTime(row["FechaSolicitudInscripcion"]), row["SolicitudEstado"].ToString(), row["SolicitudObservaciones"].ToString(), row["SolicitudDVH"].ToString(),
-                Convert.ToDecimal(row["ArancelCursoSnapshot"]), Convert.ToInt32(row["CantidadCuotasSnapshot"]), Convert.ToDecimal(row["TotalCursoSnapshot"]),
-                Convert.ToDateTime(row["FechaPrimerVencimientoSnapshot"]), row["NombrePlanSnapshot"].ToString());
+                SnapshotMapper_83KI.Decimal(row["ArancelCursoSnapshot"]), SnapshotMapper_83KI.Integer(row["CantidadCuotasSnapshot"]), SnapshotMapper_83KI.Decimal(row["TotalCursoSnapshot"]),
+                SnapshotMapper_83KI.Date(row["FechaPrimerVencimientoSnapshot"]), SnapshotMapper_83KI.Text(row["NombrePlanSnapshot"]));
         }
 
         private static string Normalizar(string value) { return (value ?? string.Empty).Trim(); }

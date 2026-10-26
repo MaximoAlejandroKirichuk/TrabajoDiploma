@@ -1,4 +1,4 @@
-namespace Service.DTOs
+namespace BE.DTOs.Leads
 {
     public class ConsultaLeadRequest_83KI
     {

@@ -1,4 +1,5 @@
 using BE.Entidades;
+using BE.DTOs.Leads;
 using Service.DTOs;
 using Service.Interfaces;
 using System;

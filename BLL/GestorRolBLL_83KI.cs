@@ -9,18 +9,18 @@ using System.Linq;
 
 namespace BLL
 {
-    internal class GestorRolBLL_83KI : IGestorRol_83KI
+    public class GestorRolBLL_83KI : IGestorRol_83KI
     {
         private readonly IRolDAL_83KI _rolDal;
         private readonly ISessionManager_83KI _sessionManager;
         private readonly IBitacoraManager_83KI _bitacoraManager;
 
-        public GestorRolBLL_83KI(IRolDAL_83KI rolDal)
+        internal GestorRolBLL_83KI(IRolDAL_83KI rolDal)
             : this(rolDal, SessionManager_83KI.Instancia, null)
         {
         }
 
-        public GestorRolBLL_83KI(IRolDAL_83KI rolDal, ISessionManager_83KI sessionManager)
+        internal GestorRolBLL_83KI(IRolDAL_83KI rolDal, ISessionManager_83KI sessionManager)
             : this(rolDal, sessionManager, null)
         {
         }

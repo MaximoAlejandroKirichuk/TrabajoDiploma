@@ -1,7 +1,7 @@
 using BE.Entidades;
 using System.Collections.Generic;
 
-namespace Service.DTOs
+namespace BE.DTOs.Pagos
 {
     public class BusquedaPagoInscripcionResultado_83KI
     {

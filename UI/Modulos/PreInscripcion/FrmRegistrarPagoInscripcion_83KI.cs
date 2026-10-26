@@ -1,5 +1,6 @@
 using BE.Entidades;
 using Service;
+using BE.DTOs.Pagos;
 using Service.DTOs;
 using Service.Entidades;
 using Service.Interfaces;

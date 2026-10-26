@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using BE.Entidades;
+using BE.DTOs.Comisiones;
 using Service.DTOs;
+using BE.DTOs.Evaluaciones;
 
 namespace Service.Interfaces
 {

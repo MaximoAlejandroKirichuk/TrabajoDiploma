@@ -1,6 +1,6 @@
 using BE.Entidades;
+using BE.DTOs.Certificaciones;
 using DAL.DAL;
-using Service.DTOs;
 using Service.Interfaces;
 using System;
 using System.Collections.Generic;

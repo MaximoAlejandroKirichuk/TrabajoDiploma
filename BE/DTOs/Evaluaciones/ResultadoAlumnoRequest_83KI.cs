@@ -1,4 +1,4 @@
-namespace Service.DTOs
+namespace BE.DTOs.Evaluaciones
 {
     public class ResultadoAlumnoRequest_83KI
     {

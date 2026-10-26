@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Data.SqlClient;
 using System.Windows.Forms;
 
 namespace UI
@@ -97,6 +98,23 @@ namespace UI
                 return string.Empty;
             }
 
+            bool contieneSqlException = false;
+            for (Exception current = ex; current != null; current = current.InnerException)
+            {
+                contieneSqlException = contieneSqlException || current is SqlException;
+
+                string mensajeTraducido;
+                if (TryTraducirClave(current, out mensajeTraducido))
+                {
+                    return mensajeTraducido;
+                }
+            }
+
+            if (contieneSqlException)
+            {
+                return Texto("Errores.BaseDatosNoDisponible");
+            }
+
             if (ex is DniRegistradoException_83KI)
             {
                 return Texto("Errores.DniRegistrado");
@@ -179,6 +197,44 @@ namespace UI
             }
 
             return mensaje;
+        }
+
+        private static bool TryTraducirClave(Exception ex, out string mensajeTraducido)
+        {
+            mensajeTraducido = null;
+            string mensaje = ex.Message ?? string.Empty;
+
+            // ArgumentException agrega "Parameter name: x" en una segunda línea.
+            if (ex is ArgumentException)
+            {
+                int saltoLinea = mensaje.IndexOfAny(new[] { '\r', '\n' });
+                if (saltoLinea >= 0) mensaje = mensaje.Substring(0, saltoLinea).Trim();
+            }
+
+            string clave;
+            if (ClavesErrores.TryGetValue(mensaje, out clave))
+            {
+                mensajeTraducido = Texto(clave);
+                return true;
+            }
+
+            if (!mensaje.StartsWith("Errores.", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            int pipeIndex = mensaje.IndexOf('|');
+            if (pipeIndex >= 0)
+            {
+                string claveTraduccion = mensaje.Substring(0, pipeIndex);
+                string[] args = mensaje.Substring(pipeIndex + 1).Split('|');
+                mensajeTraducido = Texto(claveTraduccion, (object[])args);
+            }
+            else
+            {
+                mensajeTraducido = Texto(mensaje);
+            }
+            return true;
         }
 
         public static string TraducirModulo(Modulo modulo)

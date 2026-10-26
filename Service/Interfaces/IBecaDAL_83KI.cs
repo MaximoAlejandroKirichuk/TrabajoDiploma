@@ -1,5 +1,6 @@
 using BE.Entidades;
 using Service.DTOs;
+using BE.DTOs.Becas;
 
 namespace Service.Interfaces
 {

@@ -196,7 +196,7 @@ BEGIN
     JOIN dbo.Comision c ON c.IdComision=si.IdComision
     JOIN dbo.Curso cur ON cur.IdCurso=c.IdCurso
     WHERE a.DNI=LTRIM(RTRIM(@DNI))
-      AND si.Estado IN(N'pendiente',N'confirmada',N'activa',N'Al día',N'Con deuda')
+      AND si.Estado IN(N'pendiente',N'confirmada',N'activa')
       AND EXISTS(SELECT 1 FROM dbo.Cuota cu WHERE cu.IdSolicitudInscripcion=si.IdSolicitudInscripcion AND cu.TipoConcepto=N'curso')
     ORDER BY CodigoComision;
 END
@@ -214,7 +214,7 @@ BEGIN
       JOIN dbo.Cuota cu ON cu.IdSolicitudInscripcion=si.IdSolicitudInscripcion
       JOIN dbo.PlanesDePago pp ON pp.IdPlanDePago=si.IdPlanDePago
     WHERE a.DNI=LTRIM(RTRIM(@DNI)) AND c.Codigo=LTRIM(RTRIM(@CodigoComision)) AND cu.TipoConcepto=N'curso'
-      AND si.Estado IN(N'pendiente',N'confirmada',N'activa',N'Al día',N'Con deuda') ORDER BY cu.NumeroCuota,cu.FechaVencimiento;
+      AND si.Estado IN(N'pendiente',N'confirmada',N'activa') ORDER BY cu.NumeroCuota,cu.FechaVencimiento;
 END
 GO
 
@@ -235,7 +235,7 @@ BEGIN
    JOIN dbo.SolicitudInscripcion si WITH(UPDLOCK,HOLDLOCK) ON si.IdSolicitudInscripcion=cu.IdSolicitudInscripcion
    JOIN dbo.Comision c WITH(UPDLOCK,HOLDLOCK) ON c.IdComision=si.IdComision
    WHERE cu.IdCuota=@IdCuota AND cu.IdSolicitudInscripcion=@IdSolicitudInscripcion AND si.IdAlumno=@IdAlumno AND c.Codigo=@CodigoComision
-      AND cu.TipoConcepto=N'curso' AND cu.Estado=N'pendiente' AND cu.BalanceAdeudado>0 AND si.Estado IN(N'activa',N'Al día',N'Con deuda');
+      AND cu.TipoConcepto=N'curso' AND cu.Estado=N'pendiente' AND cu.BalanceAdeudado>0 AND si.Estado IN(N'activa');
   IF @balance IS NULL THROW 52702,N'Errores.PagoCuotaNoPendiente',1;
   IF NOT EXISTS(SELECT 1 FROM dbo.Cuota WITH(UPDLOCK,HOLDLOCK)
                 WHERE IdSolicitudInscripcion=@IdSolicitudInscripcion AND TipoConcepto=N'matricula' AND Estado=N'pagada')

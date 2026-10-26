@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Service.DTOs;
+using BE.DTOs.Evaluaciones;
 
 namespace Service.Interfaces
 {

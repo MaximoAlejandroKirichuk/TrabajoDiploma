@@ -90,6 +90,8 @@
     <Compile Include="Interfaces\IEstadoDefinitivoComisionDAL_83KI.cs" />
     <Compile Include="Interfaces\IReporteOcupacionComisionBLL_83KI.cs" />
     <Compile Include="Interfaces\IReporteOcupacionComisionDAL_83KI.cs" />
+    <Compile Include="Interfaces\IReporteMorosidadBLL_83KI.cs" />
+    <Compile Include="Interfaces\IReporteMorosidadDAL_83KI.cs" />
     <Compile Include="Interfaces\IAlumnoPersonaBLL_83KI.cs" />
     <Compile Include="Interfaces\IBecaDAL_83KI.cs" />
     <Compile Include="Interfaces\IComisionDAL_83KI.cs" />

@@ -45,7 +45,7 @@ namespace BLL
             var curso = Curso_83KI.CrearNuevo(nombre, descripcion, cargaHoraria);
             if (_dal.ExisteNombreParaOtroCurso(curso.Nombre, 0)) throw new NombreCursoDuplicadoException_83KI();
             int id = _dal.Crear(curso);
-            RegistrarAuditoriaSegura($"Curso creado: {curso.Nombre}. Id: {id}. Actor: {UsuarioActual}", Criticidad.Alto, UsuarioActual);
+            ExigirAuditoria(RegistrarAuditoriaSegura($"Curso creado: {curso.Nombre}. Id: {id}. Actor: {UsuarioActual}"));
         }
 
         public void ModificarCurso(int idCurso, string nombre, string descripcion, int cargaHoraria)
@@ -55,7 +55,7 @@ namespace BLL
             curso.Modificar(nombre, descripcion, cargaHoraria);
             if (_dal.ExisteNombreParaOtroCurso(curso.Nombre, curso.IdCurso)) throw new NombreCursoDuplicadoException_83KI();
             _dal.Modificar(curso);
-            RegistrarAuditoriaSegura($"Curso modificado: {curso.Nombre}. Id: {curso.IdCurso}. Actor: {UsuarioActual}", Criticidad.Alto, UsuarioActual);
+            ExigirAuditoria(RegistrarAuditoriaSegura($"Curso modificado: {curso.Nombre}. Id: {curso.IdCurso}. Actor: {UsuarioActual}"));
         }
 
         public void ActivarCurso(int idCurso) { CambiarEstado(idCurso, true); }
@@ -68,7 +68,7 @@ namespace BLL
             if (curso.EstadoActivo == activo) throw new InvalidOperationException(activo ? "Errores.CursoYaActivo" : "Errores.CursoYaInactivo");
             if (activo) curso.Activar(); else curso.Desactivar();
             _dal.ActualizarEstadoActivo(idCurso, curso.EstadoActivo);
-            RegistrarAuditoriaSegura($"Curso {(activo ? "activado" : "desactivado")}: {curso.Nombre}. Id: {curso.IdCurso}. Actor: {UsuarioActual}", Criticidad.Alto, UsuarioActual);
+            ExigirAuditoria(RegistrarAuditoriaSegura($"Curso {(activo ? "activado" : "desactivado")}: {curso.Nombre}. Id: {curso.IdCurso}. Actor: {UsuarioActual}"));
         }
 
         private string UsuarioActual => _sessionManager.UsuarioActivo != null ? _sessionManager.UsuarioActivo.UserName : "Sistema";
@@ -87,10 +87,15 @@ namespace BLL
             }
         }
 
-        private void RegistrarAuditoriaSegura(string descripcion, Criticidad criticidad, string username)
+        private bool RegistrarAuditoriaSegura(string descripcion)
         {
-            try { _bitacora.RegistrarEvento(BitacoraEvento_83KI.CrearNuevo(descripcion, criticidad, Modulo.Admin, username)); }
-            catch { }
+            try { _bitacora.RegistrarEvento(BitacoraEvento_83KI.CrearNuevo(descripcion, Criticidad.Alto, Modulo.Admin, UsuarioActual)); return true; }
+            catch { return false; }
+        }
+
+        private static void ExigirAuditoria(bool registrada)
+        {
+            if (!registrada) throw new InvalidOperationException("Errores.AuditoriaFallidaCambioConfirmado");
         }
     }
 }

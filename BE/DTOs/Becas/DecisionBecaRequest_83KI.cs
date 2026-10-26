@@ -1,6 +1,6 @@
 using System;
 
-namespace Service.DTOs
+namespace BE.DTOs.Becas
 {
     public class DecisionBecaRequest_83KI
     {

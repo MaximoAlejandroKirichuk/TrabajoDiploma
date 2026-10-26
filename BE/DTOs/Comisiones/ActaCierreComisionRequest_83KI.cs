@@ -1,6 +1,6 @@
 using System;
 
-namespace Service.DTOs
+namespace BE.DTOs.Comisiones
 {
     public class ActaCierreComisionRequest_83KI
     {

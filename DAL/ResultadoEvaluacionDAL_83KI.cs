@@ -1,6 +1,8 @@
 using BE.Entidades;
 using DAL.DAL;
 using Service.DTOs;
+using BE.DTOs.Comisiones;
+using BE.DTOs.Evaluaciones;
 using Service.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -22,8 +24,7 @@ namespace DAL
             _integridad = integridad ?? throw new ArgumentNullException(nameof(integridad));
         }
 
-        // Al día se calcula; no es un estado académico de inscripción (migración de financiación v1).
-        private const string Habilitado = @"si.Estado IN (N'activa',N'Al día',N'Con deuda')
+        private const string Habilitado = @"si.Estado IN (N'activa')
             AND NOT EXISTS (SELECT 1 FROM dbo.Cuota cu WITH (UPDLOCK,HOLDLOCK)
                 WHERE cu.IdSolicitudInscripcion=si.IdSolicitudInscripcion AND cu.BalanceAdeudado>0
                 AND cu.FechaVencimiento<CONVERT(date,GETDATE()))

@@ -2,7 +2,7 @@ using BE.Entidades;
 using System;
 using System.Collections.Generic;
 
-namespace Service.DTOs
+namespace BE.DTOs.Certificaciones
 {
     public sealed class CuotaCertificacion_83KI
     {

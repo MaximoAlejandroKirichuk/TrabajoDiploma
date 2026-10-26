@@ -1,6 +1,7 @@
 using BE.Entidades;
 using Service;
 using Service.DTOs;
+using BE.DTOs.Becas;
 using Service.Entidades;
 using Service.Interfaces;
 using System;

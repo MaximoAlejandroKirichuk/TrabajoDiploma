@@ -16,8 +16,6 @@ namespace DAL
         {
             private readonly IProveedorConfiguracionConexion_83KI _settingsProvider;
 
-            private readonly string _stringConnection = "Data Source=(localdb)\\ProjectModels;Initial Catalog=TrabajoDiploma9/13;Integrated Security=True;";
-
             /// <summary>
             /// proveedor global de configuracion de conexion establecido desde la capa de aplicacion (BLL/UI).
             /// se usa como respaldo cuando la instancia no fue construida con un proveedor explicito.
@@ -34,8 +32,6 @@ namespace DAL
             internal AccesoDAL_83KI()
             {
                 // constructor sin parametros mantiene compatibilidad con clases DAL no refactorizadas.
-                // ResolvedConnectionString revisa el proveedor de instancia, luego el predeterminado estatico,
-                // y finalmente el valor fijo historico como ultimo respaldo.
             }
 
             internal AccesoDAL_83KI(IProveedorConfiguracionConexion_83KI settingsProvider)
@@ -44,29 +40,30 @@ namespace DAL
             }
 
             /// <summary>
-            /// devuelve la cadena de conexion activa:
-            /// 1. proveedor de instancia (si fue pasado al constructor)
-            /// 2. proveedor predeterminado estatico (establecido desde ServiceFactory al iniciar)
-            /// 3. valor fijo historico como ultimo respaldo.
+            /// devuelve la cadena de conexion configurada, usando el proveedor de instancia o el predeterminado.
+            /// falla explícitamente si no hay una configuración completa para evitar conectar a otra base.
             /// </summary>
             private string ResolvedConnectionString
             {
                 get
                 {
                     var provider = _settingsProvider ?? s_defaultProvider;
-                    if (provider != null)
+                    if (provider == null)
+                        throw new InvalidOperationException("No se configuró el proveedor de conexión a la base de datos.");
+
+                    var settings = provider.Cargar();
+                    if (settings == null ||
+                        string.IsNullOrWhiteSpace(settings.InstanciaServidor) ||
+                        string.IsNullOrWhiteSpace(settings.NombreBaseDatos))
+                        throw new InvalidOperationException("La configuración de conexión está incompleta: se requieren la instancia del servidor y el nombre de la base de datos.");
+
+                    var builder = new SqlConnectionStringBuilder
                     {
-                        var settings = provider.Cargar();
-                        if (settings != null &&
-                            !string.IsNullOrWhiteSpace(settings.InstanciaServidor) &&
-                            !string.IsNullOrWhiteSpace(settings.NombreBaseDatos))
-                        {
-                            return $"Data Source={settings.InstanciaServidor};" +
-                                   $"Initial Catalog={settings.NombreBaseDatos};" +
-                                   "Integrated Security=True;";
-                        }
-                    }
-                    return _stringConnection;
+                        DataSource = settings.InstanciaServidor.Trim(),
+                        InitialCatalog = settings.NombreBaseDatos.Trim(),
+                        IntegratedSecurity = true
+                    };
+                    return builder.ConnectionString;
                 }
             }
 
@@ -147,15 +144,8 @@ namespace DAL
                         }
 
                         SqlDataAdapter da = new SqlDataAdapter(cmd);
-                        try
-                        {
-                            // el fill se encarga de abrir y cerrar la conexion solo si es necesario
-                            da.Fill(ds);
-                        }
-                        catch (SqlException ex)
-                        {
-                            throw new Exception("Error de lectura en la base de datos", ex);
-                        }
+                        // el fill se encarga de abrir y cerrar la conexion solo si es necesario
+                        da.Fill(ds);
                     }
                 }
                 return ds;
@@ -218,13 +208,15 @@ namespace DAL
             /// ejecuta un comando contra la base master.
             /// se usa para RESTORE DATABASE ya que la base destino se vuelve inaccesible.
             /// </summary>
-            internal void EjecutarEnMaster(string consulta)
+            internal void EjecutarEnMaster(string consulta, List<SqlParameter> parametros = null)
             {
                 using (SqlConnection conn = new SqlConnection(_masterConnectionString))
                 {
                     conn.Open();
                     using (SqlCommand cmd = new SqlCommand(consulta, conn))
                     {
+                        if (parametros != null)
+                            cmd.Parameters.AddRange(parametros.ToArray());
                         cmd.CommandTimeout = 300; // la restauracion puede tardar
                         cmd.ExecuteNonQuery();
                     }
@@ -235,13 +227,15 @@ namespace DAL
             /// ejecuta una consulta de lectura contra la base master y devuelve un DataSet.
             /// se usa para RESTORE FILELISTONLY y consultas de metadatos antes del restore.
             /// </summary>
-            internal DataSet LeerDesdeMaster(string consulta)
+            internal DataSet LeerDesdeMaster(string consulta, List<SqlParameter> parametros = null)
             {
                 DataSet ds = new DataSet();
                 using (SqlConnection conn = new SqlConnection(_masterConnectionString))
                 {
                     using (SqlCommand cmd = new SqlCommand(consulta, conn))
                     {
+                        if (parametros != null)
+                            cmd.Parameters.AddRange(parametros.ToArray());
                         cmd.CommandTimeout = 60;
                         using (SqlDataAdapter da = new SqlDataAdapter(cmd))
                         {

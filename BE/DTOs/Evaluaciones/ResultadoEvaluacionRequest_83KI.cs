@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Service.DTOs
+namespace BE.DTOs.Evaluaciones
 {
     public class ResultadoEvaluacionRequest_83KI
     {

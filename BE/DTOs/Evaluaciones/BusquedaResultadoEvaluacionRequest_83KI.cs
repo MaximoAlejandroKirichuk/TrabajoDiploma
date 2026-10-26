@@ -1,6 +1,6 @@
 using System;
 
-namespace Service.DTOs
+namespace BE.DTOs.Evaluaciones
 {
     public class BusquedaResultadoEvaluacionRequest_83KI
     {

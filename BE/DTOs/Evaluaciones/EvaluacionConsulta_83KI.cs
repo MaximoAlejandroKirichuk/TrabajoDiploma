@@ -1,6 +1,6 @@
 using System;
 
-namespace Service.DTOs
+namespace BE.DTOs.Evaluaciones
 {
     // Instantánea de selección: la interfaz no puede alterar el contexto ni los valores originales.
     public sealed class EvaluacionConsulta_83KI

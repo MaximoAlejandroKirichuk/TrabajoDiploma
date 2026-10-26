@@ -27,7 +27,7 @@ namespace UI
             InitializeComponent();
             _usuarioService = gestorUsuario;
             _gestorRol = gestorRol;
-            _gestorIdioma = Service.ServiceFactory_83KI.GetGestorIdioma();
+            _gestorIdioma = ServiceFactory_83KI.GetGestorIdioma();
             CargarRoles();
             _gestorIdioma.Suscribir(this);
         }

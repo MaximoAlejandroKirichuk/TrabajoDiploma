@@ -1,6 +1,6 @@
 using System;
 
-namespace Service.DTOs
+namespace BE.DTOs.Comisiones
 {
     public class FiltroComision_83KI
     {

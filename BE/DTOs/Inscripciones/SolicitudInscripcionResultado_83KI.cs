@@ -1,6 +1,6 @@
 using BE.Entidades;
 
-namespace Service.DTOs
+namespace BE.DTOs.Inscripciones
 {
     public class SolicitudInscripcionResultado_83KI
     {

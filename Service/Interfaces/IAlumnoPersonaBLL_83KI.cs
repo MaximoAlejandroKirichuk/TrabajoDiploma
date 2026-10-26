@@ -1,3 +1,4 @@
+using BE.DTOs.Leads;
 using BE.Entidades;
 using Service.DTOs;
 

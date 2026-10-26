@@ -11,7 +11,8 @@ namespace Service.Entidades
         Usuarios,
         Admin,
         PlanificacionAcademica,
-        PreInscripcion
+        PreInscripcion,
+        CobrosMorosidadActas
     }
 
     public enum Criticidad
@@ -91,6 +92,8 @@ namespace Service.Entidades
         RegistrarResultadosEvaluacion = 71,
         GenerarCertificadoFinalizacion = 72,
         VerEvaluaciones = 73,
-        ModificarEvaluaciones = 74
+        ModificarEvaluaciones = 74,
+        VerReporteMorosidad = 75,
+        RegistrarPagoCuotas = 76
     }
 }

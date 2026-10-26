@@ -88,6 +88,8 @@
     <Compile Include="DTOs\Pagos\CuotaPreview_83KI.cs" />
     <Compile Include="DTOs\Pagos\PagoInscripcionRequest_83KI.cs" />
     <Compile Include="DTOs\Pagos\PagoInscripcionResultado_83KI.cs" />
+    <Compile Include="DTOs\Pagos\FiltroReporteMorosidad_83KI.cs" />
+    <Compile Include="DTOs\Pagos\ReporteMorosidadFila_83KI.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

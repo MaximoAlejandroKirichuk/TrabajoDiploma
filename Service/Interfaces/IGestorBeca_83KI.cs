@@ -1,4 +1,6 @@
 using Service.DTOs;
+using BE.DTOs.Comisiones;
+using BE.DTOs.Becas;
 using System.Collections.Generic;
 
 namespace Service.Interfaces

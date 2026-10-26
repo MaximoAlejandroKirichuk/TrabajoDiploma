@@ -50,6 +50,7 @@
     <Compile Include="Negocio\KI68GestorBecaBLL.cs" />
     <Compile Include="Negocio\KI68EstadoDefinitivoComisionBLL.cs" />
     <Compile Include="Negocio\KI68ReporteOcupacionComisionBLL.cs" />
+    <Compile Include="Negocio\KI68ReporteMorosidadBLL.cs" />
     <Compile Include="Negocio\KI68GestorComisionBLL.cs" />
     <Compile Include="Negocio\KI68PagoInscripcionBLL.cs" />
     <Compile Include="Negocio\KI68PagoCuotaBLL_83KI.cs" />
@@ -66,7 +67,6 @@
     <Compile Include="IntegridadBLL_83KI.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RecuperacionBaseDatosBLL_83KI.cs" />
-    <Compile Include="ServiceFactory_83KI.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BE\BE.csproj">
