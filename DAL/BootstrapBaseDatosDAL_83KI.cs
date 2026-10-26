@@ -26,7 +26,7 @@ namespace DAL
         {
             var instances = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            // Estrategia 1: SqlDataSourceEnumerator (deteccion por broadcast)
+            // Estrategia 1: SqlDataSourceEnumerator (detección por difusión)
             try
             {
                 DataTable dt = SqlDataSourceEnumerator.Instance.GetDataSources();
@@ -185,7 +185,7 @@ namespace DAL
                 // La validación de la conexión nunca migra una base de datos existente.
                 foreach (string relative in new[] { "financiacion-cuotas/001_modelo.sql", "cun03/001_migracion.sql",
                     "cun05/001_migracion.sql", "cun06/001_migracion.sql", "reporte-ocupacion-comisiones/001_migracion.sql",
-                    "cun07/001_migracion.sql", "financiacion-cuotas/002_completar_inscripciones.sql", "cun08/001_migracion.sql" })
+                    "cun07/001_migracion.sql", "financiacion-cuotas/002_completar_inscripciones.sql", "cun08/001_migracion.sql", "cun09/001_migracion.sql", "cun08/006_evaluaciones.sql" })
                 {
                     string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Scripts", "Sql", relative.Replace('/', Path.DirectorySeparatorChar));
                     if (!File.Exists(path)) return (false, "No se encontró el script de instalación: " + path);

@@ -88,6 +88,9 @@ namespace Service.Entidades
         SerializarComisiones = 68,
         DeserializarComisiones = 69,
         VerReporteOcupacionComisiones = 70,
-        RegistrarResultadosEvaluacion = 71
+        RegistrarResultadosEvaluacion = 71,
+        GenerarCertificadoFinalizacion = 72,
+        VerEvaluaciones = 73,
+        ModificarEvaluaciones = 74
     }
 }

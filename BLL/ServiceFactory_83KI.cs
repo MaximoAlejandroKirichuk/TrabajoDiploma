@@ -51,6 +51,22 @@ namespace Service
                     ? 0 : session.UsuarioActivo.DNI, integridad.ActualizarDVHyDVVResultados), session, GetBitacoraManager());
         }
 
+        public static KI68CertificadoBLL CrearCertificadoBLL()
+        {
+            var session = SessionManager_83KI.Instancia;
+            var integridad = new IntegridadDAL_83KI(new Encriptador_83KI());
+            return new KI68CertificadoBLL(new CertificadoDAL_83KI(() => session.UsuarioActivo == null ||
+                session.RequiereRecuperacionIntegridad ? 0 : session.UsuarioActivo.DNI, integridad.ActualizarCertificado), session, GetBitacoraManager());
+        }
+
+        public static KI68EvaluacionesBLL CrearEvaluacionesBLL()
+        {
+            var session = SessionManager_83KI.Instancia;
+            return new KI68EvaluacionesBLL(new ResultadoEvaluacionDAL_83KI(
+                () => session.UsuarioActivo == null || session.RequiereRecuperacionIntegridad ? 0 : session.UsuarioActivo.DNI,
+                GetIntegridadDatosService().ActualizarDVHyDVVResultados), session, GetBitacoraManager());
+        }
+
         public static IGestorIdioma_83KI GetGestorIdioma()
         {
             if (_gestorIdioma == null)
@@ -130,7 +146,7 @@ namespace Service
         }
 
         /// <summary>
-        /// obtiene el servicio de bootstrap de base de datos.
+        /// obtiene el servicio de inicialización de base de datos.
         /// requiere que EstablecerProveedorConfiguracionConexion haya sido llamado previamente.
         /// </summary>
         public static IBootstrapBaseDatosService_83KI ObtenerServicioBootstrapBaseDatos()

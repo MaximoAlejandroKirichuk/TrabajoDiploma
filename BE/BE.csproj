@@ -41,6 +41,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DTOs\Evaluaciones\EvaluacionConsulta_83KI.cs" />
+    <Compile Include="Entidades\CertificadoFinalizacion_83KI.cs" />
     <Compile Include="Entidades\ResultadoEvaluacion_83KI.cs" />
     <Compile Include="Entidades\Alumno_83KI.cs" />
     <Compile Include="Entidades\ActaCierreComision_83KI.cs" />
@@ -61,6 +63,7 @@
     <Compile Include="DTOs\Becas\BusquedaDecisionBecaResultado_83KI.cs" />
     <Compile Include="DTOs\Becas\DecisionBecaRequest_83KI.cs" />
     <Compile Include="DTOs\Becas\DecisionBecaResultado_83KI.cs" />
+    <Compile Include="DTOs\Certificaciones\Certificacion_83KI.cs" />
     <Compile Include="DTOs\Comisiones\ActaCierreComisionRequest_83KI.cs" />
     <Compile Include="DTOs\Comisiones\AltaOficialComisionRequest_83KI.cs" />
     <Compile Include="DTOs\Comisiones\ComisionEstadoDefinitivoListado_83KI.cs" />

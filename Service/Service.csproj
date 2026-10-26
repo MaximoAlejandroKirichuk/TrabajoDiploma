@@ -42,6 +42,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Interfaces\IEvaluacionesDAL_83KI.cs" />
+    <Compile Include="Interfaces\ICertificadoDAL_83KI.cs" />
     <Compile Include="Interfaces\IResultadoEvaluacionDAL_83KI.cs" />
     <Compile Include="DTOs\BitacoraEventoVista_83KI.cs" />
     <Compile Include="DTOs\ResultadoBootstrap_83KI.cs" />

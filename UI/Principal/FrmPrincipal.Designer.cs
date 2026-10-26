@@ -7,6 +7,8 @@
         /// </summary>
         private System.ComponentModel.IContainer components = null;
         private System.Windows.Forms.ToolStripMenuItem registrarResultadosEvaluacionToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem generarCertificadoToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem evaluacionesToolStripMenuItem;
 
         /// <summary>
         /// Clean up any resources being used.
@@ -53,6 +55,14 @@
             this.registrarPagoInscripcionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.registrarPagoCuotaToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.registrarEstadoDefinitivoComisionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.generarCertificadoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.evaluacionesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.evaluacionesToolStripMenuItem.Name = "evaluacionesToolStripMenuItem";
+            this.evaluacionesToolStripMenuItem.Text = "Evaluaciones";
+            this.evaluacionesToolStripMenuItem.Click += new System.EventHandler(this.evaluacionesToolStripMenuItem_Click);
+            this.generarCertificadoToolStripMenuItem.Name = "generarCertificadoToolStripMenuItem";
+            this.generarCertificadoToolStripMenuItem.Text = "Generar certificado de finalización";
+            this.generarCertificadoToolStripMenuItem.Click += new System.EventHandler(this.generarCertificadoToolStripMenuItem_Click);
             this.registrarResultadosEvaluacionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.registrarResultadosEvaluacionToolStripMenuItem.Name = "registrarResultadosEvaluacionToolStripMenuItem";
             this.registrarResultadosEvaluacionToolStripMenuItem.Text = "Registrar resultados de evaluación";
@@ -204,6 +214,7 @@
             this.registrarConsultaToolStripMenuItem,
             this.registrarSolicitudInscripcionToolStripMenuItem,
             this.registrarDecisionBecaToolStripMenuItem,
+            this.registrarPagoInscripcionToolStripMenuItem,
             this.registrarEstadoDefinitivoComisionToolStripMenuItem});
             this.planificacionAcademicaToolStripMenuItem.Name = "planificacionAcademicaToolStripMenuItem";
             this.planificacionAcademicaToolStripMenuItem.Size = new System.Drawing.Size(189, 24);
@@ -266,9 +277,10 @@
             // cobrosMorosidadActasToolStripMenuItem
             // 
             this.cobrosMorosidadActasToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.registrarPagoInscripcionToolStripMenuItem,
             this.registrarPagoCuotaToolStripMenuItem,
-            this.registrarResultadosEvaluacionToolStripMenuItem});
+            this.registrarResultadosEvaluacionToolStripMenuItem,
+            this.evaluacionesToolStripMenuItem,
+            this.generarCertificadoToolStripMenuItem});
             this.cobrosMorosidadActasToolStripMenuItem.Name = "cobrosMorosidadActasToolStripMenuItem";
             this.cobrosMorosidadActasToolStripMenuItem.Size = new System.Drawing.Size(208, 24);
             this.cobrosMorosidadActasToolStripMenuItem.Text = "Cobros, Morosidad y Actas";

@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace DAL
 {
-    public class ResultadoEvaluacionDAL_83KI : IResultadoEvaluacionDAL_83KI
+    public partial class ResultadoEvaluacionDAL_83KI : IResultadoEvaluacionDAL_83KI, IEvaluacionesDAL_83KI
     {
         private readonly AccesoDAL_83KI _accesoDAL = new AccesoDAL_83KI();
         private readonly Func<int> _dniActual;

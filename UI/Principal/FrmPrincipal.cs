@@ -85,9 +85,13 @@ namespace UI
             bool puedeRegistrarDecisionBeca = PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarDecisionBeca);
             bool puedeRegistrarPagoInscripcion = PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarPagoInscripcion);
             bool puedeRegistrarEstadoDefinitivo = PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarEstadoDefinitivoComision);
-            bool puedePlanificacionAcademica = puedeRegistrarPreapertura || puedeVerComisiones || puedeRegistrarConsulta || puedeRegistrarSolicitudInscripcion || puedeRegistrarDecisionBeca || puedeRegistrarEstadoDefinitivo;
             bool puedeRegistrarResultados = PermisosUi_83KI.Tiene(PermisoSistema_83KI.RegistrarResultadosEvaluacion);
             registrarResultadosEvaluacionToolStripMenuItem.Visible = puedeRegistrarResultados;
+            bool puedeCertificar = PermisosUi_83KI.Tiene(PermisoSistema_83KI.GenerarCertificadoFinalizacion);
+            generarCertificadoToolStripMenuItem.Visible = puedeCertificar;
+            bool puedeVerEvaluaciones = PermisosUi_83KI.Tiene(PermisoSistema_83KI.VerEvaluaciones);
+            evaluacionesToolStripMenuItem.Visible = puedeVerEvaluaciones;
+            bool puedePlanificacionAcademica = puedeCertificar || puedeRegistrarPreapertura || puedeVerComisiones || puedeRegistrarConsulta || puedeRegistrarSolicitudInscripcion || puedeRegistrarDecisionBeca || puedeRegistrarEstadoDefinitivo;
             gestionComisionesToolStripMenuItem.Visible = puedeVerComisiones;
             registrarPreaperturaComisionToolStripMenuItem.Visible = puedeRegistrarPreapertura;
             registrarConsultaToolStripMenuItem.Visible = puedeRegistrarConsulta;
@@ -97,7 +101,7 @@ namespace UI
             registrarPagoCuotaToolStripMenuItem.Visible = puedeRegistrarPagoInscripcion;
             registrarEstadoDefinitivoComisionToolStripMenuItem.Visible = puedeRegistrarEstadoDefinitivo;
             planificacionAcademicaToolStripMenuItem.Visible = puedePlanificacionAcademica;
-            cobrosMorosidadActasToolStripMenuItem.Visible = puedeRegistrarPagoInscripcion || puedeRegistrarResultados;
+            cobrosMorosidadActasToolStripMenuItem.Visible = puedeRegistrarPagoInscripcion || puedeRegistrarResultados || puedeVerEvaluaciones || puedeCertificar;
             bool puedeVerReporteOcupacion = PermisosUi_83KI.Tiene(PermisoSistema_83KI.VerReporteOcupacionComisiones);
             reporteOcupacionComisionesToolStripMenuItem.Visible = puedeVerReporteOcupacion;
             reportesToolStripMenuItem.Visible = puedeVerReporteOcupacion;
@@ -130,6 +134,8 @@ namespace UI
             registrarPagoCuotaToolStripMenuItem.Text = Texto("FrmPrincipal.RegistrarPagoCuota");
             registrarEstadoDefinitivoComisionToolStripMenuItem.Text = Texto("FrmPrincipal.RegistrarEstadoDefinitivoComision");
             registrarResultadosEvaluacionToolStripMenuItem.Text = Texto("Cun08.Titulo");
+            generarCertificadoToolStripMenuItem.Text = Texto("Cun09.Titulo");
+            evaluacionesToolStripMenuItem.Text = Texto("Evaluaciones.Titulo");
             cobrosMorosidadActasToolStripMenuItem.Text = Texto("FrmPrincipal.CobrosMorosidadActas");
             reportesToolStripMenuItem.Text = Texto("FrmPrincipal.Reportes");
             reporteOcupacionComisionesToolStripMenuItem.Text = Texto("FrmPrincipal.ReporteOcupacionComisiones");
@@ -316,7 +322,7 @@ namespace UI
             {
                 var resultado = frmRecuperacion.ShowDialog(this);
 
-                // post-restore la aplicacion debe cerrarse
+                // Después de la restauración, la aplicación debe cerrarse.
                 if (SessionManager_83KI.Instancia.ReinicioRequeridoDespuesDeRestore)
                 {
                     ForzarLogoutRestore();
@@ -512,6 +518,23 @@ namespace UI
             {
                 formulario.ShowDialog(this);
             }
+        }
+
+        private void generarCertificadoToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!PermisosUi_83KI.Tiene(PermisoSistema_83KI.GenerarCertificadoFinalizacion))
+            {
+                IdiomaUiHelper_83KI.MostrarAdvertencia(this, "Errores.SinPermisos", "Comun.Seguridad");
+                return;
+            }
+            using (var formulario = new FrmGenerarCertificado_83KI(ServiceFactory_83KI.CrearCertificadoBLL())) formulario.ShowDialog(this);
+        }
+
+        private void evaluacionesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!PermisosUi_83KI.Tiene(PermisoSistema_83KI.VerEvaluaciones))
+            { MessageBox.Show(Texto("Errores.SinPermisos")); return; }
+            using (var formulario = new FrmEvaluaciones_83KI(ServiceFactory_83KI.CrearEvaluacionesBLL())) formulario.ShowDialog(this);
         }
 
         private void registrarResultadosEvaluacionToolStripMenuItem_Click(object sender, EventArgs e)
