@@ -7,6 +7,7 @@ namespace Service.Interfaces
 {
     public interface ICuotaBLL_83KI
     {
+        void ValidarPagoCompleto(Cuota_83KI cuota, decimal monto);
         CuotaPreview_83KI PrevisualizarCuotaInicial(Comision_83KI comision, DateTime fechaSolicitud);
     }
 }

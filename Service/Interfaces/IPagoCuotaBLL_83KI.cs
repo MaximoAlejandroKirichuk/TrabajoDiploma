@@ -8,7 +8,7 @@ namespace Service.Interfaces
     public interface IPagoCuotaBLL_83KI
     {
         IEnumerable<ComisionPagoOpcion_83KI> ListarComisionesConCuotasPendientes(string dni);
-        BusquedaPagoInscripcionResultado_83KI BuscarCuotasPendientes(string dni, string codigoComision);
-        PagoInscripcionResultado_83KI RegistrarPagoCuota(PagoInscripcionRequest_83KI request);
+        BusquedaCuotasPagoResultado_83KI BuscarCuotasPendientes(string dni, string codigoComision);
+        PagoCuotaResultado_83KI RegistrarPagoCuota(PagoCuotaRequest_83KI request);
     }
 }

@@ -11,9 +11,9 @@ namespace UI.Modulos.PreInscripcion
     internal sealed class FacturaPagoPdfExporter_83KI
     {
         private const string NombreImpresoraPdf = "Microsoft Print to PDF";
-        private PagoInscripcionResultado_83KI _resultado;
+        private PagoCuotaResultado_83KI _resultado;
 
-        public void Exportar(PagoInscripcionResultado_83KI resultado, string rutaArchivo)
+        public void Exportar(PagoCuotaResultado_83KI resultado, string rutaArchivo)
         {
             if (resultado == null) throw new ArgumentNullException(nameof(resultado));
             if (string.IsNullOrWhiteSpace(rutaArchivo)) throw new ArgumentException("La ruta de la factura es obligatoria.", nameof(rutaArchivo));

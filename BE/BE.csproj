@@ -85,6 +85,9 @@
     <Compile Include="DTOs\Leads\ConsultaLeadRequest_83KI.cs" />
     <Compile Include="DTOs\Leads\ConsultaLeadResultado_83KI.cs" />
     <Compile Include="DTOs\Pagos\BusquedaPagoInscripcionResultado_83KI.cs" />
+    <Compile Include="DTOs\Pagos\BusquedaCuotasPagoResultado_83KI.cs" />
+    <Compile Include="DTOs\Pagos\PagoCuotaRequest_83KI.cs" />
+    <Compile Include="DTOs\Pagos\PagoCuotaResultado_83KI.cs" />
     <Compile Include="DTOs\Pagos\CuotaPreview_83KI.cs" />
     <Compile Include="DTOs\Pagos\PagoInscripcionRequest_83KI.cs" />
     <Compile Include="DTOs\Pagos\PagoInscripcionResultado_83KI.cs" />

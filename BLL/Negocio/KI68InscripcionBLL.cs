@@ -26,6 +26,15 @@ namespace BLL
             _sessionManager = sessionManager;
         }
 
+        public SolicitudInscripcion_83KI ObtenerPorDniYComision(string dni, string codigoComision)
+        {
+            if (!_sessionManager.TienePermiso(PermisoSistema_83KI.RegistrarPagoCuotas))
+                throw new InvalidOperationException("Errores.SinPermisos");
+            if (string.IsNullOrWhiteSpace(dni)) throw new ArgumentException("Errores.PagoDniObligatorio");
+            if (string.IsNullOrWhiteSpace(codigoComision)) throw new ArgumentException("Errores.PagoComisionObligatoria");
+            return _inscripcionDAL.ObtenerPorDniYComision(dni, codigoComision);
+        }
+
         public IEnumerable<BusquedaInscripcionPersonaResultado_83KI> BuscarPersonas(string texto)
         {
             ValidarPermiso();

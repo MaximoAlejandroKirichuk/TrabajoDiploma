@@ -30,7 +30,7 @@ namespace DAL
             return resultado;
         }
 
-        public BusquedaPagoInscripcionResultado_83KI BuscarCuotasPendientes(string dni, string codigoComision)
+        public BusquedaCuotasPagoResultado_83KI BuscarCuotasPendientes(string dni, string codigoComision)
         {
             var ds = _accesoDAL.LeerStoredProcedure("sp_CUN07_BuscarCuotasPendientes", new List<SqlParameter>
             {
@@ -38,7 +38,7 @@ namespace DAL
                 new SqlParameter("@CodigoComision", Normalizar(codigoComision))
             });
             if (ds == null || ds.Tables.Count == 0 || ds.Tables[0].Rows.Count == 0) return null;
-            BusquedaPagoInscripcionResultado_83KI resultado = null;
+            BusquedaCuotasPagoResultado_83KI resultado = null;
             int? idSolicitud = null;
             foreach (DataRow row in ds.Tables[0].Rows)
             {
@@ -62,10 +62,10 @@ namespace DAL
             return ds != null && ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0 && Convert.ToInt32(ds.Tables[0].Rows[0][0]) == 1;
         }
 
-        public PagoInscripcionResultado_83KI RegistrarPago(PagoInscripcion_83KI pago)
+        public PagoCuotaResultado_83KI RegistrarPago(PagoInscripcion_83KI pago)
         {
             if (pago == null) throw new ArgumentNullException(nameof(pago));
-            PagoInscripcionResultado_83KI resultado = null;
+            PagoCuotaResultado_83KI resultado = null;
             _accesoDAL.EjecutarTransaccion((conn, tran) =>
             {
                 var ds = AccesoDAL_83KI.LeerStoredProcedureTransaccional(conn, tran, "sp_CUN07_RegistrarPago", CrearParametrosRegistro(pago));
@@ -91,12 +91,12 @@ namespace DAL
             };
         }
 
-        private static BusquedaPagoInscripcionResultado_83KI MapearBusqueda(DataRow row)
+        private static BusquedaCuotasPagoResultado_83KI MapearBusqueda(DataRow row)
         {
             var alumno = Alumno_83KI.ReconstruirDesdePersistencia(Convert.ToInt32(row["IdAlumno"]), row["AlumnoDNI"].ToString(), row["AlumnoNombre"].ToString(), row["AlumnoApellido"].ToString(), row["AlumnoEmail"].ToString(), row["AlumnoTelefono"].ToString(), Convert.ToDateTime(row["AlumnoFechaAlta"]), row["AlumnoEstado"].ToString(), row["AlumnoDVH"].ToString());
             int? idLead = row["IdLeadOrigen"] == DBNull.Value ? (int?)null : Convert.ToInt32(row["IdLeadOrigen"]);
             var solicitud = MapearSolicitud(row, alumno.IdAlumno, idLead);
-            return new BusquedaPagoInscripcionResultado_83KI { Alumno = alumno, Solicitud = solicitud, CodigoComision = row["CodigoComision"].ToString(), Curso = row["Curso"].ToString(), NombrePlanDePago = row["NombrePlanDePago"].ToString(), MatriculaPagada = Convert.ToBoolean(row["MatriculaPagada"]) };
+            return new BusquedaCuotasPagoResultado_83KI { Alumno = alumno, Solicitud = solicitud, CodigoComision = row["CodigoComision"].ToString(), Curso = row["Curso"].ToString(), NombrePlanDePago = row["NombrePlanDePago"].ToString(), MatriculaPagada = Convert.ToBoolean(row["MatriculaPagada"]) };
         }
 
         private static Cuota_83KI MapearCuota(DataRow row)
@@ -104,14 +104,14 @@ namespace DAL
             return Cuota_83KI.ReconstruirDesdePersistencia(Convert.ToInt32(row["IdCuota"]), Convert.ToInt32(row["IdSolicitudInscripcion"]), Convert.ToInt32(row["NumeroCuota"]), Convert.ToDecimal(row["MontoOriginal"]), Convert.ToDecimal(row["BalanceAdeudado"]), Convert.ToDateTime(row["FechaVencimiento"]), row["CuotaEstado"].ToString(), row["CuotaDVH"].ToString(), row["TipoConcepto"].ToString(), row["Periodo"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(row["Periodo"]));
         }
 
-        private static PagoInscripcionResultado_83KI MapearResultado(DataRow row)
+        private static PagoCuotaResultado_83KI MapearResultado(DataRow row)
         {
             var alumno = Alumno_83KI.ReconstruirDesdePersistencia(Convert.ToInt32(row["IdAlumno"]), row["AlumnoDNI"].ToString(), row["AlumnoNombre"].ToString(), row["AlumnoApellido"].ToString(), row["AlumnoEmail"].ToString(), row["AlumnoTelefono"].ToString(), Convert.ToDateTime(row["AlumnoFechaAlta"]), row["AlumnoEstado"].ToString(), row["AlumnoDVH"].ToString());
             int? idLead = row["IdLeadOrigen"] == DBNull.Value ? (int?)null : Convert.ToInt32(row["IdLeadOrigen"]);
             var solicitud = MapearSolicitud(row, alumno.IdAlumno, idLead);
             var cuota = MapearCuota(row);
             var pago = PagoInscripcion_83KI.ReconstruirDesdePersistencia(Convert.ToInt32(row["IdPagoInscripcion"]), alumno.IdAlumno, solicitud.IdSolicitudInscripcion, cuota.IdCuota, row["MetodoPago"].ToString(), Convert.ToDecimal(row["MontoPagado"]), row["NumeroReferencia"].ToString(), Convert.ToDateTime(row["FechaPago"]), Convert.ToDateTime(row["FechaAcreditacion"]), row["CodigoComision"].ToString(), row["PagoDVH"].ToString());
-            return new PagoInscripcionResultado_83KI { Pago = pago, Alumno = alumno, Solicitud = solicitud, Cuota = cuota, CodigoComision = row["CodigoComision"].ToString(), Curso = row["Curso"].ToString(), CodigoSolicitud = solicitud.Codigo, NumeroReciboInstitucional = row["NumeroReciboInstitucional"].ToString(), FacturaConcepto = row["ConceptoFactura"].ToString(), FacturaTotal = Convert.ToDecimal(row["TotalFactura"]), FacturaFecha = Convert.ToDateTime(row["FechaTransaccion"]), IdFactura = Convert.ToInt32(row["IdFactura"]), FacturaTexto = string.Format("{0}|{1}|{2}|{3}", row["NumeroReciboInstitucional"], row["ConceptoFactura"], row["TotalFactura"], row["FechaTransaccion"]) };
+            return new PagoCuotaResultado_83KI { Pago = pago, Alumno = alumno, Solicitud = solicitud, Cuota = cuota, CodigoComision = row["CodigoComision"].ToString(), Curso = row["Curso"].ToString(), CodigoSolicitud = solicitud.Codigo, NumeroReciboInstitucional = row["NumeroReciboInstitucional"].ToString(), FacturaConcepto = row["ConceptoFactura"].ToString(), FacturaTotal = Convert.ToDecimal(row["TotalFactura"]), FacturaFecha = Convert.ToDateTime(row["FechaTransaccion"]), IdFactura = Convert.ToInt32(row["IdFactura"]), FacturaTexto = string.Format("{0}|{1}|{2}|{3}", row["NumeroReciboInstitucional"], row["ConceptoFactura"], row["TotalFactura"], row["FechaTransaccion"]) };
         }
 
         private void RecomputarIntegridad(string tabla, string pk, int id, SqlConnection conn, SqlTransaction tran)

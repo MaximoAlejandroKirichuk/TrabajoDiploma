@@ -19,6 +19,37 @@ namespace DAL
         private readonly IntegridadDAL_83KI _integridadDAL = new IntegridadDAL_83KI(new Encriptador_83KI());
         private readonly AlumnoDAL_83KI _alumnoDAL = new AlumnoDAL_83KI();
 
+        public SolicitudInscripcion_83KI ObtenerPorDniYComision(string dni, string codigoComision)
+        {
+            const string sql = @"SELECT si.* FROM dbo.SolicitudInscripcion si
+                INNER JOIN dbo.Alumno a ON a.IdAlumno = si.IdAlumno
+                INNER JOIN dbo.Comision c ON c.IdComision = si.IdComision
+                WHERE a.DNI = @DNI AND c.Codigo = @CodigoComision
+                  AND si.Estado IN (N'pendiente', N'confirmada', N'activa')
+                  AND EXISTS (SELECT 1 FROM dbo.Cuota cu
+                              WHERE cu.IdSolicitudInscripcion = si.IdSolicitudInscripcion AND cu.TipoConcepto = N'curso')";
+            var ds = _accesoDAL.Leer(sql, new List<SqlParameter>
+            {
+                new SqlParameter("@DNI", Normalizar(dni)),
+                new SqlParameter("@CodigoComision", Normalizar(codigoComision))
+            });
+            if (ds == null || ds.Tables.Count == 0 || ds.Tables[0].Rows.Count == 0) return null;
+            if (ds.Tables[0].Rows.Count > 1) throw new InvalidOperationException("Errores.PagoSolicitudesAmbiguas");
+            return MapearSolicitud(ds.Tables[0].Rows[0]);
+        }
+
+        private static SolicitudInscripcion_83KI MapearSolicitud(DataRow row)
+        {
+            return SolicitudInscripcion_83KI.ReconstruirDesdePersistencia(
+                Convert.ToInt32(row["IdSolicitudInscripcion"]), row["Codigo"].ToString(), Convert.ToInt32(row["IdAlumno"]),
+                row["IdLeadOrigen"] == DBNull.Value ? (int?)null : Convert.ToInt32(row["IdLeadOrigen"]),
+                Convert.ToInt32(row["IdComision"]), Convert.ToInt32(row["IdPlanDePago"]), Convert.ToDecimal(row["RecargoPlanSnapshot"]),
+                Convert.ToDateTime(row["FechaSolicitud"]), row["Estado"].ToString(), row["Observaciones"].ToString(), row["DVH"].ToString(),
+                SnapshotMapper_83KI.Decimal(row["ArancelCursoSnapshot"]), SnapshotMapper_83KI.Integer(row["CantidadCuotasSnapshot"]),
+                SnapshotMapper_83KI.Decimal(row["TotalCursoSnapshot"]), SnapshotMapper_83KI.Date(row["FechaPrimerVencimientoSnapshot"]),
+                SnapshotMapper_83KI.Text(row["NombrePlanSnapshot"]));
+        }
+
         public IEnumerable<BusquedaInscripcionPersonaResultado_83KI> BuscarPersonas(string texto)
         {
             return _alumnoDAL.BuscarParaInscripcion(texto);

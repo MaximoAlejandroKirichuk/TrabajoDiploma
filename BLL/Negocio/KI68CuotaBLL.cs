@@ -8,6 +8,14 @@ namespace BLL
 {
     public class KI68CuotaBLL : ICuotaBLL_83KI
     {
+        public void ValidarPagoCompleto(Cuota_83KI cuota, decimal monto)
+        {
+            if (cuota == null) throw new InvalidOperationException("Errores.PagoCuotaObligatoria");
+            if (cuota.EsMatricula || cuota.Estado != Cuota_83KI.EstadoPendiente || cuota.BalanceAdeudado <= 0)
+                throw new InvalidOperationException("Errores.PagoCuotaNoPendiente");
+            if (monto != cuota.BalanceAdeudado) throw new ArgumentException("Errores.PagoMontoNoCoincide");
+        }
+
         public CuotaPreview_83KI PrevisualizarCuotaInicial(Comision_83KI comision, DateTime fechaSolicitud)
         {
             if (comision == null) throw new ArgumentNullException(nameof(comision));

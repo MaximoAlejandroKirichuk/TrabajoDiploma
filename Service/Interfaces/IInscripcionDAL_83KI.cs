@@ -8,6 +8,7 @@ namespace Service.Interfaces
 {
     public interface IInscripcionDAL_83KI
     {
+        SolicitudInscripcion_83KI ObtenerPorDniYComision(string dni, string codigoComision);
         IEnumerable<BusquedaInscripcionPersonaResultado_83KI> BuscarPersonas(string texto);
         IEnumerable<ComisionListado_83KI> ListarComisionesElegibles();
         IEnumerable<PlanDePago_83KI> ObtenerPlanesComision(int idComision);

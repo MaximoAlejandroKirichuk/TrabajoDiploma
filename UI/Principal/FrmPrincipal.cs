@@ -568,7 +568,10 @@ namespace UI
                 new KI68PagoCuotaBLL_83KI(
                     new PagoCuotaDAL_83KI(),
                     SessionManager_83KI.Instancia,
-                    new BitacoraBLL_83KI(new BitacoraEventoDAL_83KI()))))
+                    new BitacoraBLL_83KI(new BitacoraEventoDAL_83KI()),
+                    new KI68InscripcionBLL(new InscripcionDAL_83KI(), new ComisionDAL_83KI(),
+                        new KI68CuotaBLL(), SessionManager_83KI.Instancia),
+                    new KI68CuotaBLL())))
             {
                 formulario.ShowDialog(this);
             }

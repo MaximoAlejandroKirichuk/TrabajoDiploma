@@ -15,8 +15,8 @@ namespace UI.Modulos.PreInscripcion
     {
         private readonly IPagoCuotaBLL_83KI _pagoBLL;
         private readonly IGestorIdioma_83KI _gestorIdioma;
-        private BusquedaPagoInscripcionResultado_83KI _resultadoBusqueda;
-        private PagoInscripcionResultado_83KI _pagoPendienteDeGuardarFactura;
+        private BusquedaCuotasPagoResultado_83KI _resultadoBusqueda;
+        private PagoCuotaResultado_83KI _pagoPendienteDeGuardarFactura;
         private readonly Label _lblPlanDePago = new Label { AutoSize = true, Location = new System.Drawing.Point(18, 106) };
 
         public FrmRegistrarPagoCuota_83KI(IPagoCuotaBLL_83KI pagoBLL)
@@ -209,7 +209,7 @@ namespace UI.Modulos.PreInscripcion
             {
                 if (dgvCuotas.SelectedRows.Count == 0) { lblMensaje.Text = IdiomaUiHelper_83KI.Texto("Errores.PagoCuotaObligatoria"); return; }
                 int idCuota = Convert.ToInt32(dgvCuotas.SelectedRows[0].Cells["IdCuota"].Value);
-                var resultado = _pagoBLL.RegistrarPagoCuota(new PagoInscripcionRequest_83KI
+                var resultado = _pagoBLL.RegistrarPagoCuota(new PagoCuotaRequest_83KI
                 {
                     DNI = txtDni.Text, CodigoComision = cmbComision.SelectedValue != null ? cmbComision.SelectedValue.ToString() : string.Empty,
                     IdCuota = idCuota, MetodoPago = cmbMetodoPago.SelectedItem != null ? cmbMetodoPago.SelectedItem.ToString() : string.Empty,
@@ -223,7 +223,7 @@ namespace UI.Modulos.PreInscripcion
 
         public void HabilitarFormularioPago(bool habilitado) { grpPago.Enabled = habilitado; btnGuardar.Enabled = habilitado; }
 
-        private void MostrarConfirmacion(PagoInscripcionResultado_83KI resultado)
+        private void MostrarConfirmacion(PagoCuotaResultado_83KI resultado)
         {
             string mensaje = IdiomaUiHelper_83KI.Texto("FrmRegistrarPagoInscripcion.Registrado", resultado.Alumno.Nombre, resultado.Alumno.DNI, resultado.CodigoSolicitud, resultado.Cuota.NumeroMensualidad, resultado.Pago.MontoPagado, resultado.Pago.MetodoPago, resultado.Pago.NumeroReferencia);
             _pagoPendienteDeGuardarFactura = resultado;
