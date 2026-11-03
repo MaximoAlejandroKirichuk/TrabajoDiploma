@@ -70,13 +70,14 @@ function VerifyIntegrity {
     'PASS: SQL backfill hashes match the application DVH/DVV implementation.'
 }
 function VerifyLookupAndBusinessRules {
-    $snapshotMapper = [DAL.SnapshotMapper_83KI].GetMethod('Decimal',[System.Reflection.BindingFlags]'NonPublic,Static')
+    $snapshotType = [DAL.PagoCuotaDAL_83KI].Assembly.GetType('DAL.SnapshotMapper_83KI', $true)
+    $snapshotMapper = $snapshotType.GetMethod('Decimal',[System.Reflection.BindingFlags]'NonPublic,Static')
     if ($null -ne $snapshotMapper.Invoke($null,[object[]]@([DBNull]::Value))) { throw 'A NULL decimal snapshot did not remain null.' }
-    $snapshotMapper = [DAL.SnapshotMapper_83KI].GetMethod('Integer',[System.Reflection.BindingFlags]'NonPublic,Static')
+    $snapshotMapper = $snapshotType.GetMethod('Integer',[System.Reflection.BindingFlags]'NonPublic,Static')
     if ($null -ne $snapshotMapper.Invoke($null,[object[]]@([DBNull]::Value))) { throw 'A NULL integer snapshot did not remain null.' }
-    $snapshotMapper = [DAL.SnapshotMapper_83KI].GetMethod('Date',[System.Reflection.BindingFlags]'NonPublic,Static')
+    $snapshotMapper = $snapshotType.GetMethod('Date',[System.Reflection.BindingFlags]'NonPublic,Static')
     if ($null -ne $snapshotMapper.Invoke($null,[object[]]@([DBNull]::Value))) { throw 'A NULL date snapshot did not remain null.' }
-    $snapshotMapper = [DAL.SnapshotMapper_83KI].GetMethod('Text',[System.Reflection.BindingFlags]'NonPublic,Static')
+    $snapshotMapper = $snapshotType.GetMethod('Text',[System.Reflection.BindingFlags]'NonPublic,Static')
     if ($null -ne $snapshotMapper.Invoke($null,[object[]]@([DBNull]::Value))) { throw 'A NULL text snapshot did not remain null.' }
     'PASS: nullable financing snapshots preserve SQL NULL values.'
     $command = $connection.CreateCommand()
