@@ -5,6 +5,7 @@ using Service.Excepciones.Maestros;
 using Service.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace BLL
 {
@@ -80,7 +81,7 @@ namespace BLL
             ValidarProfesorExistente(idProfesor);
             var disponibilidad = DisponibilidadProfesor_83KI.CrearNueva(idProfesor, diaSemana, horaInicio, horaFin);
             ValidarDisponibilidadActivaNoDuplicada(disponibilidad);
-            int id = _disponibilidadDal.Insertar(disponibilidad);
+            int id = _disponibilidadDal.Insertar(disponibilidad, UsuarioActual);
             ExigirAuditoria(RegistrarAuditoriaSegura($"Disponibilidad de profesor creada. IdProfesor: {idProfesor}. IdDisponibilidad: {id}. Actor: {UsuarioActual}", Criticidad.Alto, UsuarioActual));
         }
 
@@ -90,7 +91,7 @@ namespace BLL
             var disponibilidad = ObtenerDisponibilidadRequerida(idDisponibilidadProfesor, idProfesor);
             disponibilidad.ModificarHorario(diaSemana, horaInicio, horaFin);
             ValidarDisponibilidadActivaNoDuplicada(disponibilidad);
-            _disponibilidadDal.Actualizar(disponibilidad);
+            _disponibilidadDal.Actualizar(disponibilidad, UsuarioActual);
             ExigirAuditoria(RegistrarAuditoriaSegura($"Disponibilidad de profesor modificada. IdProfesor: {idProfesor}. IdDisponibilidad: {idDisponibilidadProfesor}. Actor: {UsuarioActual}", Criticidad.Alto, UsuarioActual));
         }
 
@@ -122,7 +123,7 @@ namespace BLL
             var disponibilidad = ObtenerDisponibilidadRequerida(idDisponibilidadProfesor, idProfesor);
             if (activo) disponibilidad.Activar(); else disponibilidad.Desactivar();
             ValidarDisponibilidadActivaNoDuplicada(disponibilidad);
-            _disponibilidadDal.Actualizar(disponibilidad);
+            _disponibilidadDal.Actualizar(disponibilidad, UsuarioActual);
             ExigirAuditoria(RegistrarAuditoriaSegura($"Disponibilidad de profesor {(activo ? "activada" : "desactivada")}. IdProfesor: {idProfesor}. IdDisponibilidad: {idDisponibilidadProfesor}. Actor: {UsuarioActual}", Criticidad.Alto, UsuarioActual));
         }
 
@@ -130,18 +131,8 @@ namespace BLL
         {
             if (disponibilidad == null || !disponibilidad.EstadoActivo) return;
 
-            foreach (var existente in _disponibilidadDal.ObtenerPorProfesor(disponibilidad.IdProfesor))
-            {
-                if (!existente.EstadoActivo) continue;
-                if (existente.IdDisponibilidadProfesor == disponibilidad.IdDisponibilidadProfesor) continue;
-
-                if (existente.DiaSemana == disponibilidad.DiaSemana
-                    && existente.HoraInicio == disponibilidad.HoraInicio
-                    && existente.HoraFin == disponibilidad.HoraFin)
-                {
-                    throw new InvalidOperationException("Errores.DisponibilidadProfesorDuplicada");
-                }
-            }
+            ReglasDisponibilidadProfesor_83KI.ValidarActivaNoDuplicada(disponibilidad,
+                _disponibilidadDal.ObtenerPorProfesor(disponibilidad.IdProfesor));
         }
 
         private DisponibilidadProfesor_83KI ObtenerDisponibilidadRequerida(int idDisponibilidadProfesor, int idProfesor)

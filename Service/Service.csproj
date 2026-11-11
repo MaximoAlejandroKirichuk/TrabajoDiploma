@@ -99,6 +99,7 @@
     <Compile Include="Interfaces\IComisionSerializacionBLL_83KI.cs" />
     <Compile Include="Interfaces\IConsultaLeadDAL_83KI.cs" />
     <Compile Include="Interfaces\IDisponibilidadProfesorDAL_83KI.cs" />
+    <Compile Include="Interfaces\IDisponibilidadProfesorHistorialBLL_83KI.cs" />
     <Compile Include="Interfaces\IProveedorConfiguracionConexion_83KI.cs" />
     <Compile Include="Interfaces\IConsultaBitacoraEventos_83KI.cs" />
     <Compile Include="Interfaces\IBootstrapBaseDatosService_83KI.cs" />

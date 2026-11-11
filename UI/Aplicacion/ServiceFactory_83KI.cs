@@ -21,6 +21,11 @@ namespace UI
         private static IBootstrapBaseDatosService_83KI _servicioBootstrapBaseDatos;
         private static IProveedorConfiguracionConexion_83KI _proveedorConfiguracionConexion;
 
+        public static IDisponibilidadProfesorHistorialBLL_83KI CrearDisponibilidadProfesorHistorialBLL()
+        {
+            return new KI68DisponibilidadProfesorHistorialBLL(new KI68DisponibilidadProfesorDAL(), SessionManager_83KI.Instancia, GetBitacoraManager());
+        }
+
         public static IGestorUsuario_83KI GetGestorUsuario()
         {
             if (_gestorUsuario == null)

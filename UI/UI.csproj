@@ -176,6 +176,9 @@
     <Compile Include="Modulos\Maestros\FrmGestionProfesores_83KI.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Modulos\Maestros\FrmHistorialDisponibilidadProfesor_83KI.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Modulos\Maestros\FrmModificarCurso_83KI.cs">
       <SubType>Form</SubType>
     </Compile>

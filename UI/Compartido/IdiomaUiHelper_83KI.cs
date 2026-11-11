@@ -101,6 +101,19 @@ namespace UI
             bool contieneSqlException = false;
             for (Exception current = ex; current != null; current = current.InnerException)
             {
+                var sqlException = current as SqlException;
+                if (sqlException != null && sqlException.Number == 52803)
+                    return Texto("Errores.DisponibilidadProfesorDuplicada");
+                if (sqlException != null && sqlException.Number == 52801)
+                {
+                    foreach (SqlError error in sqlException.Errors)
+                    {
+                        Match compromiso = Regex.Match(error.Message ?? string.Empty,
+                            @"Errores\.DisponibilidadProfesorCompromisoComision:\s*(.+?)\s*\(([^()]*)\)", RegexOptions.IgnoreCase);
+                        if (compromiso.Success)
+                            return Texto("Errores.DisponibilidadProfesorCompromisoComision", compromiso.Groups[1].Value.Trim(), compromiso.Groups[2].Value.Trim());
+                    }
+                }
                 contieneSqlException = contieneSqlException || current is SqlException;
 
                 string mensajeTraducido;

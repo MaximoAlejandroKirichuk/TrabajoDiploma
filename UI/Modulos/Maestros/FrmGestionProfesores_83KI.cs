@@ -3,6 +3,7 @@ using BE.Entidades;
 using Service.Entidades;
 using Service.Interfaces;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -18,7 +19,10 @@ namespace UI.Modulos.Maestros
         private Button btnModificar;
         private Button btnCambiarEstado;
         private GroupBox grpDisponibilidad;
-        private DataGridView dgvDisponibilidades;
+        private TreeView tvDisponibilidades;
+        private List<DisponibilidadProfesor_83KI> _disponibilidades = new List<DisponibilidadProfesor_83KI>();
+        private bool _cargandoDisponibilidades;
+        private string _errorDisponibilidad;
         private Label lblDisponibilidadEstado;
         private Label lblDia;
         private Label lblHoraInicio;
@@ -29,6 +33,7 @@ namespace UI.Modulos.Maestros
         private Button btnAgregarDisponibilidad;
         private Button btnModificarDisponibilidad;
         private Button btnCambiarEstadoDisponibilidad;
+        private Button btnHistorialDisponibilidad;
 
         public FrmGestionProfesores_83KI(IGestorProfesor_83KI gestorProfesor)
         {
@@ -67,40 +72,74 @@ namespace UI.Modulos.Maestros
             btnCambiarEstado.Click += btnCambiarEstado_Click;
             Controls.Add(btnCambiarEstado);
 
-            grpDisponibilidad = new GroupBox { Left = 660, Top = 175, Width = 420, Height = 377 };
+            grpDisponibilidad = new GroupBox { Left = 660, Top = 175, Width = 420, Height = 410 };
             Controls.Add(grpDisponibilidad);
 
             lblDisponibilidadEstado = new Label { Left = 14, Top = 28, Width = 390, Height = 24, ForeColor = Color.DarkBlue };
             grpDisponibilidad.Controls.Add(lblDisponibilidadEstado);
 
-            dgvDisponibilidades = new DataGridView { Left = 14, Top = 58, Width = 390, Height = 150, ReadOnly = true, AutoGenerateColumns = true, SelectionMode = DataGridViewSelectionMode.FullRowSelect, MultiSelect = false };
-            dgvDisponibilidades.SelectionChanged += (s, e) => { CargarDisponibilidadSeleccionada(); ActualizarEstadoDisponibilidad(); };
-            grpDisponibilidad.Controls.Add(dgvDisponibilidades);
+            tvDisponibilidades = new TreeView
+            {
+                Name = "tvDisponibilidades",
+                Left = 14, Top = 58, Width = 390, Height = 180,
+                HideSelection = false, FullRowSelect = true, ShowNodeToolTips = true,
+                ItemHeight = 24, Indent = 20, ShowLines = false,
+                Font = new Font("Segoe UI", 9F), AccessibleName = ""
+            };
+            tvDisponibilidades.AfterSelect += (s, e) =>
+            {
+                if (_cargandoDisponibilidades) return;
+                if (e.Node.Tag is DayOfWeek) cmbDia.SelectedIndex = (int)(DayOfWeek)e.Node.Tag;
+                CargarDisponibilidadSeleccionada();
+                ActualizarEstadoDisponibilidad();
+            };
+            grpDisponibilidad.Controls.Add(tvDisponibilidades);
 
-            lblDia = new Label { Left = 14, Top = 224, Width = 110, Height = 24 };
+            lblDia = new Label { Left = 14, Top = 254, Width = 110, Height = 24 };
             grpDisponibilidad.Controls.Add(lblDia);
-            cmbDia = new ComboBox { Left = 135, Top = 220, Width = 170, DropDownStyle = ComboBoxStyle.DropDownList };
+            cmbDia = new ComboBox { Left = 135, Top = 250, Width = 170, DropDownStyle = ComboBoxStyle.DropDownList };
             grpDisponibilidad.Controls.Add(cmbDia);
 
-            lblHoraInicio = new Label { Left = 14, Top = 257, Width = 110, Height = 24 };
+            lblHoraInicio = new Label { Left = 14, Top = 286, Width = 110, Height = 24 };
             grpDisponibilidad.Controls.Add(lblHoraInicio);
-            dtpHoraInicio = new DateTimePicker { Left = 135, Top = 253, Width = 110, Format = DateTimePickerFormat.Time, ShowUpDown = true };
+            dtpHoraInicio = new DateTimePicker { Left = 135, Top = 282, Width = 110, Format = DateTimePickerFormat.Custom, CustomFormat = "HH:mm", ShowUpDown = true };
             grpDisponibilidad.Controls.Add(dtpHoraInicio);
 
-            lblHoraFin = new Label { Left = 14, Top = 290, Width = 110, Height = 24 };
+            lblHoraFin = new Label { Left = 14, Top = 318, Width = 110, Height = 24 };
             grpDisponibilidad.Controls.Add(lblHoraFin);
-            dtpHoraFin = new DateTimePicker { Left = 135, Top = 286, Width = 110, Format = DateTimePickerFormat.Time, ShowUpDown = true };
+            dtpHoraFin = new DateTimePicker { Left = 135, Top = 314, Width = 110, Format = DateTimePickerFormat.Custom, CustomFormat = "HH:mm", ShowUpDown = true };
             grpDisponibilidad.Controls.Add(dtpHoraFin);
 
-            btnAgregarDisponibilidad = new Button { Left = 14, Top = 327, Width = 115, Height = 32 };
+            btnAgregarDisponibilidad = new Button { Left = 14, Top = 354, Width = 115, Height = 32 };
             btnAgregarDisponibilidad.Click += btnAgregarDisponibilidad_Click;
             grpDisponibilidad.Controls.Add(btnAgregarDisponibilidad);
-            btnModificarDisponibilidad = new Button { Left = 141, Top = 327, Width = 115, Height = 32 };
+            btnModificarDisponibilidad = new Button { Left = 141, Top = 354, Width = 115, Height = 32 };
             btnModificarDisponibilidad.Click += btnModificarDisponibilidad_Click;
             grpDisponibilidad.Controls.Add(btnModificarDisponibilidad);
-            btnCambiarEstadoDisponibilidad = new Button { Left = 268, Top = 327, Width = 136, Height = 32 };
+            btnCambiarEstadoDisponibilidad = new Button { Left = 268, Top = 354, Width = 136, Height = 32 };
             btnCambiarEstadoDisponibilidad.Click += btnCambiarEstadoDisponibilidad_Click;
             grpDisponibilidad.Controls.Add(btnCambiarEstadoDisponibilidad);
+            btnHistorialDisponibilidad = new Button
+            {
+                Name = "btnHistorialDisponibilidad",
+                Left = 850,
+                Top = 20,
+                Width = 230,
+                Height = 36
+            };
+            btnHistorialDisponibilidad.Click += (s, e) =>
+            {
+                var profesor = ProfesorSeleccionado();
+                if (profesor == null) return;
+                using (var dialog = new FrmHistorialDisponibilidadProfesor_83KI(
+                    ServiceFactory_83KI.CrearDisponibilidadProfesorHistorialBLL(),
+                    profesor.IdProfesor, DisponibilidadSeleccionada()?.IdDisponibilidadProfesor))
+                {
+                    dialog.ShowDialog(this);
+                }
+                CargarDisponibilidadesProfesor();
+            };
+            Controls.Add(btnHistorialDisponibilidad);
 
             CargarDiasDisponibilidad();
             dtpHoraInicio.Value = DateTime.Today.AddHours(8);
@@ -129,14 +168,50 @@ namespace UI.Modulos.Maestros
             if (dgvProfesores.Columns["EstadoActivo"] != null) dgvProfesores.Columns["EstadoActivo"].HeaderText = IdiomaUiHelper_83KI.Texto("FrmGestionProfesores.Activo");
         }
 
-        private void ConfigurarGrillaDisponibilidades()
+        private string TextoEstadoDisponibilidad(DisponibilidadProfesor_83KI disponibilidad)
         {
-            if (dgvDisponibilidades.Columns["Original"] != null) dgvDisponibilidades.Columns["Original"].Visible = false;
-            if (dgvDisponibilidades.Columns["Id"] != null) dgvDisponibilidades.Columns["Id"].HeaderText = "Id";
-            if (dgvDisponibilidades.Columns["Dia"] != null) dgvDisponibilidades.Columns["Dia"].HeaderText = IdiomaUiHelper_83KI.Texto("FrmGestionProfesores.DisponibilidadDia");
-            if (dgvDisponibilidades.Columns["HoraInicio"] != null) dgvDisponibilidades.Columns["HoraInicio"].HeaderText = IdiomaUiHelper_83KI.Texto("FrmGestionProfesores.DisponibilidadHoraInicio");
-            if (dgvDisponibilidades.Columns["HoraFin"] != null) dgvDisponibilidades.Columns["HoraFin"].HeaderText = IdiomaUiHelper_83KI.Texto("FrmGestionProfesores.DisponibilidadHoraFin");
-            if (dgvDisponibilidades.Columns["Activa"] != null) dgvDisponibilidades.Columns["Activa"].HeaderText = IdiomaUiHelper_83KI.Texto("FrmGestionProfesores.DisponibilidadActiva");
+            return IdiomaUiHelper_83KI.Texto(disponibilidad.EstadoActivo
+                ? "FrmGestionProfesores.DisponibilidadHabilitada"
+                : "FrmGestionProfesores.DisponibilidadDeshabilitada");
+        }
+
+        private void MostrarArbolDisponibilidades(int? idSeleccionado)
+        {
+            _cargandoDisponibilidades = true;
+            tvDisponibilidades.BeginUpdate();
+            try
+            {
+                tvDisponibilidades.Nodes.Clear();
+                TreeNode seleccion = null;
+                TreeNode primera = null;
+                foreach (var grupo in _disponibilidades.GroupBy(d => d.DiaSemana).OrderBy(g => ((int)g.Key + 6) % 7))
+                {
+                    var dia = new TreeNode(TraducirDia(grupo.Key) + " (" + grupo.Count() + ")") { Tag = grupo.Key };
+                    foreach (var disponibilidad in grupo.OrderByDescending(d => d.EstadoActivo).ThenBy(d => d.HoraInicio).ThenBy(d => d.HoraFin).ThenBy(d => d.IdDisponibilidadProfesor))
+                    {
+                        string estado = TextoEstadoDisponibilidad(disponibilidad);
+                        var franja = new TreeNode(disponibilidad.HoraInicio.ToString(@"hh\:mm") + " – " + disponibilidad.HoraFin.ToString(@"hh\:mm") + " · " + estado)
+                        {
+                            Tag = disponibilidad,
+                            ForeColor = disponibilidad.EstadoActivo ? SystemColors.WindowText : SystemColors.GrayText,
+                            ToolTipText = string.Format(IdiomaUiHelper_83KI.Texto("FrmGestionProfesores.DisponibilidadIdentificada"), disponibilidad.IdDisponibilidadProfesor, estado)
+                        };
+                        dia.Nodes.Add(franja);
+                        if (primera == null) primera = franja;
+                        if (disponibilidad.IdDisponibilidadProfesor == idSeleccionado) seleccion = franja;
+                    }
+                    tvDisponibilidades.Nodes.Add(dia);
+                    dia.Expand();
+                }
+                tvDisponibilidades.SelectedNode = seleccion ?? primera;
+                if (tvDisponibilidades.SelectedNode != null) tvDisponibilidades.SelectedNode.EnsureVisible();
+            }
+            finally
+            {
+                tvDisponibilidades.EndUpdate();
+                _cargandoDisponibilidades = false;
+            }
+            CargarDisponibilidadSeleccionada();
         }
 
         private void ActualizarAccionEstado()
@@ -166,7 +241,10 @@ namespace UI.Modulos.Maestros
         private void CargarDisponibilidadesProfesor()
         {
             var profesor = ProfesorSeleccionado();
-            dgvDisponibilidades.DataSource = null;
+            int? idSeleccionado = DisponibilidadSeleccionada()?.IdDisponibilidadProfesor;
+            _errorDisponibilidad = null;
+            _disponibilidades.Clear();
+            MostrarArbolDisponibilidades(null);
 
             if (profesor == null)
             {
@@ -177,16 +255,12 @@ namespace UI.Modulos.Maestros
 
             try
             {
-                var disponibilidades = _gestorProfesor.ObtenerDisponibilidades(profesor.IdProfesor)
-                    .Select(d => new DisponibilidadProfesorVista_83KI(d, TraducirDia(d.DiaSemana)))
-                    .ToList();
-                dgvDisponibilidades.DataSource = disponibilidades;
-                ConfigurarGrillaDisponibilidades();
-                lblDisponibilidadEstado.Text = disponibilidades.Count == 0 ? IdiomaUiHelper_83KI.Texto("FrmGestionProfesores.DisponibilidadVacia") : string.Empty;
+                _disponibilidades = _gestorProfesor.ObtenerDisponibilidades(profesor.IdProfesor).ToList();
+                MostrarArbolDisponibilidades(idSeleccionado);
             }
             catch (Exception ex)
             {
-                lblDisponibilidadEstado.Text = IdiomaUiHelper_83KI.TraducirExcepcion(ex);
+                _errorDisponibilidad = IdiomaUiHelper_83KI.TraducirExcepcion(ex);
             }
             finally
             {
@@ -213,11 +287,19 @@ namespace UI.Modulos.Maestros
             btnAgregarDisponibilidad.Enabled = profesorSeleccionado && puedeModificar;
             btnModificarDisponibilidad.Enabled = profesorSeleccionado && puedeModificar && disponibilidadSeleccionada;
             btnCambiarEstadoDisponibilidad.Enabled = profesorSeleccionado && puedeModificar && disponibilidadSeleccionada;
+            btnHistorialDisponibilidad.Enabled = profesorSeleccionado;
+            btnHistorialDisponibilidad.Visible = PermisosUi_83KI.TieneAlguno(PermisoSistema_83KI.VerProfesores, PermisoSistema_83KI.GestionProfesores);
 
             var disponibilidad = DisponibilidadSeleccionada();
             btnCambiarEstadoDisponibilidad.Text = disponibilidad == null || disponibilidad.EstadoActivo
                 ? IdiomaUiHelper_83KI.Texto("FrmGestionProfesores.DisponibilidadDesactivar")
                 : IdiomaUiHelper_83KI.Texto("FrmGestionProfesores.DisponibilidadActivar");
+            lblDisponibilidadEstado.Text = _errorDisponibilidad ?? (!profesorSeleccionado
+                ? IdiomaUiHelper_83KI.Texto("FrmGestionProfesores.DisponibilidadSinProfesor")
+                : disponibilidad != null
+                    ? string.Format(IdiomaUiHelper_83KI.Texto("FrmGestionProfesores.DisponibilidadIdentificada"), disponibilidad.IdDisponibilidadProfesor, TextoEstadoDisponibilidad(disponibilidad))
+                    : IdiomaUiHelper_83KI.Texto(_disponibilidades.Count == 0
+                        ? "FrmGestionProfesores.DisponibilidadVacia" : "FrmGestionProfesores.DisponibilidadElegirFranja"));
         }
 
         private void btnCrear_Click(object sender, EventArgs e)
@@ -329,9 +411,7 @@ namespace UI.Modulos.Maestros
 
         private DisponibilidadProfesor_83KI DisponibilidadSeleccionada()
         {
-            if (dgvDisponibilidades.SelectedRows.Count == 0) return null;
-            var vista = dgvDisponibilidades.SelectedRows[0].DataBoundItem as DisponibilidadProfesorVista_83KI;
-            return vista == null ? null : vista.Original;
+            return tvDisponibilidades.SelectedNode == null ? null : tvDisponibilidades.SelectedNode.Tag as DisponibilidadProfesor_83KI;
         }
 
         private DayOfWeek DiaSeleccionadoDisponibilidad
@@ -373,9 +453,11 @@ namespace UI.Modulos.Maestros
             lblHoraFin.Text = IdiomaUiHelper_83KI.Texto("FrmGestionProfesores.DisponibilidadHoraFin");
             btnAgregarDisponibilidad.Text = IdiomaUiHelper_83KI.Texto("Comun.Agregar");
             btnModificarDisponibilidad.Text = IdiomaUiHelper_83KI.Texto("Comun.Guardar");
+            btnHistorialDisponibilidad.Text = IdiomaUiHelper_83KI.Texto("FrmHistorialDisponibilidad.Titulo");
             CargarDiasDisponibilidad();
             ConfigurarGrilla();
-            ConfigurarGrillaDisponibilidades();
+            tvDisponibilidades.AccessibleName = grpDisponibilidad.Text;
+            MostrarArbolDisponibilidades(DisponibilidadSeleccionada()?.IdDisponibilidadProfesor);
             ActualizarAccionEstado();
             ActualizarEstadoDisponibilidad();
             if (ProfesorSeleccionado() == null) lblDisponibilidadEstado.Text = IdiomaUiHelper_83KI.Texto("FrmGestionProfesores.DisponibilidadSinProfesor");
@@ -387,20 +469,5 @@ namespace UI.Modulos.Maestros
             base.OnFormClosed(e);
         }
 
-        private sealed class DisponibilidadProfesorVista_83KI
-        {
-            public DisponibilidadProfesorVista_83KI(DisponibilidadProfesor_83KI original, string dia)
-            {
-                Original = original;
-                Dia = dia;
-            }
-
-            public DisponibilidadProfesor_83KI Original { get; private set; }
-            public int Id { get { return Original.IdDisponibilidadProfesor; } }
-            public string Dia { get; private set; }
-            public string HoraInicio { get { return Original.HoraInicio.ToString(@"hh\:mm"); } }
-            public string HoraFin { get { return Original.HoraFin.ToString(@"hh\:mm"); } }
-            public bool Activa { get { return Original.EstadoActivo; } }
-        }
     }
 }
