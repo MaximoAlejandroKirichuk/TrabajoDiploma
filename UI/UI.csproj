@@ -367,6 +367,10 @@
       <Link>Scripts\Sql\pagos-cuotas\001_permiso.sql</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="..\Scripts\Sql\disponibilidad-profesor\001_auditoria.sql">
+      <Link>Scripts\Sql\disponibilidad-profesor\001_auditoria.sql</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="..\Scripts\Sql\cun03\001_migracion.sql">
       <Link>Scripts\Sql\cun03\001_migracion.sql</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

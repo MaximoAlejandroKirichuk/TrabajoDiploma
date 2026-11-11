@@ -186,7 +186,7 @@ namespace DAL
                 foreach (string relative in new[] { "financiacion-cuotas/001_modelo.sql", "cun03/001_migracion.sql",
                     "cun05/001_migracion.sql", "cun06/001_migracion.sql", "reporte-ocupacion-comisiones/001_migracion.sql",
                     "cun07/001_migracion.sql", "financiacion-cuotas/002_completar_inscripciones.sql", "cun08/001_migracion.sql", "cun09/001_migracion.sql", "cun08/006_evaluaciones.sql",
-                    "reporte-morosidad/001_migracion.sql", "pagos-cuotas/001_permiso.sql" })
+                    "reporte-morosidad/001_migracion.sql", "pagos-cuotas/001_permiso.sql", "disponibilidad-profesor/001_auditoria.sql" })
                 {
                     string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Scripts", "Sql", relative.Replace('/', Path.DirectorySeparatorChar));
                     if (!File.Exists(path)) return (false, "No se encontró el script de instalación: " + path);
