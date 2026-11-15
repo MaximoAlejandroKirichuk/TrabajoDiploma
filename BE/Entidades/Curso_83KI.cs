@@ -10,6 +10,7 @@ namespace BE.Entidades
         public int CargaHoraria { get; private set; }
         public bool EstadoActivo { get; private set; }
         public string DVH { get; private set; }
+        public int? CupoMinimoReferencia { get; private set; }
 
         private Curso_83KI() { }
 
@@ -25,12 +26,13 @@ namespace BE.Entidades
             };
         }
 
-        public static Curso_83KI ReconstruirDesdePersistencia(int idCurso, string nombre, string descripcion, int cargaHoraria, bool estadoActivo, string dvh)
+        public static Curso_83KI ReconstruirDesdePersistencia(int idCurso, string nombre, string descripcion, int cargaHoraria, bool estadoActivo, string dvh, int? cupoMinimoReferencia = null)
         {
             var curso = CrearNuevo(nombre, descripcion, cargaHoraria);
             curso.IdCurso = idCurso;
             curso.EstadoActivo = estadoActivo;
             curso.DVH = dvh ?? string.Empty;
+            curso.CupoMinimoReferencia = cupoMinimoReferencia;
             return curso;
         }
 

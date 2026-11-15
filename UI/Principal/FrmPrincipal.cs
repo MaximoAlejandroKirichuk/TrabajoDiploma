@@ -31,10 +31,24 @@ namespace UI
         private bool _logoutConfirmado;
         private readonly Timer _integrityModeTimer;
         private bool _integrityModeActive;
+        private readonly ToolStripMenuItem _reporteInteligente = new ToolStripMenuItem();
+        private readonly ToolStripMenuItem _gestionRecorridos = new ToolStripMenuItem();
 
         public FrmPrincipal(IGestorUsuario_83KI gestorUsuario, IGestorRol_83KI gestorRol)
         {
             InitializeComponent();
+            reportesToolStripMenuItem.DropDownItems.Add(_reporteInteligente);
+            maestrosToolStripMenuItem.DropDownItems.Add(_gestionRecorridos);
+            _reporteInteligente.Click += (s, e) =>
+            {
+                if (!PermisosUi_83KI.Tiene(PermisoSistema_83KI.VerReporteInteligente)) return;
+                using (var form = new FrmReporteInteligente_83KI(ServiceFactory_83KI.CrearReporteInteligente())) form.ShowDialog(this);
+            };
+            _gestionRecorridos.Click += (s, e) =>
+            {
+                if (!PermisosUi_83KI.Tiene(PermisoSistema_83KI.GestionRecorridos)) return;
+                using (var form = new FrmGestionRecorridos_83KI(ServiceFactory_83KI.CrearGestorRecorridos())) form.ShowDialog(this);
+            };
             _gestorUsuario = gestorUsuario;
             _gestorRol = gestorRol;
             _gestorIdioma = ServiceFactory_83KI.GetGestorIdioma();
@@ -130,8 +144,10 @@ namespace UI
             cobrosMorosidadActasToolStripMenuItem.Visible = puedeRegistrarPagoInscripcion || puedeRegistrarResultados || puedeVerEvaluaciones || puedeCertificar || puedeVerReporteMorosidad;
             bool puedeVerReporteOcupacion = PermisosUi_83KI.Tiene(PermisoSistema_83KI.VerReporteOcupacionComisiones);
             reporteOcupacionComisionesToolStripMenuItem.Visible = puedeVerReporteOcupacion;
-            reportesToolStripMenuItem.Visible = puedeVerReporteOcupacion;
-            maestrosToolStripMenuItem.Visible = PermisosUi_83KI.TienePermisoMaestros();
+            _reporteInteligente.Visible = PermisosUi_83KI.Tiene(PermisoSistema_83KI.VerReporteInteligente);
+            _gestionRecorridos.Visible = PermisosUi_83KI.Tiene(PermisoSistema_83KI.GestionRecorridos);
+            reportesToolStripMenuItem.Visible = !modoRecuperacion && (puedeVerReporteOcupacion || _reporteInteligente.Visible);
+            maestrosToolStripMenuItem.Visible = !modoRecuperacion && (PermisosUi_83KI.TienePermisoMaestros() || _gestionRecorridos.Visible);
         }
 
         public void ActualizarIdioma(IIdioma idioma)
@@ -165,6 +181,8 @@ namespace UI
             cobrosMorosidadActasToolStripMenuItem.Text = Texto("FrmPrincipal.CobrosMorosidadActas");
             reporteMorosidadToolStripMenuItem.Text = Texto("FrmPrincipal.ReporteMorosidad");
             reportesToolStripMenuItem.Text = Texto("FrmPrincipal.Reportes");
+            _reporteInteligente.Text = Texto("Inteligente.Titulo");
+            _gestionRecorridos.Text = Texto("Recorridos.Titulo");
             reporteOcupacionComisionesToolStripMenuItem.Text = Texto("FrmPrincipal.ReporteOcupacionComisiones");
             reToolStripMenuItem.Text = Texto("FrmPrincipal.Ayuda");
             menuIdioma.Text = Texto("FrmPrincipal.Idioma");

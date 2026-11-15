@@ -94,6 +94,8 @@ namespace Service.Entidades
         VerEvaluaciones = 73,
         ModificarEvaluaciones = 74,
         VerReporteMorosidad = 75,
-        RegistrarPagoCuotas = 76
+        RegistrarPagoCuotas = 76,
+        VerReporteInteligente = 77,
+        GestionRecorridos = 78
     }
 }

@@ -61,6 +61,8 @@ namespace UI
 
         private static readonly TemaAyuda_83KI[] Temas =
         {
+            new TemaAyuda_83KI("FrmReporteInteligente_83KI", "FrmPrincipal.Reportes", "Inteligente.Titulo", PermisoSistema_83KI.VerReporteInteligente),
+            new TemaAyuda_83KI("FrmGestionRecorridos_83KI", "FrmPrincipal.Maestros", "Recorridos.Titulo", PermisoSistema_83KI.GestionRecorridos),
             new TemaAyuda_83KI("Login", "Ayuda.General", "Login.Titulo"),
             new TemaAyuda_83KI("FrmConfiguracionBD_83KI", "Ayuda.General", "Ayuda.Configuracion"),
             new TemaAyuda_83KI("FrmPrincipal", "Ayuda.General", "FrmPrincipal.Titulo", PermisoSistema_83KI.Ayuda),

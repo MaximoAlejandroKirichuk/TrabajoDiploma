@@ -49,6 +49,7 @@ namespace DAL
                 { "FamiliaFamilia",  new[] { "CodigoFamiliaPadre", "CodigoFamiliaHija" } },
                 { "Profesor",        new[] { "IdProfesor" } },
                 { "Curso",           new[] { "IdCurso" } },
+                { "RecorridoCurso", new[] { "IdRecorridoCurso" } },
                 { "CursoProfesor",   new[] { "IdCurso", "IdProfesor" } },
                 { "Comision",        new[] { "IdComision" } },
                 { "DisponibilidadProfesor", new[] { "IdDisponibilidadProfesor" } },

@@ -62,7 +62,10 @@ namespace Service.DTOs
                     "Apellido", "DNI", "Email", "EstadoActivo", "IdProfesor", "Nombre"),
 
                 new IntegridadTablaConfig_83KI("Curso",
-                    "CargaHoraria", "Descripcion", "EstadoActivo", "IdCurso", "Nombre"),
+                    "CargaHoraria", "CupoMinimoReferencia", "Descripcion", "EstadoActivo", "IdCurso", "Nombre"),
+
+                new IntegridadTablaConfig_83KI("RecorridoCurso",
+                    "IdCursoPrevio", "IdCursoRecomendado", "IdRecorridoCurso", "Orden"),
 
                 new IntegridadTablaConfig_83KI("CursoProfesor",
                     "EstadoActivo", "IdCurso", "IdProfesor"),

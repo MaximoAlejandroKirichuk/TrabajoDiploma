@@ -16,17 +16,17 @@ namespace DAL
 
         public IEnumerable<Curso_83KI> ObtenerTodos()
         {
-            return MapearLista(_accesoDAL.Leer("SELECT IdCurso, Nombre, Descripcion, CargaHoraria, EstadoActivo, DVH FROM Curso ORDER BY Nombre"));
+            return MapearLista(_accesoDAL.Leer("SELECT IdCurso, Nombre, Descripcion, CargaHoraria, EstadoActivo, DVH, CupoMinimoReferencia FROM Curso ORDER BY Nombre"));
         }
 
         public IEnumerable<Curso_83KI> ObtenerActivos()
         {
-            return MapearLista(_accesoDAL.Leer("SELECT IdCurso, Nombre, Descripcion, CargaHoraria, EstadoActivo, DVH FROM Curso WHERE EstadoActivo = 1 ORDER BY Nombre"));
+            return MapearLista(_accesoDAL.Leer("SELECT IdCurso, Nombre, Descripcion, CargaHoraria, EstadoActivo, DVH, CupoMinimoReferencia FROM Curso WHERE EstadoActivo = 1 ORDER BY Nombre"));
         }
 
         public Curso_83KI ObtenerPorId(int idCurso)
         {
-            var ds = _accesoDAL.Leer("SELECT IdCurso, Nombre, Descripcion, CargaHoraria, EstadoActivo, DVH FROM Curso WHERE IdCurso = @id", new List<SqlParameter> { new SqlParameter("@id", idCurso) });
+            var ds = _accesoDAL.Leer("SELECT IdCurso, Nombre, Descripcion, CargaHoraria, EstadoActivo, DVH, CupoMinimoReferencia FROM Curso WHERE IdCurso = @id", new List<SqlParameter> { new SqlParameter("@id", idCurso) });
             if (ds == null || ds.Tables.Count == 0 || ds.Tables[0].Rows.Count == 0) return null;
             return Mapear(ds.Tables[0].Rows[0]);
         }
@@ -87,7 +87,7 @@ namespace DAL
 
         private Curso_83KI Mapear(DataRow row)
         {
-            return Curso_83KI.ReconstruirDesdePersistencia(Convert.ToInt32(row["IdCurso"]), row["Nombre"].ToString(), row["Descripcion"].ToString(), Convert.ToInt32(row["CargaHoraria"]), Convert.ToBoolean(row["EstadoActivo"]), row["DVH"].ToString());
+            return Curso_83KI.ReconstruirDesdePersistencia(Convert.ToInt32(row["IdCurso"]), row["Nombre"].ToString(), row["Descripcion"].ToString(), Convert.ToInt32(row["CargaHoraria"]), Convert.ToBoolean(row["EstadoActivo"]), row["DVH"].ToString(), row.IsNull("CupoMinimoReferencia") ? (int?)null : Convert.ToInt32(row["CupoMinimoReferencia"]));
         }
 
         private void RecomputarIntegridadCurso(int idCurso, SqlConnection conn, SqlTransaction tran)

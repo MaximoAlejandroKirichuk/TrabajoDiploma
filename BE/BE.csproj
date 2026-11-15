@@ -31,6 +31,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Entidades\RecorridoCurso_83KI.cs" />
+    <Compile Include="DTOs\Recorridos\RecorridoListado_83KI.cs" />
+    <Compile Include="DTOs\Reportes\ReporteInteligente_83KI.cs" />
     <Compile Include="Entidades\DisponibilidadProfesorHistorial_83KI.cs" />
     <Compile Include="DTOs\Disponibilidades\FiltroDisponibilidadProfesorHistorial_83KI.cs" />
     <Compile Include="DTOs\Disponibilidades\DisponibilidadProfesorHistorial_83KI.cs" />

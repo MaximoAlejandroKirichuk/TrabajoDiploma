@@ -31,6 +31,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Negocio\KI68ReporteInteligenteBLL.cs" />
+    <Compile Include="Negocio\KI68RecorridoCursoBLL.cs" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />

@@ -231,7 +231,8 @@ namespace UI
                 return true;
             }
 
-            if (!mensaje.StartsWith("Errores.", StringComparison.OrdinalIgnoreCase))
+            if (!mensaje.StartsWith("Errores.", StringComparison.OrdinalIgnoreCase)
+                && !mensaje.StartsWith("Inteligente.", StringComparison.OrdinalIgnoreCase))
             {
                 return false;
             }

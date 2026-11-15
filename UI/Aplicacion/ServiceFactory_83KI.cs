@@ -26,6 +26,16 @@ namespace UI
             return new KI68DisponibilidadProfesorHistorialBLL(new KI68DisponibilidadProfesorDAL(), SessionManager_83KI.Instancia, GetBitacoraManager());
         }
 
+        public static IReporteInteligenteBLL_83KI CrearReporteInteligente()
+        {
+            return new KI68ReporteInteligenteBLL(new ReporteInteligenteDAL_83KI(), SessionManager_83KI.Instancia);
+        }
+
+        public static IRecorridoCursoBLL_83KI CrearGestorRecorridos()
+        {
+            return new KI68RecorridoCursoBLL(new RecorridoCursoDAL_83KI(), SessionManager_83KI.Instancia, GetBitacoraManager());
+        }
+
         public static IGestorUsuario_83KI GetGestorUsuario()
         {
             if (_gestorUsuario == null)
