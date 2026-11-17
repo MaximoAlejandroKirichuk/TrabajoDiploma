@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace UI.Modulos.Reportes
@@ -20,12 +21,16 @@ namespace UI.Modulos.Reportes
         private readonly ComboBox _condicion = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 180 };
         private readonly TabControl _tabs = new TabControl { Dock = DockStyle.Fill };
         private readonly Label _nota = new Label { AutoSize = false, Dock = DockStyle.Top, Height = 58, Padding = new Padding(8) };
+        private readonly Button _exportarPdf = new Button { AutoSize = true, Enabled = false };
         private readonly Dictionary<string, Control> _textos = new Dictionary<string, Control>();
         private readonly DataGridView _demanda = Grilla(), _ocupacion = Grilla(), _oferta = Grilla(), _candidatos = Grilla();
         private readonly DataGridView _cumplimiento = Grilla();
         private ReporteInteligente_83KI _reporte;
         private Exception _errorConsulta;
         private List<Curso_83KI> _cursos = new List<Curso_83KI>();
+        private FiltroReporteInteligente_83KI _filtroAplicado;
+        private string _cursoAplicado;
+        private bool _exportandoPdf;
 
         public FrmReporteInteligente_83KI(IReporteInteligenteBLL_83KI bll)
         {
@@ -39,6 +44,8 @@ namespace UI.Modulos.Reportes
             AgregarEtiqueta(filtros, "Inteligente.Curso"); filtros.Controls.Add(_curso);
             var consultar = new Button { AutoSize = true }; _textos.Add("Comun.Actualizar", consultar); filtros.Controls.Add(consultar);
             consultar.Click += (s,e) => Cargar();
+            _textos.Add("Inteligente.ExportarPdf", _exportarPdf); filtros.Controls.Add(_exportarPdf);
+            _exportarPdf.Click += async (s,e) => await ExportarPdfAsync();
             AgregarTab("Inteligente.Demanda", _demanda); AgregarTab("Inteligente.Ocupacion", _ocupacion);
             AgregarTab("Inteligente.Oferta", _oferta);
             AgregarTab("Inteligente.Cumplimiento", _cumplimiento);
@@ -82,24 +89,65 @@ namespace UI.Modulos.Reportes
             try
             {
                 int id = _curso.SelectedValue is int ? (int)_curso.SelectedValue : 0;
-                _reporte = _bll.Generar(new FiltroReporteInteligente_83KI { Desde = _desde.Checked ? _desde.Value.Date : (DateTime?)null,
-                    Hasta = _hasta.Checked ? _hasta.Value.Date : (DateTime?)null, IdCurso = id > 0 ? id : (int?)null });
+                var filtro = new FiltroReporteInteligente_83KI { Desde = _desde.Checked ? _desde.Value.Date : (DateTime?)null,
+                    Hasta = _hasta.Checked ? _hasta.Value.Date : (DateTime?)null, IdCurso = id > 0 ? id : (int?)null };
+                _reporte = _bll.Generar(filtro);
+                _filtroAplicado = filtro;
+                _cursoAplicado = _curso.Text;
                 _demanda.DataSource = _reporte.Demanda; _ocupacion.DataSource = _reporte.OcupacionHistorica;
                 _cumplimiento.DataSource = _reporte.Cumplimiento;
                 _oferta.DataSource = _reporte.OfertaActual; MostrarCandidatos(); TraducirGrillas();
                 _errorConsulta = null;
                 ActualizarNota();
+                _exportarPdf.Enabled = !_exportandoPdf;
             }
             catch (Exception ex)
             {
                 _errorConsulta = ex;
                 _reporte = null;
+                _exportarPdf.Enabled = false;
                 foreach (var grid in new[] { _demanda, _ocupacion, _oferta, _candidatos, _cumplimiento })
                 {
                     grid.DataSource = null;
                     grid.Rows.Clear();
                 }
                 ActualizarNota();
+            }
+        }
+        private async Task ExportarPdfAsync()
+        {
+            if (_reporte == null || _exportandoPdf) return;
+            try
+            {
+                if (!PermisosUi_83KI.Tiene(PermisoSistema_83KI.VerReporteInteligente))
+                    throw new InvalidOperationException("Errores.SinPermisos");
+                using (var dialogo = new SaveFileDialog { Title = T("Inteligente.ExportarPdf"),
+                    Filter = "PDF (*.pdf)|*.pdf", DefaultExt = "pdf", AddExtension = true,
+                    FileName = "ReporteInteligente_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".pdf" })
+                {
+                    if (dialogo.ShowDialog(this) != DialogResult.OK) return;
+                    string filtros = T("Inteligente.Desde") + ": " + (_filtroAplicado.Desde?.ToShortDateString() ?? T("Comun.Todos"))
+                        + " | " + T("Inteligente.Hasta") + ": " + (_filtroAplicado.Hasta?.ToShortDateString() ?? T("Comun.Todos"))
+                        + " | " + T("Inteligente.Curso") + ": " + (_filtroAplicado.IdCurso.HasValue ? _cursoAplicado : T("Comun.Todos"))
+                        + " | " + T("Inteligente.Censo") + ": " + _condicion.Text;
+                    _exportandoPdf = true;
+                    _exportarPdf.Enabled = false;
+                    UseWaitCursor = true;
+                    await new ReporteInteligentePdfExporter_83KI().ExportarAsync(dialogo.FileName, Text,
+                        filtros, _nota.Text, T("Inteligente.SinDatosPdf"), _tabs.TabPages.Cast<TabPage>().ToArray());
+                    // Si la pantalla se cerró mientras se generaba el PDF, ya no hay ventana sobre la cual avisar.
+                    if (!IsDisposed) IdiomaUiHelper_83KI.MostrarInformacion(this, "Inteligente.PdfExportado", "Comun.Informacion");
+                }
+            }
+            catch (Exception ex) { if (!IsDisposed) MostrarError(ex); }
+            finally
+            {
+                _exportandoPdf = false;
+                if (!IsDisposed)
+                {
+                    UseWaitCursor = false;
+                    _exportarPdf.Enabled = _reporte != null;
+                }
             }
         }
         private void ActualizarNota()

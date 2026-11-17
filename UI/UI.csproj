@@ -34,6 +34,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Modulos\Reportes\ReporteInteligentePdfExporter_83KI.cs" />
     <Compile Include="Modulos\Reportes\FrmReporteInteligente_83KI.cs">
       <SubType>Form</SubType>
     </Compile>
