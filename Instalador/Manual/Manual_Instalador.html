@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Manual del instalador - Instituto Visión en Acción</title>
+<!--
+  Fuente del manual. Para regenerar el PDF despues de editar (desde la raiz del repositorio):
+    powershell -ExecutionPolicy Bypass -File Instalador\Manual\GenerarManualPdf.ps1
+
+  Para agregar una captura de pantalla, guardar la imagen en esta carpeta y pegar donde corresponda:
+    <figure><img src="captura-01.png" alt="Descripcion"><figcaption>Figura 1 - Descripcion</figcaption></figure>
+  Los lugares sugeridos estan marcados con comentarios "CAPTURA".
+-->
+<style>
+  @page { size: A4; margin: 22mm 20mm 20mm 20mm; }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", Arial, sans-serif; font-size: 10.5pt; line-height: 1.5; color: #1c1c1c; margin: 0; }
+  h1 { font-size: 20pt; margin: 0 0 4pt 0; color: #14365c; }
+  h2 { font-size: 14pt; color: #14365c; border-bottom: 1.5pt solid #14365c; padding-bottom: 3pt; margin: 22pt 0 8pt 0; page-break-after: avoid; }
+  h3 { font-size: 11.5pt; color: #14365c; margin: 14pt 0 4pt 0; page-break-after: avoid; }
+  p { margin: 0 0 7pt 0; }
+  ul, ol { margin: 0 0 8pt 0; padding-left: 20pt; }
+  li { margin-bottom: 3pt; }
+  code, pre { font-family: Consolas, "Courier New", monospace; font-size: 9pt; }
+  code { background: #eef1f5; padding: 0 3pt; border-radius: 2pt; }
+  pre { background: #eef1f5; border-left: 3pt solid #14365c; padding: 7pt 9pt; margin: 4pt 0 9pt 0; white-space: pre-wrap; word-break: break-all; page-break-inside: avoid; }
+  table { border-collapse: collapse; width: 100%; margin: 4pt 0 10pt 0; page-break-inside: avoid; }
+  th, td { border: 0.75pt solid #9aa5b1; padding: 4pt 6pt; text-align: left; vertical-align: top; }
+  th { background: #14365c; color: #fff; font-weight: 600; }
+  tr:nth-child(even) td { background: #f5f7fa; }
+  .portada { height: 240mm; display: flex; flex-direction: column; justify-content: center; page-break-after: always; }
+  .portada h1 { font-size: 30pt; }
+  .portada .sub { font-size: 15pt; color: #44546a; margin-bottom: 26pt; }
+  .portada table { width: 70%; }
+  .portada th { width: 35%; }
+  .nota { border: 0.75pt solid #c9a227; background: #fff8e1; padding: 6pt 9pt; margin: 6pt 0 10pt 0; page-break-inside: avoid; }
+  .nota strong { color: #7a5c00; }
+  .indice li { margin-bottom: 2pt; }
+  figure { margin: 8pt 0 12pt 0; text-align: center; page-break-inside: avoid; }
+  figure img { max-width: 100%; border: 0.75pt solid #9aa5b1; }
+  figcaption { font-size: 9pt; color: #44546a; margin-top: 3pt; }
+</style>
+</head>
+<body>
+
+<div class="portada">
+  <h1>Instituto Visión en Acción</h1>
+  <div class="sub">Manual del instalador y reinstalador</div>
+  <table>
+    <tr><th>Programa</th><td>Setup_InstitutoVisionEnAccion.exe</td></tr>
+    <tr><th>Versión del instalador</th><td>Segunda versión (Inno Setup 6)</td></tr>
+    <tr><th>Versión del sistema</th><td>1.0.0</td></tr>
+    <tr><th>Fecha</th><td>Noviembre de 2026</td></tr>
+  </table>
+</div>
+
+<h2>Contenido</h2>
+<ol class="indice">
+  <li>Introducción</li>
+  <li>Requisitos</li>
+  <li>Qué instala y dónde</li>
+  <li>Instalación por primera vez</li>
+  <li>Actualización desde la primera versión del instalador</li>
+  <li>Reinstalación: actualizar o restaurar la base</li>
+  <li>Cómo se prepara y se protege la base de datos</li>
+  <li>Desinstalación</li>
+  <li>Instalación desatendida</li>
+  <li>Solución de problemas</li>
+  <li>Pruebas del instalador</li>
+  <li>Cómo generar el instalador</li>
+</ol>
+
+<h2>1. Introducción</h2>
+<p>Este documento explica cómo usar <code>Setup_InstitutoVisionEnAccion.exe</code>, la segunda versión del
+instalador del sistema Instituto Visión en Acción. La primera versión era un paquete MSI generado con el
+proyecto de instalación de Visual Studio (<code>Solucion_83KI</code>), que solo copiaba los archivos del programa.</p>
+<p>La segunda versión es un único programa que cumple dos funciones:</p>
+<ul>
+  <li><strong>Instalador (primera vez):</strong> copia la aplicación, prepara la base de datos con su esquema y
+      sus datos iniciales, y deja la conexión configurada.</li>
+  <li><strong>Reinstalador (ya instalado):</strong> detecta la instalación anterior, hace una copia de seguridad
+      de la base y permite <em>actualizarla conservando los datos</em> o <em>restaurarla</em> desde una copia anterior.</li>
+</ul>
+<p>El mismo instalador se puede ejecutar todas las veces que haga falta: nunca duplica ni pisa los datos
+existentes.</p>
+
+<h2>2. Requisitos</h2>
+<table>
+  <tr><th style="width:32%">Requisito</th><th>Detalle</th></tr>
+  <tr><td>Sistema operativo</td><td>Windows de 64 bits.</td></tr>
+  <tr><td>Permisos</td><td>Usuario administrador. Windows pide confirmación al iniciar el instalador.</td></tr>
+  <tr><td>.NET Framework</td><td>4.7.2 o superior. Si no está, el instalador avisa y pregunta si continúa.</td></tr>
+  <tr><td>Motor de base de datos</td><td>SQL Server 2016 SP1 o superior, o SQL Server LocalDB, con autenticación integrada de Windows.</td></tr>
+  <tr><td>Herramienta <code>sqlcmd</code></td><td>Tiene que estar en el PATH (se instala con SQL Server o con sus herramientas de línea de comandos).
+      Sin <code>sqlcmd</code> la aplicación se instala igual, pero la base no se crea ni se actualiza.</td></tr>
+</table>
+
+<h2>3. Qué instala y dónde</h2>
+<table>
+  <tr><th style="width:44%">Ubicación</th><th>Contenido</th></tr>
+  <tr><td><code>C:\Program Files\InstitutoVisionEnAccion</code></td><td>La aplicación (<code>UI.exe</code>), sus bibliotecas, los idiomas y los scripts que usa la pantalla de configuración.</td></tr>
+  <tr><td><code>...\InstitutoVisionEnAccion\Database</code></td><td>Scripts de base de datos, por si hay que ejecutarlos a mano:
+      <code>Deploy_InstitutoVisionEnAccion.sql</code>, <code>Backup_Previo.sql</code>, <code>Restaurar_Base.sql</code> y <code>ConfigurarConexion.ps1</code>.</td></tr>
+  <tr><td><code>C:\ProgramData\InstitutoVisionEnAccion\Backups</code></td><td>Copias de seguridad de la base (<code>.bak</code>). Una por cada reinstalación.</td></tr>
+  <tr><td><code>C:\ProgramData\InstitutoVisionEnAccion\Logs</code></td><td>Resultado de cada paso: <code>Backup.log</code>, <code>Restore.log</code>, <code>Deploy.log</code> y <code>Config.log</code>.</td></tr>
+  <tr><td>Registro: <code>HKLM\Software\InstitutoVisionEnAccion</code></td><td>Carpeta de instalación, versión, instancia de SQL Server y nombre de la base. El instalador lo usa para saber si es una reinstalación.</td></tr>
+  <tr><td>Menú Inicio y escritorio</td><td>Acceso directo a la aplicación (el del escritorio es opcional) y acceso para desinstalar.</td></tr>
+</table>
+<p>Las copias de seguridad se guardan en <code>ProgramData</code> y no dentro de <code>Program Files</code> porque el
+archivo <code>.bak</code> lo escribe el servicio de SQL Server, que no tiene permiso para escribir en <code>Program Files</code>.</p>
+
+<h2>4. Instalación por primera vez</h2>
+<ol>
+  <li>Ejecutar <code>Setup_InstitutoVisionEnAccion.exe</code> y aceptar el aviso de administrador de Windows.</li>
+  <li><strong>Carpeta de destino.</strong> Dejar la propuesta o elegir otra.</li>
+  <!-- CAPTURA: pagina "Base de datos" -->
+  <li><strong>Base de datos.</strong>
+    <ul>
+      <li>Elegir la instancia de SQL Server en la lista. El instalador detecta las instancias instaladas:
+          la predeterminada aparece como <code>.</code>, las que tienen nombre como <code>.\NOMBRE</code> y al final
+          siempre está <code>(localdb)\MSSQLLocalDB</code>. También se puede escribir otra.</li>
+      <li>Dejar el nombre de la base (<code>InstitutoVisionEnAccion</code>) o escribir otro. Solo admite letras, números y guion bajo.</li>
+      <li>Usar <strong>Probar conexión</strong>: muestra la versión del servidor o el motivo del error.</li>
+    </ul>
+    Al pulsar Siguiente el instalador vuelve a probar la conexión. Si falla, muestra el error y pregunta si se desea continuar igual.
+  </li>
+  <li><strong>Accesos directos.</strong> Marcar si se quiere el acceso en el escritorio.</li>
+  <!-- CAPTURA: pagina "Listo para instalar" -->
+  <li><strong>Resumen.</strong> Revisar el modo, la carpeta, la instancia, la base y la ruta del backup, y pulsar Instalar.</li>
+  <li>El instalador copia los archivos, crea la base con su esquema y sus datos iniciales, y guarda la conexión.</li>
+  <li>Al finalizar, dejar marcada la opción para abrir la aplicación. Se abre directamente la pantalla de inicio de sesión.</li>
+</ol>
+<div class="nota"><strong>Si la base ya existe</strong> en la instancia elegida, no se vuelve a crear: el instalador hace
+una copia de seguridad y la actualiza conservando todos sus datos (ver sección 7).</div>
+
+<h2>5. Actualización desde la primera versión del instalador</h2>
+<p>Si en la PC está instalada la primera versión (figura como <code>Solucion_83KI</code> en «Aplicaciones instaladas»),
+el instalador nuevo la detecta.</p>
+<ol>
+  <li>Ejecutar <code>Setup_InstitutoVisionEnAccion.exe</code>.</li>
+  <li>En la página <strong>Base de datos</strong>, elegir la instancia y el nombre de la base que usaba la versión anterior.</li>
+  <!-- CAPTURA: aviso "Se encontro la version anterior..." -->
+  <li>Al comenzar la instalación aparece el aviso «Se encontró la versión anterior instalada con el instalador viejo».
+      Responder <strong>Sí</strong> para desinstalarla. La base de datos no se toca.</li>
+  <li>El instalador hace una copia de seguridad de la base existente y actualiza su esquema: agrega las tablas,
+      los procedimientos y los permisos de la versión nueva.</li>
+  <li>Abrir la aplicación e iniciar sesión con el mismo usuario de siempre: los datos anteriores siguen estando.</li>
+</ol>
+
+<h2>6. Reinstalación: actualizar o restaurar la base</h2>
+<p>Cuando el sistema ya fue instalado con este instalador, al ejecutarlo de nuevo funciona como reinstalador.
+Reutiliza la carpeta, la instancia y la base de la instalación anterior, así que no vuelve a preguntarlas.</p>
+<ol>
+  <!-- CAPTURA: pagina "Actualizacion" -->
+  <li><strong>Página «Actualización».</strong> Informa que ya hay una versión instalada y muestra la carpeta,
+      la instancia y la base que se van a usar.</li>
+  <!-- CAPTURA: pagina "Base de datos existente" con las dos opciones -->
+  <li><strong>Página «Base de datos existente».</strong> Elegir una de las dos opciones:
+    <ul>
+      <li><strong>Actualizar la base conservando los datos</strong> (recomendada, viene marcada).</li>
+      <li><strong>Restaurar la base desde una copia de seguridad.</strong> La lista muestra las copias de
+          <code>C:\ProgramData\InstitutoVisionEnAccion\Backups</code>, de la más nueva a la más vieja. El nombre de cada
+          archivo incluye la fecha y la hora en que se hizo. Con <strong>Examinar...</strong> se puede elegir un archivo de otra carpeta.</li>
+    </ul>
+  </li>
+  <li>Si se eligió restaurar, el instalador pide confirmación porque se reemplazan los datos actuales.</li>
+  <li>Revisar el resumen y pulsar Instalar.</li>
+</ol>
+<div class="nota"><strong>Siempre hay vuelta atrás.</strong> En las dos opciones, lo primero que hace el instalador es
+una copia de seguridad de la base tal como está en ese momento. Si se restauró una copia equivocada, se puede
+ejecutar otra vez el instalador y restaurar esa última copia.</div>
+<p>La copia a restaurar tiene que haber sido hecha en la misma instancia de SQL Server (por ejemplo, cualquiera de las
+que genera el propio instalador).</p>
+
+<h2>7. Cómo se prepara y se protege la base de datos</h2>
+<p>Durante la instalación se ejecutan estos pasos, en este orden. Cada uno deja su resultado en un archivo de log
+con una marca que el instalador verifica antes de seguir.</p>
+<table>
+  <tr><th style="width:5%">N.º</th><th style="width:20%">Paso</th><th>Qué hace</th><th style="width:24%">Marca en el log</th></tr>
+  <tr><td>1</td><td>Copia de seguridad</td><td>Si la base existe, hace un backup completo en la carpeta <code>Backups</code>.
+      Si no se puede escribir ahí, lo reintenta en la carpeta de backups de la instancia. Si la base no existe, no hace nada.</td>
+      <td><code>BACKUP_OK</code><br><code>BACKUP_OK_CARPETA_SQL</code><br><code>BACKUP_SIN_BASE</code></td></tr>
+  <tr><td>2</td><td>Restauración (solo si se eligió)</td><td>Verifica que el archivo sea una copia válida, cierra las conexiones abiertas y
+      restaura la base desde esa copia.</td><td><code>RESTORE_OK</code></td></tr>
+  <tr><td>3</td><td>Preparación o actualización</td><td>Crea la base si no existe y aplica el esquema completo (ver abajo).</td><td><code>DEPLOY_OK</code></td></tr>
+  <tr><td>4</td><td>Conexión</td><td>Guarda la instancia y la base en <code>UI.exe.config</code> para que la aplicación abra directamente.</td><td><code>CONFIG_OK</code></td></tr>
+</table>
+<p>Si un paso falla, los siguientes no se ejecutan: sin copia de seguridad correcta no se restaura ni se actualiza nada.
+En ese caso el instalador muestra el error, la ruta del log y el comando para repetir el paso a mano. La aplicación queda instalada igual.</p>
+
+<h3>El script de preparación (Deploy)</h3>
+<p><code>Deploy_InstitutoVisionEnAccion.sql</code> es un único script que sirve tanto para una base nueva como para una existente:</p>
+<ul>
+  <li>Decide una sola vez si la instalación es nueva, mirando si existe la tabla <code>dbo.Usuarios</code>.</li>
+  <li><strong>Instalación nueva:</strong> crea las tablas base y carga los datos iniciales (roles, permisos, usuarios)
+      con sus dígitos verificadores.</li>
+  <li><strong>Base existente:</strong> no vuelve a cargar los datos iniciales. Solo agrega lo que falte: tablas y columnas nuevas,
+      procedimientos, disparadores y los permisos de las funciones nuevas. Los dígitos verificadores se recalculan únicamente
+      para las tablas de permisos que reciben filas nuevas.</li>
+  <li>Todo se ejecuta dentro de una transacción: si algo falla a mitad de camino, la base queda exactamente como estaba.</li>
+</ul>
+<p>El script se genera con <code>Instalador\GenerarDeploy.ps1</code> a partir de los scripts del proyecto
+(<code>Scripts\Sql\EsquemaCompleto.sql</code> y sus migraciones), en el mismo orden que usa la aplicación.</p>
+
+<h2>8. Desinstalación</h2>
+<p>Desde «Aplicaciones instaladas» de Windows o desde el acceso «Desinstalar Instituto Visión en Acción» del menú Inicio.</p>
+<ul>
+  <li>Se borran la carpeta de la aplicación, los accesos directos y la clave del Registro.</li>
+  <li><strong>No se borran</strong> la base de datos, las copias de seguridad ni los logs de <code>C:\ProgramData\InstitutoVisionEnAccion</code>.</li>
+</ul>
+<p>Por eso, si se vuelve a instalar apuntando a la misma instancia y base, el sistema recupera todos sus datos.</p>
+
+<h2>9. Instalación desatendida</h2>
+<p>El instalador se puede ejecutar sin pantallas, por ejemplo para pruebas automáticas. Hay que abrir la consola como administrador.</p>
+<pre>Setup_InstitutoVisionEnAccion.exe /VERYSILENT /SUPPRESSMSGBOXES /Instancia="(localdb)\MSSQLLocalDB" /Base=InstitutoVisionEnAccion</pre>
+<table>
+  <tr><th style="width:30%">Parámetro</th><th>Significado</th></tr>
+  <tr><td><code>/Instancia="..."</code></td><td>Instancia de SQL Server. Reemplaza a la que se elige en la página «Base de datos».</td></tr>
+  <tr><td><code>/Base=Nombre</code></td><td>Nombre de la base de datos.</td></tr>
+  <tr><td><code>/Restaurar="ruta.bak"</code></td><td>Solo en la reinstalación: restaura la base desde esa copia de seguridad.</td></tr>
+  <tr><td><code>/LOG="archivo"</code></td><td>Guarda el registro detallado del instalador.</td></tr>
+</table>
+<p>En modo desatendido el instalador no desinstala la primera versión (<code>Solucion_83KI</code>), porque eso requiere confirmación.</p>
+
+<h2>10. Solución de problemas</h2>
+<table>
+  <tr><th style="width:34%">Situación</th><th>Qué hacer</th></tr>
+  <tr><td>«No se encontró sqlcmd en el PATH»</td><td>Instalar las herramientas de línea de comandos de SQL Server y volver a ejecutar el instalador.
+      Otra opción es continuar: la aplicación se instala y la base se puede crear desde la pantalla de configuración que muestra la aplicación al abrir.</td></tr>
+  <tr><td>«No se pudo conectar» al probar la conexión</td><td>Verificar que el servicio de SQL Server esté iniciado, que el nombre de la instancia sea correcto
+      y que el usuario de Windows tenga acceso.</td></tr>
+  <tr><td>No se pudo hacer la copia de seguridad</td><td>La base no se modifica. Revisar <code>Logs\Backup.log</code>; lo más habitual es que el servicio de SQL Server
+      no tenga permiso sobre la carpeta de destino.</td></tr>
+  <tr><td>No se pudo restaurar</td><td>La base no se actualiza. Revisar <code>Logs\Restore.log</code>. La copia de la base que había antes está en la carpeta <code>Backups</code>.</td></tr>
+  <tr><td>La base no se pudo crear o actualizar</td><td>No se aplicó ningún cambio. Revisar <code>Logs\Deploy.log</code>, corregir la causa y repetir con el comando de abajo.</td></tr>
+  <tr><td>La aplicación abre la pantalla de configuración en vez del inicio de sesión</td><td>Elegir ahí la instancia y la base. Ocurre si no se pudo guardar la conexión
+      (ver <code>Logs\Config.log</code>) o si ese usuario de Windows ya tenía guardada otra configuración.</td></tr>
+</table>
+<h3>Comandos manuales</h3>
+<p>Se ejecutan desde <code>C:\Program Files\InstitutoVisionEnAccion\Database</code>, reemplazando la instancia y la base.</p>
+<p>Crear o actualizar la base:</p>
+<pre>sqlcmd -S "." -E -b -I -l 30 -f 65001 -v BaseDatos="InstitutoVisionEnAccion" -i Deploy_InstitutoVisionEnAccion.sql</pre>
+<p>Hacer una copia de seguridad:</p>
+<pre>sqlcmd -S "." -E -b -l 30 -v BaseDatos="InstitutoVisionEnAccion" CarpetaBackup="C:\ProgramData\InstitutoVisionEnAccion\Backups" ArchivoBackup="copia.bak" -i Backup_Previo.sql</pre>
+<p>Restaurar una copia de seguridad:</p>
+<pre>sqlcmd -S "." -E -b -l 30 -v BaseDatos="InstitutoVisionEnAccion" ArchivoBak="C:\ProgramData\InstitutoVisionEnAccion\Backups\copia.bak" -i Restaurar_Base.sql</pre>
+
+<h2>11. Pruebas del instalador</h2>
+<p>Las pruebas se hicieron en SQL Server LocalDB 2019, siempre sobre bases descartables con otro nombre; la base real no se modificó.</p>
+<h3>Pruebas con el instalador (modo desatendido)</h3>
+<table>
+  <tr><th style="width:5%">N.º</th><th style="width:30%">Caso</th><th>Resultado obtenido</th></tr>
+  <tr><td>1</td><td>Instalación por primera vez</td><td>Correcto. Base creada (<code>BACKUP_SIN_BASE</code>, <code>DEPLOY_OK</code>), conexión guardada (<code>CONFIG_OK</code>) y clave de Registro escrita.</td></tr>
+  <tr><td>2</td><td>Reinstalación con actualización</td><td>Correcto. Copia de seguridad hecha (<code>BACKUP_OK</code>) y esquema actualizado. Cantidad de filas, sumas de control por tabla y dígitos verificadores idénticos antes y después.</td></tr>
+  <tr><td>3</td><td>Reinstalación con restauración</td><td>Correcto. Se agregó una tabla de marca a la base, se reinstaló restaurando la copia del caso 2 y la marca desapareció (<code>BACKUP_OK</code>, <code>RESTORE_OK</code>, <code>DEPLOY_OK</code>).</td></tr>
+  <tr><td>4</td><td>Desinstalación</td><td>Correcto. Se borraron la carpeta de la aplicación y la clave de Registro; la base y las copias de seguridad se conservaron.</td></tr>
+</table>
+<h3>Pruebas de los scripts de base de datos</h3>
+<table>
+  <tr><th style="width:5%">N.º</th><th style="width:30%">Caso</th><th>Resultado obtenido</th></tr>
+  <tr><td>5</td><td>Deploy sobre una base inexistente</td><td>Correcto: 32 tablas y 37 procedimientos, con los datos iniciales.</td></tr>
+  <tr><td>6</td><td>Deploy ejecutado dos veces seguidas</td><td>Correcto: el segundo resultado es idéntico al primero.</td></tr>
+  <tr><td>7</td><td>Deploy sobre una copia de la base de la primera versión (13 tablas)</td><td>Correcto: las tablas con datos no cambiaron; solo se agregaron los permisos nuevos y las tablas que faltaban. El esquema final coincide con el de una instalación nueva.</td></tr>
+  <tr><td>8</td><td>Error provocado a mitad del Deploy</td><td>Correcto: se revirtió todo y no se imprimió <code>DEPLOY_OK</code>.</td></tr>
+  <tr><td>9</td><td>Copia de seguridad con carpeta inválida</td><td>Correcto: reintentó en la carpeta de la instancia (<code>BACKUP_OK_CARPETA_SQL</code>).</td></tr>
+  <tr><td>10</td><td>Restauración con un archivo que no es una copia</td><td>Correcto: falló sin modificar la base, que quedó accesible.</td></tr>
+  <tr><td>11</td><td>Aplicación con la conexión escrita por el instalador</td><td>Correcto: abre directamente la pantalla de inicio de sesión.</td></tr>
+</table>
+<h3>Pruebas pendientes</h3>
+<ul>
+  <li>Recorrido manual del asistente con sus pantallas, incluida la desinstalación de la primera versión.</li>
+  <li>Instalación sobre un SQL Server completo (no LocalDB).</li>
+</ul>
+
+<h2>12. Cómo generar el instalador</h2>
+<p>Desde la raíz del repositorio, con Inno Setup 6 instalado:</p>
+<ol>
+  <li>Generar el script de base de datos:
+    <pre>powershell -ExecutionPolicy Bypass -File Instalador\GenerarDeploy.ps1</pre></li>
+  <li>Compilar la solución en Release:
+    <pre>dotnet build "Solucion.sln" -c Release</pre></li>
+  <li>Compilar el instalador:
+    <pre>"%LOCALAPPDATA%\Programs\Inno Setup 6\ISCC.exe" /Q Instalador\Setup_InstitutoVisionEnAccion.iss</pre></li>
+</ol>
+<p>El resultado queda en <code>Instalador\Salida\Setup_InstitutoVisionEnAccion.exe</code>.</p>
+
+</body>
+</html>

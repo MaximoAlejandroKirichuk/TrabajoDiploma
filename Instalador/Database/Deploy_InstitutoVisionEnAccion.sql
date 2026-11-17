@@ -1,0 +1,5194 @@
+﻿/* =============================================================================
+   Deploy_InstitutoVisionEnAccion.sql  -  ARCHIVO GENERADO, NO EDITAR A MANO
+   Se genera con Instalador\GenerarDeploy.ps1 a partir de Scripts\Sql.
+
+   Script unico e idempotente: sirve para instalacion nueva y para actualizacion.
+   - Si la base no existe, la crea.
+   - Decide UNA sola vez si es instalacion nueva (no existe dbo.Usuarios).
+   - Tablas base, datos semilla y digitos verificadores: SOLO en instalacion nueva.
+   - Secciones con guardas y migraciones: siempre (no pisan datos existentes).
+   - Todo dentro de una transaccion con XACT_ABORT: ante un error no queda nada a medias.
+   - Al terminar bien imprime DEPLOY_OK.
+
+   Requisitos: SQL Server 2016 SP1 o superior (CREATE OR ALTER, SESSION_CONTEXT).
+   Ejecucion manual:
+     sqlcmd -S "<instancia>" -E -b -I -l 30 -f 65001 -v BaseDatos="InstitutoVisionEnAccion" -i Deploy_InstitutoVisionEnAccion.sql
+   (-b corta ante el primer error; -I activa QUOTED_IDENTIFIER; -f 65001 lee UTF-8)
+   ============================================================================= */
+:on error exit
+SET NOCOUNT ON;
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_PADDING ON;
+SET ANSI_WARNINGS ON;
+SET ARITHABORT ON;
+SET CONCAT_NULL_YIELDS_NULL ON;
+SET NUMERIC_ROUNDABORT OFF;
+GO
+USE [master]
+GO
+IF DB_ID(N'$(BaseDatos)') IS NULL
+BEGIN
+    CREATE DATABASE [$(BaseDatos)];
+    PRINT 'Base de datos creada: $(BaseDatos)';
+END
+GO
+USE [$(BaseDatos)]
+GO
+-- Decision unica: es instalacion nueva si todavia no existe la tabla testigo dbo.Usuarios.
+DECLARE @nueva BIT = CASE WHEN OBJECT_ID(N'dbo.Usuarios', N'U') IS NULL THEN 1 ELSE 0 END;
+EXEC sys.sp_set_session_context @key = N'EsInstalacionNueva', @value = @nueva;
+IF @nueva = 1 PRINT 'Modo: INSTALACION NUEVA (esquema + datos semilla)';
+ELSE PRINT 'Modo: ACTUALIZACION (se conservan los datos existentes)';
+GO
+SET XACT_ABORT ON;
+GO
+BEGIN TRANSACTION;
+GO
+-- En una actualizacion, SET NOEXEC ON hace que los lotes siguientes se compilen pero NO se ejecuten.
+IF CAST(SESSION_CONTEXT(N'EsInstalacionNueva') AS BIT) = 0 SET NOEXEC ON;
+GO
+
+-- ============================================================================
+-- Tablas base, datos semilla y digitos verificadores (solo instalacion nueva) - origen: EsquemaCompleto.sql
+-- ============================================================================
+GO
+/****** Object:  Table [dbo].[BitacoraEventos]    Script Date: 7/7/2026 2:34:57 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[BitacoraEventos](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[Username] [nvarchar](50) NOT NULL,
+	[Fecha] [datetime] NOT NULL,
+	[Modulo] [nvarchar](50) NOT NULL,
+	[Descripcion] [nvarchar](max) NOT NULL,
+	[Criticidad] [int] NOT NULL,
+ CONSTRAINT [PK_BitacoraEventos] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[DigitoVerificador_83KI]    Script Date: 7/7/2026 2:34:57 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[DigitoVerificador_83KI](
+	[NombreTabla] [varchar](128) NOT NULL,
+	[DVV] [varchar](64) NOT NULL,
+	[FechaActualizacion] [datetime] NOT NULL,
+ CONSTRAINT [PK_DigitoVerificador_83KI] PRIMARY KEY CLUSTERED 
+(
+	[NombreTabla] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[FamiliaFamilia]    Script Date: 7/7/2026 2:34:58 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[FamiliaFamilia](
+	[CodigoFamiliaPadre] [int] NOT NULL,
+	[CodigoFamiliaHija] [int] NOT NULL,
+	[DVH] [varchar](64) NOT NULL,
+ CONSTRAINT [PK_FamiliaFamilia] PRIMARY KEY CLUSTERED 
+(
+	[CodigoFamiliaPadre] ASC,
+	[CodigoFamiliaHija] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[FamiliaPatente]    Script Date: 7/7/2026 2:34:58 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[FamiliaPatente](
+	[CodigoFamilia] [int] NOT NULL,
+	[CodigoPatente] [int] NOT NULL,
+	[DVH] [varchar](64) NOT NULL,
+ CONSTRAINT [PK_FamiliaPatente] PRIMARY KEY CLUSTERED 
+(
+	[CodigoFamilia] ASC,
+	[CodigoPatente] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Familias]    Script Date: 7/7/2026 2:34:58 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Familias](
+	[CodigoFamilia] [int] IDENTITY(1,1) NOT NULL,
+	[Nombre] [nvarchar](100) NOT NULL,
+	[DVH] [varchar](64) NOT NULL,
+ CONSTRAINT [PK_Familias] PRIMARY KEY CLUSTERED 
+(
+	[CodigoFamilia] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Patentes]    Script Date: 7/7/2026 2:34:58 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Patentes](
+	[CodigoPatente] [int] IDENTITY(1,1) NOT NULL,
+	[Nombre] [nvarchar](100) NOT NULL,
+	[DVH] [varchar](64) NOT NULL,
+ CONSTRAINT [PK_Patentes] PRIMARY KEY CLUSTERED 
+(
+	[CodigoPatente] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Roles]    Script Date: 7/7/2026 2:34:58 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Roles](
+	[CodigoRol] [int] IDENTITY(1,1) NOT NULL,
+	[Nombre] [nvarchar](50) NOT NULL,
+	[DVH] [varchar](64) NOT NULL,
+ CONSTRAINT [PK__Roles__F0D13057AB23237F] PRIMARY KEY CLUSTERED 
+(
+	[CodigoRol] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[RolFamilia]    Script Date: 7/7/2026 2:34:58 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[RolFamilia](
+	[CodigoRol] [int] NOT NULL,
+	[CodigoFamilia] [int] NOT NULL,
+	[DVH] [varchar](64) NOT NULL,
+ CONSTRAINT [PK_RolFamilia] PRIMARY KEY CLUSTERED 
+(
+	[CodigoRol] ASC,
+	[CodigoFamilia] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[RolPatente]    Script Date: 7/7/2026 2:34:58 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[RolPatente](
+	[CodigoRol] [int] NOT NULL,
+	[CodigoPatente] [int] NOT NULL,
+	[DVH] [varchar](64) NOT NULL,
+ CONSTRAINT [PK_RolPatente] PRIMARY KEY CLUSTERED 
+(
+	[CodigoRol] ASC,
+	[CodigoPatente] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Usuarios]    Script Date: 7/7/2026 2:34:58 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Usuarios](
+	[DNI] [varchar](50) NOT NULL,
+	[Nombre] [nvarchar](80) NOT NULL,
+	[Apellido] [nvarchar](80) NOT NULL,
+	[Email] [nchar](200) NOT NULL,
+	[Bloqueado] [bit] NOT NULL,
+	[Contrasena] [nvarchar](max) NOT NULL,
+	[Username] [nvarchar](50) NOT NULL,
+	[Activo] [bit] NOT NULL,
+	[CodigoRol] [int] NOT NULL,
+	[IntentosRealizados] [int] NOT NULL,
+	[FechaUltimoIntento] [datetime] NULL,
+	[IdiomaId] [nvarchar](10) NOT NULL,
+	[DVH] [varchar](64) NOT NULL,
+ CONSTRAINT [PK_Usuarios] PRIMARY KEY CLUSTERED 
+(
+	[DNI] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+SET IDENTITY_INSERT [dbo].[BitacoraEventos] ON 
+
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (2, N'46948668Maximo', CAST(N'2026-04-26T04:50:00.507' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (4, N'46948668Maximo', CAST(N'2026-04-26T04:56:59.467' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (5, N'46948668Maximo', CAST(N'2026-04-26T05:02:44.997' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (6, N'46948668Maximo', CAST(N'2026-04-26T05:03:28.797' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (7, N'46905013Lucas', CAST(N'2026-04-26T05:05:14.367' AS DateTime), N'Usuarios', N'Usuario bloqueado: 46905013Lucas', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (8, N'46948668Maximo', CAST(N'2026-04-26T05:07:57.643' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (9, N'46948668Maximo', CAST(N'2026-04-26T05:08:30.957' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (10, N'46948668Maximo', CAST(N'2026-04-26T05:09:43.570' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (11, N'46948668Maximo', CAST(N'2026-04-26T05:11:14.707' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (12, N'46948668Maximo', CAST(N'2026-04-26T05:19:39.323' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (13, N'23456789as', CAST(N'2026-04-26T05:19:53.123' AS DateTime), N'Usuarios', N'Usuario desbloqueado: 23456789as (Rol: Admin)', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (14, N'23456789as', CAST(N'2026-04-26T05:19:56.800' AS DateTime), N'Usuarios', N'Usuario desbloqueado: 23456789as (Rol: Admin)', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (15, N'23456789as', CAST(N'2026-04-26T05:20:17.877' AS DateTime), N'Usuarios', N'Usuario desbloqueado: 23456789as (Rol: Admin)', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (16, N'23456789as', CAST(N'2026-04-26T05:20:22.193' AS DateTime), N'Usuarios', N'Usuario desbloqueado: 23456789as (Rol: Admin)', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (17, N'46948668Maximo', CAST(N'2026-04-26T05:23:40.357' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (18, N'46905013Lucas', CAST(N'2026-04-26T05:23:43.210' AS DateTime), N'Usuarios', N'Usuario desbloqueado: 46905013Lucas (Rol: Admin)', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (19, N'46905013Lucas', CAST(N'2026-04-26T05:25:54.773' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (20, N'46948668Maximo', CAST(N'2026-04-27T00:47:27.250' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (21, N'46948668Maximo', CAST(N'2026-04-27T00:47:59.690' AS DateTime), N'Usuarios', N'Contraseña modificada: 46948668Maximo', 2)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (22, N'46948668Maximo', CAST(N'2026-04-27T00:48:25.420' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (23, N'46948668Maximo', CAST(N'2026-04-27T00:48:33.207' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (24, N'46948668Maximo', CAST(N'2026-04-27T00:48:41.963' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (25, N'46948668Maximo', CAST(N'2026-04-27T02:40:37.517' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (26, N'46948668Maximo', CAST(N'2026-04-27T02:40:47.463' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (27, N'46948668Maximo', CAST(N'2026-04-27T02:41:42.557' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (28, N'46948668Maximo', CAST(N'2026-04-27T02:45:41.037' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (29, N'46948668Maximo', CAST(N'2026-04-27T02:46:23.847' AS DateTime), N'Usuarios', N'Usuario modificado: DNI 23456789. Email: houstonrockets@gmail.com. Rol: RolSimple. Actor: 46948668Maximo', 2)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (30, N'46948668Maximo', CAST(N'2026-04-29T03:16:56.817' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (31, N'46948668Maximo', CAST(N'2026-04-29T03:17:11.903' AS DateTime), N'Usuarios', N'Usuario deshabilitado: DNI 23456789. Actor: 46948668Maximo', 2)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (32, N'46948668Maximo', CAST(N'2026-04-29T03:17:16.877' AS DateTime), N'Usuarios', N'Usuario habilitado: DNI 23456789. Actor: 46948668Maximo', 2)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (33, N'46948668Maximo', CAST(N'2026-04-29T03:17:22.523' AS DateTime), N'Usuarios', N'Usuario deshabilitado: DNI 23456789. Actor: 46948668Maximo', 2)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (34, N'46948668Maximo', CAST(N'2026-04-29T03:17:31.713' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (35, N'46948668Maximo', CAST(N'2026-04-29T03:17:38.437' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (36, N'46948668Maximo', CAST(N'2026-04-29T03:17:47.417' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (37, N'46948668Maximo', CAST(N'2026-04-29T03:40:22.270' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (38, N'46948668Maximo', CAST(N'2026-04-29T03:40:29.503' AS DateTime), N'Usuarios', N'Usuario habilitado: DNI 23456789. Actor: 46948668Maximo', 2)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (39, N'46948668Maximo', CAST(N'2026-04-29T03:40:33.810' AS DateTime), N'Usuarios', N'Usuario deshabilitado: DNI 23456789. Actor: 46948668Maximo', 2)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (40, N'46948668Maximo', CAST(N'2026-04-29T03:40:39.517' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (41, N'46948668Maximo', CAST(N'2026-04-29T03:47:54.163' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (42, N'46948668Maximo', CAST(N'2026-04-29T04:02:32.567' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (43, N'46948668Maximo', CAST(N'2026-04-29T04:02:37.753' AS DateTime), N'Usuarios', N'Usuario habilitado: DNI 23456789. Actor: 46948668Maximo', 2)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (44, N'46948668Maximo', CAST(N'2026-04-29T04:02:39.937' AS DateTime), N'Usuarios', N'Usuario deshabilitado: DNI 23456789. Actor: 46948668Maximo', 2)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (45, N'46948668Maximo', CAST(N'2026-04-29T04:02:51.127' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (46, N'46948668Maximo', CAST(N'2026-04-29T04:12:36.127' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (47, N'46948668Maximo', CAST(N'2026-04-29T04:13:16.183' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (48, N'46905013Lucas', CAST(N'2026-04-29T04:13:33.307' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (49, N'46905013Lucas', CAST(N'2026-04-29T04:13:41.757' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (50, N'46905013Lucas', CAST(N'2026-04-29T04:13:49.277' AS DateTime), N'Usuarios', N'Usuario bloqueado: 46905013Lucas', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (51, N'46948668Maximo', CAST(N'2026-04-29T04:14:01.817' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (52, N'46905013Lucas', CAST(N'2026-04-29T04:14:31.660' AS DateTime), N'Usuarios', N'Usuario desbloqueado: 46905013Lucas (Rol: Admin)', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (53, N'46948668Maximo', CAST(N'2026-04-29T04:14:37.470' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (54, N'46948668Maximo', CAST(N'2026-04-29T04:17:42.167' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (55, N'46948668Maximo', CAST(N'2026-04-29T04:18:00.653' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (56, N'46948668Maximo', CAST(N'2026-04-29T18:07:28.567' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (57, N'46948668Maximo', CAST(N'2026-04-29T18:07:51.943' AS DateTime), N'Usuarios', N'Usuario habilitado: DNI 23456789. Actor: 46948668Maximo', 2)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (58, N'46948668Maximo', CAST(N'2026-04-29T18:07:56.593' AS DateTime), N'Usuarios', N'Usuario deshabilitado: DNI 23456789. Actor: 46948668Maximo', 2)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (59, N'46948668Maximo', CAST(N'2026-04-29T18:08:08.930' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (60, N'46948668Maximo', CAST(N'2026-04-29T18:49:32.660' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (61, N'46948668Maximo', CAST(N'2026-04-29T18:49:40.060' AS DateTime), N'Usuarios', N'Usuario habilitado: DNI 23456789. Actor: 46948668Maximo', 2)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (62, N'46948668Maximo', CAST(N'2026-04-29T18:49:43.650' AS DateTime), N'Usuarios', N'Usuario deshabilitado: DNI 23456789. Actor: 46948668Maximo', 2)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (63, N'46948668Maximo', CAST(N'2026-04-29T18:49:57.733' AS DateTime), N'Usuarios', N'Usuario modificado: DNI 23456789. Email: houstonrockets@gmail.com. Rol: Admin. Actor: 46948668Maximo', 2)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (64, N'46948668Maximo', CAST(N'2026-04-29T18:50:07.237' AS DateTime), N'Usuarios', N'Usuario modificado: DNI 23456789. Email: houstonrockets@gmail.com. Rol: RolSimple. Actor: 46948668Maximo', 2)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (65, N'46948668Maximo', CAST(N'2026-04-29T19:03:52.967' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (66, N'46948668Maximo', CAST(N'2026-04-29T19:04:01.183' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (67, N'46948668Maximo', CAST(N'2026-04-29T19:04:19.213' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (68, N'46948668Maximo', CAST(N'2026-04-29T19:04:21.300' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (69, N'46948668Maximo', CAST(N'2026-05-02T13:38:09.040' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (70, N'46948668Maximo', CAST(N'2026-05-02T13:38:16.073' AS DateTime), N'Usuarios', N'Usuario habilitado: DNI 23456789. Actor: 46948668Maximo', 2)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (71, N'46948668Maximo', CAST(N'2026-05-02T13:38:19.330' AS DateTime), N'Usuarios', N'Usuario deshabilitado: DNI 23456789. Actor: 46948668Maximo', 2)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (72, N'46905013Lucas', CAST(N'2026-05-02T13:59:39.807' AS DateTime), N'Usuarios', N'Usuario bloqueado: 46905013Lucas', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (73, N'46948668Maximo', CAST(N'2026-05-02T14:00:07.137' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (74, N'46905013Lucas', CAST(N'2026-05-02T14:00:12.570' AS DateTime), N'Usuarios', N'Usuario desbloqueado: 46905013Lucas (Rol: Admin)', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (75, N'46948668Maximo', CAST(N'2026-05-02T14:00:25.370' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (76, N'46905013Lucas', CAST(N'2026-05-02T14:00:45.410' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (77, N'46905013Lucas', CAST(N'2026-05-02T14:00:48.140' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (78, N'46948668Maximo', CAST(N'2026-05-04T13:52:57.467' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (79, N'46948668Maximo', CAST(N'2026-05-04T13:53:45.680' AS DateTime), N'Usuarios', N'Usuario habilitado: DNI 23456789. Actor: 46948668Maximo', 2)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (80, N'46948668Maximo', CAST(N'2026-05-04T13:54:43.313' AS DateTime), N'Usuarios', N'Usuario deshabilitado: DNI 23456789. Actor: 46948668Maximo', 2)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (81, N'46948668Maximo', CAST(N'2026-05-04T13:54:56.197' AS DateTime), N'Usuarios', N'Usuario modificado: DNI 46948668. Email: MaximoKirichuk@gmail.com. Rol: Admin. Actor: 46948668Maximo', 2)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (82, N'46948668Maximo', CAST(N'2026-05-04T13:55:12.010' AS DateTime), N'Usuarios', N'Usuario modificado: DNI 46948668. Email: MaximoKirichuk2005@gmail.com. Rol: Admin. Actor: 46948668Maximo', 2)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (83, N'46948668Maximo', CAST(N'2026-05-04T13:55:20.450' AS DateTime), N'Usuarios', N'Usuario modificado: DNI 46948668. Email: MaximoKirichuk@gmail.com. Rol: Admin. Actor: 46948668Maximo', 2)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (84, N'46948668Maximo', CAST(N'2026-05-04T13:57:11.910' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (85, N'46948668Maximo', CAST(N'2026-05-05T20:48:56.303' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (86, N'46905013Lucas', CAST(N'2026-05-17T16:10:45.903' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (87, N'46905013Lucas', CAST(N'2026-05-17T17:17:45.423' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (88, N'46905013Lucas', CAST(N'2026-05-18T11:39:25.390' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (89, N'46905013Lucas', CAST(N'2026-05-18T11:39:46.870' AS DateTime), N'Usuarios', N'Usuario modificado: DNI 46948668. Email: MaximoKirichuk@gmail.com. Rol: RolSimple. Actor: 46905013Lucas', 2)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (90, N'46905013Lucas', CAST(N'2026-05-18T13:09:59.157' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (91, N'46905013Lucas', CAST(N'2026-05-18T13:10:02.867' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (92, N'46905013Lucas', CAST(N'2026-05-18T13:46:18.510' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (93, N'47006530Benjamin', CAST(N'2026-05-18T13:47:21.540' AS DateTime), N'Usuarios', N'Nuevo usuario creado: 47006530Benjamin (Rol: RolSimple)', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (94, N'46905013Lucas', CAST(N'2026-05-18T13:47:39.403' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (95, N'47006530Benjamin', CAST(N'2026-05-18T13:49:45.620' AS DateTime), N'Usuarios', N'Login exitoso: 47006530Benjamin', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (96, N'47006530Benjamin', CAST(N'2026-05-18T13:49:59.170' AS DateTime), N'Usuarios', N'Logout exitoso: 47006530Benjamin', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (97, N'46905013Lucas', CAST(N'2026-05-18T14:13:49.447' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (98, N'46905013Lucas', CAST(N'2026-05-18T14:14:03.163' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (99, N'46905013Lucas', CAST(N'2026-05-18T19:07:57.580' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (100, N'46905013Lucas', CAST(N'2026-05-18T19:10:33.670' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (101, N'46905013Lucas', CAST(N'2026-05-18T19:14:20.390' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+GO
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (102, N'46905013Lucas', CAST(N'2026-05-18T19:14:27.490' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (103, N'46905013Lucas', CAST(N'2026-05-18T19:14:52.573' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (104, N'46905013Lucas', CAST(N'2026-05-18T20:04:45.570' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (105, N'46905013Lucas', CAST(N'2026-05-18T20:17:11.567' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (106, N'46905013Lucas', CAST(N'2026-05-19T19:02:26.363' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (107, N'46905013Lucas', CAST(N'2026-05-19T20:20:08.137' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (108, N'46905013Lucas', CAST(N'2026-05-19T20:20:14.847' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (109, N'47006530Benjamin', CAST(N'2026-05-19T20:20:57.157' AS DateTime), N'Usuarios', N'Usuario bloqueado por intentos fallidos: 47006530Benjamin', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (110, N'46905013Lucas', CAST(N'2026-05-19T20:21:29.650' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (111, N'47006530Benjamin', CAST(N'2026-05-19T20:21:40.470' AS DateTime), N'Usuarios', N'Usuario desbloqueado: 47006530Benjamin (Rol: RolSimple)', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (112, N'46905013Lucas', CAST(N'2026-05-19T20:21:54.747' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (113, N'47006530Benjamin', CAST(N'2026-05-19T20:22:43.807' AS DateTime), N'Usuarios', N'Usuario bloqueado por intentos fallidos: 47006530Benjamin', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (114, N'46905013Lucas', CAST(N'2026-05-19T20:22:58.430' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (115, N'46905013Lucas', CAST(N'2026-05-19T20:27:43.080' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (116, N'47006530Benjamin', CAST(N'2026-05-19T20:28:02.687' AS DateTime), N'Usuarios', N'Usuario desbloqueado: 47006530Benjamin (Rol: RolSimple)', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (117, N'46905013Lucas', CAST(N'2026-05-19T20:28:11.527' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (118, N'47006530Benjamin', CAST(N'2026-05-19T20:28:25.273' AS DateTime), N'Usuarios', N'Login exitoso: 47006530Benjamin', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (119, N'47006530Benjamin', CAST(N'2026-05-19T20:28:30.977' AS DateTime), N'Usuarios', N'Logout exitoso: 47006530Benjamin', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (120, N'46905013Lucas', CAST(N'2026-05-19T20:31:34.470' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (121, N'46905013Lucas', CAST(N'2026-05-19T20:32:12.213' AS DateTime), N'Usuarios', N'Contraseña modificada: 46905013Lucas', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (122, N'46905013Lucas', CAST(N'2026-05-19T20:33:34.380' AS DateTime), N'Usuarios', N'Usuario habilitado: DNI 23456789. Actor: 46905013Lucas', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (123, N'46905013Lucas', CAST(N'2026-05-19T20:33:44.893' AS DateTime), N'Usuarios', N'Usuario modificado: DNI 23456789. Email: houstonrockets@gmail.com. Rol: Admin. Actor: 46905013Lucas', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (124, N'46905013Lucas', CAST(N'2026-05-19T20:34:08.870' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (125, N'23456789as', CAST(N'2026-05-19T20:34:20.947' AS DateTime), N'Usuarios', N'Usuario bloqueado por intentos fallidos: 23456789as', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (126, N'46905013Lucas', CAST(N'2026-05-19T20:34:28.517' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (127, N'23456789as', CAST(N'2026-05-19T20:34:39.283' AS DateTime), N'Usuarios', N'Usuario desbloqueado: 23456789as (Rol: Admin)', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (128, N'46905013Lucas', CAST(N'2026-05-19T20:34:57.313' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (129, N'23456789as', CAST(N'2026-05-19T20:35:22.753' AS DateTime), N'Usuarios', N'Login exitoso: 23456789as', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (130, N'23456789as', CAST(N'2026-05-19T20:38:29.500' AS DateTime), N'Usuarios', N'Usuario modificado: DNI 23456789. Email: AS@gmail.com. Rol: Admin. Actor: 23456789as', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (131, N'46948668Maximo', CAST(N'2026-05-19T21:15:43.503' AS DateTime), N'Usuarios', N'Usuario bloqueado por intentos fallidos: 46948668Maximo', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (132, N'46905013Lucas', CAST(N'2026-05-19T21:15:58.637' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (133, N'46948668Maximo', CAST(N'2026-05-19T21:16:14.977' AS DateTime), N'Usuarios', N'Usuario desbloqueado: 46948668Maximo (Rol: RolSimple)', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (134, N'46905013Lucas', CAST(N'2026-05-19T21:16:27.490' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (135, N'46948668Maximo', CAST(N'2026-05-19T21:16:51.797' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (136, N'46948668Maximo', CAST(N'2026-05-19T21:17:00.507' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (137, N'46905013Lucas', CAST(N'2026-05-19T21:17:15.423' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (138, N'46905013Lucas', CAST(N'2026-05-19T21:17:59.760' AS DateTime), N'Usuarios', N'Usuario modificado: DNI 46948668. Email: MaximoKirichuk@gmail.com. Rol: Admin. Actor: 46905013Lucas', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (139, N'46905013Lucas', CAST(N'2026-05-19T21:18:14.443' AS DateTime), N'Usuarios', N'Usuario deshabilitado: DNI 23456789. Actor: 46905013Lucas', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (140, N'46905013Lucas', CAST(N'2026-05-19T21:18:37.367' AS DateTime), N'Usuarios', N'Usuario habilitado: DNI 23456789. Actor: 46905013Lucas', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (141, N'46905013Lucas', CAST(N'2026-05-19T21:22:44.307' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (142, N'46905013Lucas', CAST(N'2026-05-19T21:23:08.847' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (143, N'46948668Maximo', CAST(N'2026-05-20T01:38:10.420' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (144, N'46948668Maximo', CAST(N'2026-05-20T01:41:43.603' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (145, N'46948668Maximo', CAST(N'2026-05-20T01:51:09.110' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (146, N'46948668Maximo', CAST(N'2026-05-20T02:29:54.247' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (147, N'46948668Maximo', CAST(N'2026-05-20T02:39:18.083' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (148, N'46948668Maximo', CAST(N'2026-05-20T03:12:13.603' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (149, N'46948668Maximo', CAST(N'2026-05-20T03:12:32.917' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (150, N'46948668Maximo', CAST(N'2026-05-20T03:22:32.723' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (151, N'46948668Maximo', CAST(N'2026-05-20T03:23:04.920' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (152, N'46948668Maximo', CAST(N'2026-05-29T19:29:11.757' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (153, N'46948668Maximo', CAST(N'2026-05-29T19:31:04.050' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (154, N'46948668Maximo', CAST(N'2026-05-29T19:42:29.523' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (155, N'46948668Maximo', CAST(N'2026-05-29T19:43:02.133' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (156, N'46948668Maximo', CAST(N'2026-05-29T19:43:08.853' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (157, N'46948668Maximo', CAST(N'2026-05-29T19:43:21.990' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (158, N'46948668Maximo', CAST(N'2026-05-29T19:46:25.867' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (159, N'124231241fas', CAST(N'2026-05-29T19:48:09.463' AS DateTime), N'Usuarios', N'Nuevo usuario creado: 124231241fas (Rol: Admin)', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (160, N'46948668Maximo', CAST(N'2026-05-29T19:48:17.660' AS DateTime), N'Usuarios', N'Usuario deshabilitado: DNI 124231241. Actor: 46948668Maximo', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (161, N'46948668Maximo', CAST(N'2026-05-29T22:50:46.207' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (162, N'46948668Maximo', CAST(N'2026-05-29T23:12:55.943' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (163, N'46948668Maximo', CAST(N'2026-05-30T00:35:05.427' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (164, N'46948668Maximo', CAST(N'2026-05-30T00:43:11.237' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (165, N'46948668Maximo', CAST(N'2026-05-30T00:44:55.933' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (166, N'46948668Maximo', CAST(N'2026-05-30T00:48:58.810' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (167, N'46948668Maximo', CAST(N'2026-05-30T00:53:52.017' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (168, N'46948668Maximo', CAST(N'2026-05-30T19:57:56.200' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (169, N'46948668Maximo', CAST(N'2026-05-30T20:05:40.050' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (170, N'46948668Maximo', CAST(N'2026-05-31T13:40:06.523' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (171, N'46948668Maximo', CAST(N'2026-05-31T13:57:05.853' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (172, N'46948668Maximo', CAST(N'2026-05-31T14:04:38.123' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (173, N'46948668Maximo', CAST(N'2026-05-31T14:12:49.487' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (174, N'46948668Maximo', CAST(N'2026-05-31T14:13:14.677' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (175, N'46948668Maximo', CAST(N'2026-05-31T14:21:15.107' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (176, N'46948668Maximo', CAST(N'2026-05-31T14:21:38.133' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (177, N'46948668Maximo', CAST(N'2026-05-31T14:21:55.137' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (178, N'46948668Maximo', CAST(N'2026-05-31T14:26:34.193' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (179, N'46948668Maximo', CAST(N'2026-05-31T14:26:42.160' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (180, N'46948668Maximo', CAST(N'2026-05-31T14:26:47.903' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (181, N'46948668Maximo', CAST(N'2026-05-31T14:30:38.820' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (182, N'46948668Maximo', CAST(N'2026-05-31T14:35:15.363' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (183, N'46948668Maximo', CAST(N'2026-05-31T14:37:28.723' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (184, N'46948668Maximo', CAST(N'2026-05-31T14:37:53.210' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (185, N'46948668Maximo', CAST(N'2026-05-31T14:39:11.670' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (186, N'46948668Maximo', CAST(N'2026-05-31T14:42:48.507' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (187, N'46948668Maximo', CAST(N'2026-05-31T14:43:11.413' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (188, N'46905013Lucas', CAST(N'2026-05-31T14:43:42.067' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (189, N'46905013Lucas', CAST(N'2026-05-31T14:44:05.553' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (190, N'46948668Maximo', CAST(N'2026-05-31T14:44:13.057' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (191, N'46948668Maximo', CAST(N'2026-05-31T15:13:24.760' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (192, N'46948668Maximo', CAST(N'2026-05-31T15:13:45.543' AS DateTime), N'Usuarios', N'Usuario modificado: DNI 46905013. Email: lucas@gmail.com. Rol: RolSimple. Actor: 46948668Maximo', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (193, N'46948668Maximo', CAST(N'2026-05-31T16:07:13.953' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (194, N'46948668Maximo', CAST(N'2026-05-31T16:17:53.687' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (195, N'46948668Maximo', CAST(N'2026-05-31T16:22:48.050' AS DateTime), N'Usuarios', N'Usuario modificado: DNI 46905013. Email: lucas@gmail.com. Rol: RolAdminSinAuditoria. Actor: 46948668Maximo', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (196, N'46948668Maximo', CAST(N'2026-05-31T16:22:51.583' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (197, N'46905013Lucas', CAST(N'2026-05-31T16:23:13.320' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (198, N'46905013Lucas', CAST(N'2026-05-31T16:23:24.017' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (199, N'46948668Maximo', CAST(N'2026-05-31T16:24:09.163' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (200, N'46948668Maximo', CAST(N'2026-05-31T16:25:12.413' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (201, N'46905013Lucas', CAST(N'2026-05-31T16:25:25.743' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+GO
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (202, N'46905013Lucas', CAST(N'2026-05-31T16:25:30.013' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (203, N'46948668Maximo', CAST(N'2026-05-31T16:25:53.960' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (204, N'46948668Maximo', CAST(N'2026-05-31T16:27:53.110' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (205, N'46905013Lucas', CAST(N'2026-05-31T16:28:03.563' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (206, N'46905013Lucas', CAST(N'2026-05-31T16:28:36.363' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (207, N'46948668Maximo', CAST(N'2026-05-31T17:40:36.033' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (208, N'46948668Maximo', CAST(N'2026-05-31T17:44:24.130' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (209, N'46905013Lucas', CAST(N'2026-05-31T17:44:34.800' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (210, N'46905013Lucas', CAST(N'2026-05-31T17:44:49.743' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (211, N'46948668Maximo', CAST(N'2026-05-31T17:45:01.183' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (212, N'46948668Maximo', CAST(N'2026-05-31T17:45:58.030' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (213, N'46905013Lucas', CAST(N'2026-05-31T17:46:13.477' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (214, N'46905013Lucas', CAST(N'2026-05-31T17:46:49.167' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (215, N'47006530Benjamin', CAST(N'2026-05-31T17:46:59.513' AS DateTime), N'Usuarios', N'Login exitoso: 47006530Benjamin', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (216, N'47006530Benjamin', CAST(N'2026-05-31T17:47:24.340' AS DateTime), N'Usuarios', N'Logout exitoso: 47006530Benjamin', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (217, N'46948668Maximo', CAST(N'2026-05-31T17:47:42.680' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (218, N'46948668Maximo', CAST(N'2026-05-31T17:59:53.663' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (219, N'46948668Maximo', CAST(N'2026-05-31T18:06:54.793' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (220, N'46948668Maximo', CAST(N'2026-05-31T18:19:58.827' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (221, N'46948668Maximo', CAST(N'2026-05-31T18:25:06.420' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (222, N'46948668Maximo', CAST(N'2026-05-31T18:26:02.547' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (223, N'46948668Maximo', CAST(N'2026-05-31T18:27:42.557' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (224, N'46948668Maximo', CAST(N'2026-05-31T18:29:59.360' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (225, N'46948668Maximo', CAST(N'2026-05-31T18:33:55.490' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (226, N'46948668Maximo', CAST(N'2026-05-31T18:35:40.393' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (227, N'46948668Maximo', CAST(N'2026-05-31T18:35:49.433' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (228, N'46948668Maximo', CAST(N'2026-05-31T18:37:49.937' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (229, N'46948668Maximo', CAST(N'2026-05-31T18:37:56.263' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (230, N'46948668Maximo', CAST(N'2026-05-31T18:43:24.287' AS DateTime), N'Usuarios', N'Usuario modificado: DNI 46905013. Email: lucas@gmail.com. Rol: SuperAdmin. Actor: 46948668Maximo', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (231, N'46948668Maximo', CAST(N'2026-05-31T18:43:32.063' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (232, N'46905013Lucas', CAST(N'2026-05-31T18:43:45.923' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (233, N'46905013Lucas', CAST(N'2026-05-31T18:43:53.923' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (234, N'46948668Maximo', CAST(N'2026-05-31T18:44:18.843' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (235, N'46948668Maximo', CAST(N'2026-05-31T18:47:39.710' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (236, N'46905013Lucas', CAST(N'2026-05-31T18:47:50.133' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (237, N'46905013Lucas', CAST(N'2026-05-31T18:48:01.207' AS DateTime), N'Usuarios', N'Usuario modificado: DNI 46948668. Email: MaximoKirichuk@gmail.com. Rol: RolAdminSinAuditoria. Actor: 46905013Lucas', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (238, N'46905013Lucas', CAST(N'2026-05-31T18:48:05.967' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (239, N'46948668Maximo', CAST(N'2026-05-31T18:48:23.167' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (240, N'46948668Maximo', CAST(N'2026-05-31T18:48:45.720' AS DateTime), N'Usuarios', N'Usuario modificado: DNI 46905013. Email: lucas@gmail.com. Rol: Admin. Actor: 46948668Maximo', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (241, N'46948668Maximo', CAST(N'2026-05-31T18:48:55.210' AS DateTime), N'Usuarios', N'Usuario modificado: DNI 46905013. Email: lucas@gmail.com. Rol: SuperAdmin. Actor: 46948668Maximo', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (242, N'46948668Maximo', CAST(N'2026-05-31T18:49:02.760' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (243, N'46948668Maximo', CAST(N'2026-05-31T19:48:32.947' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (244, N'46948668Maximo', CAST(N'2026-05-31T19:48:59.013' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (245, N'46948668Maximo', CAST(N'2026-05-31T20:37:07.797' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (246, N'46948668Maximo', CAST(N'2026-05-31T20:37:14.347' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (247, N'46948668Maximo', CAST(N'2026-05-31T20:46:07.030' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (248, N'46948668Maximo', CAST(N'2026-05-31T20:46:30.873' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (249, N'46948668Maximo', CAST(N'2026-05-31T20:47:41.920' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (250, N'46948668Maximo', CAST(N'2026-05-31T20:57:08.893' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (251, N'46948668Maximo', CAST(N'2026-05-31T20:57:25.800' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (252, N'46948668Maximo', CAST(N'2026-05-31T20:58:49.527' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (253, N'46948668Maximo', CAST(N'2026-05-31T20:58:58.903' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (254, N'46948668Maximo', CAST(N'2026-05-31T21:09:31.147' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (255, N'46948668Maximo', CAST(N'2026-05-31T21:16:09.167' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (256, N'46948668Maximo', CAST(N'2026-06-01T11:29:15.917' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (257, N'46948668Maximo', CAST(N'2026-06-01T11:29:33.987' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (258, N'46948668Maximo', CAST(N'2026-06-01T11:29:47.020' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (259, N'46948668Maximo', CAST(N'2026-06-01T11:30:04.150' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (260, N'46948668Maximo', CAST(N'2026-06-01T13:48:58.373' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (261, N'46948668Maximo', CAST(N'2026-06-01T13:52:07.510' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (262, N'46948668Maximo', CAST(N'2026-06-01T13:54:07.123' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (263, N'46948668Maximo', CAST(N'2026-06-01T13:55:37.127' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (264, N'46905013Lucas', CAST(N'2026-06-01T13:57:57.947' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (265, N'46948668Maximo', CAST(N'2026-06-02T23:02:11.567' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (266, N'46948668Maximo', CAST(N'2026-06-02T23:02:36.587' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (267, N'46905013Lucas', CAST(N'2026-06-02T23:03:01.313' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (268, N'46905013Lucas', CAST(N'2026-06-02T23:03:59.200' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (269, N'46948668Maximo', CAST(N'2026-06-11T02:11:10.813' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (270, N'46948668Maximo', CAST(N'2026-06-11T02:11:36.050' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (271, N'46905013Lucas', CAST(N'2026-06-11T02:14:38.757' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (272, N'46905013Lucas', CAST(N'2026-06-11T02:27:01.283' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (273, N'46905013Lucas', CAST(N'2026-06-11T02:28:32.483' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (274, N'46905013Lucas', CAST(N'2026-06-16T01:14:55.770' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (275, N'46905013Lucas', CAST(N'2026-06-16T01:20:29.370' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (276, N'46905013Lucas', CAST(N'2026-06-16T01:35:15.813' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (277, N'46905013Lucas', CAST(N'2026-06-16T01:36:45.277' AS DateTime), N'Usuarios', N'Usuario modificado: DNI 46948668. Email: MaximoKirichuk@gmail.com. Rol: SuperAdmin. Actor: 46905013Lucas', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (278, N'46905013Lucas', CAST(N'2026-06-16T01:38:49.587' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (279, N'46948668Maximo', CAST(N'2026-06-16T01:39:18.380' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (280, N'46948668Maximo', CAST(N'2026-06-16T01:47:39.420' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (281, N'46948668Maximo', CAST(N'2026-06-16T01:55:19.730' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (282, N'46948668Maximo', CAST(N'2026-06-16T01:56:15.153' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (283, N'46948668Maximo', CAST(N'2026-06-16T02:35:35.180' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (284, N'46948668Maximo', CAST(N'2026-06-16T02:36:45.280' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (285, N'46948668Maximo', CAST(N'2026-06-20T18:46:48.567' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (286, N'46948668Maximo', CAST(N'2026-06-20T18:52:03.633' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (287, N'46948668Maximo', CAST(N'2026-06-20T18:57:50.967' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (288, N'46948668Maximo', CAST(N'2026-06-20T19:03:14.263' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (289, N'46948668Maximo', CAST(N'2026-06-20T19:08:23.233' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (290, N'46948668Maximo', CAST(N'2026-06-20T19:23:05.677' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (291, N'46948668Maximo', CAST(N'2026-06-20T20:03:09.520' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (292, N'46948668Maximo', CAST(N'2026-06-20T20:05:54.843' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (293, N'46948668Maximo', CAST(N'2026-06-20T20:06:39.157' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (294, N'46948668Maximo', CAST(N'2026-06-20T20:07:07.817' AS DateTime), N'Admin', N'Nueva familia creada: Nuevo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (295, N'46948668Maximo', CAST(N'2026-06-20T20:11:30.253' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (296, N'46948668Maximo', CAST(N'2026-06-20T20:23:24.760' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (297, N'46948668Maximo', CAST(N'2026-06-20T20:30:32.670' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (298, N'46948668Maximo', CAST(N'2026-06-20T20:33:58.923' AS DateTime), N'Admin', N'Nueva familia creada: CrearROL PRUBEA', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (299, N'46948668Maximo', CAST(N'2026-06-20T20:34:29.077' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (300, N'46948668Maximo', CAST(N'2026-06-20T20:35:56.663' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (301, N'46948668Maximo', CAST(N'2026-06-20T20:40:26.693' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+GO
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (302, N'46948668Maximo', CAST(N'2026-06-20T20:41:29.023' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (303, N'46948668Maximo', CAST(N'2026-06-20T20:48:29.673' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (304, N'46948668Maximo', CAST(N'2026-06-20T20:55:24.547' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (305, N'46948668Maximo', CAST(N'2026-06-20T21:13:01.950' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (306, N'46948668Maximo', CAST(N'2026-06-20T23:37:32.717' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (307, N'46948668Maximo', CAST(N'2026-06-20T23:38:14.823' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (308, N'46948668Maximo', CAST(N'2026-06-21T00:35:18.640' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (309, N'46948668Maximo', CAST(N'2026-06-21T00:38:07.083' AS DateTime), N'Admin', N'Nueva familia creada: Hijo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (310, N'46948668Maximo', CAST(N'2026-06-21T00:38:21.087' AS DateTime), N'Admin', N'Nueva familia creada: Padre', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (311, N'46948668Maximo', CAST(N'2026-06-21T00:38:47.940' AS DateTime), N'Admin', N'Nueva familia creada: Abuelo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (312, N'46948668Maximo', CAST(N'2026-06-21T00:40:39.677' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (313, N'46948668Maximo', CAST(N'2026-06-21T03:40:40.173' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (314, N'46948668Maximo', CAST(N'2026-06-21T03:45:43.080' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (315, N'46948668Maximo', CAST(N'2026-06-21T04:27:45.983' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (316, N'46948668Maximo', CAST(N'2026-06-21T04:28:36.860' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (317, N'46948668Maximo', CAST(N'2026-06-21T20:41:49.933' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (318, N'46948668Maximo', CAST(N'2026-06-21T20:42:15.523' AS DateTime), N'Admin', N'Nuevo rol creado: Prueba', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (319, N'46948668Maximo', CAST(N'2026-06-21T20:47:57.910' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (320, N'46948668Maximo', CAST(N'2026-06-21T20:48:30.740' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (321, N'46948668Maximo', CAST(N'2026-06-21T20:55:45.363' AS DateTime), N'Admin', N'Nuevo rol creado: Prueba', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (322, N'46948668Maximo', CAST(N'2026-06-21T20:58:37.277' AS DateTime), N'Admin', N'Nuevo rol creado: AdminPRUEBA', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (323, N'46948668Maximo', CAST(N'2026-06-21T21:00:49.413' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (324, N'46948668Maximo', CAST(N'2026-06-21T21:13:28.570' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (325, N'46948668Maximo', CAST(N'2026-06-21T21:17:17.267' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (326, N'46948668Maximo', CAST(N'2026-06-21T21:21:28.133' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (327, N'46948668Maximo', CAST(N'2026-06-21T21:24:02.663' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (328, N'46948668Maximo', CAST(N'2026-06-22T02:42:13.687' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (329, N'46948668Maximo', CAST(N'2026-06-22T02:42:34.743' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (330, N'46948668Maximo', CAST(N'2026-06-22T02:49:33.153' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (331, N'46948668Maximo', CAST(N'2026-06-22T02:50:36.450' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (332, N'46948668Maximo', CAST(N'2026-06-22T02:50:54.073' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (333, N'46948668Maximo', CAST(N'2026-06-22T02:51:08.093' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (334, N'46948668Maximo', CAST(N'2026-06-22T02:51:34.843' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (335, N'46948668Maximo', CAST(N'2026-06-22T02:53:01.797' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (336, N'46948668Maximo', CAST(N'2026-06-22T02:53:32.523' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (337, N'46905013Lucas', CAST(N'2026-06-22T03:26:45.710' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (338, N'46905013Lucas', CAST(N'2026-06-22T03:28:07.633' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (339, N'46905013Lucas', CAST(N'2026-06-22T03:29:41.040' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (340, N'46905013Lucas', CAST(N'2026-06-22T03:29:45.397' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (341, N'46905013Lucas', CAST(N'2026-06-22T03:30:15.523' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (342, N'46905013Lucas', CAST(N'2026-06-22T03:32:28.913' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (343, N'46905013Lucas', CAST(N'2026-06-22T03:32:43.830' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (344, N'46905013Lucas', CAST(N'2026-06-22T03:59:53.353' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (345, N'46948668Maximo', CAST(N'2026-06-22T04:30:25.950' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (346, N'46948668Maximo', CAST(N'2026-06-22T04:30:38.183' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (347, N'46948668Maximo', CAST(N'2026-06-22T04:31:31.787' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (348, N'46948668Maximo', CAST(N'2026-06-22T04:31:58.377' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (349, N'46948668Maximo', CAST(N'2026-06-22T04:36:28.160' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (350, N'46948668Maximo', CAST(N'2026-06-22T04:42:38.783' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (351, N'46948668Maximo', CAST(N'2026-06-22T16:25:04.233' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (352, N'46948668Maximo', CAST(N'2026-06-22T16:26:21.873' AS DateTime), N'Admin', N'Familia modificada: Administrador (Actor: 46948668Maximo)', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (353, N'46948668Maximo', CAST(N'2026-06-22T16:27:20.003' AS DateTime), N'Admin', N'Familia modificada: Administrador (Actor: 46948668Maximo)', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (354, N'46948668Maximo', CAST(N'2026-06-22T16:29:11.663' AS DateTime), N'Admin', N'Rol eliminado: AdminPRUEBA (Codigo: 10) (Actor: 46948668Maximo)', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (355, N'46948668Maximo', CAST(N'2026-06-22T16:30:16.033' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (356, N'46948668Maximo', CAST(N'2026-06-22T16:37:05.247' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (357, N'46948668Maximo', CAST(N'2026-06-22T16:37:46.870' AS DateTime), N'Admin', N'Familia eliminada: Abuelo (Codigo: 17) (Actor: 46948668Maximo)', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (358, N'46948668Maximo', CAST(N'2026-06-22T19:54:10.390' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (359, N'46948668Maximo', CAST(N'2026-06-22T19:54:15.120' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (360, N'46948668Maximo', CAST(N'2026-06-22T19:57:43.667' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (361, N'46948668Maximo', CAST(N'2026-06-22T19:58:20.190' AS DateTime), N'Admin', N'Contraseña modificada: 46948668Maximo (Actor: 46948668Maximo)', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (362, N'46948668Maximo', CAST(N'2026-06-22T20:03:12.120' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (363, N'46948668Maximo', CAST(N'2026-06-22T20:13:54.237' AS DateTime), N'Usuarios', N'Intento fallido de login: 46948668Maximo', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (364, N'46948668Maximo', CAST(N'2026-06-22T20:13:57.133' AS DateTime), N'Usuarios', N'Intento fallido de login: 46948668Maximo', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (365, N'46948668Maximo', CAST(N'2026-06-22T20:14:00.857' AS DateTime), N'Usuarios', N'Intento fallido de login: 46948668Maximo', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (366, N'46948668Maximo', CAST(N'2026-06-22T20:14:00.857' AS DateTime), N'Usuarios', N'Usuario bloqueado por intentos fallidos: 46948668Maximo', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (367, N'46905013Lucas', CAST(N'2026-06-22T20:14:19.507' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (368, N'46948668Maximo', CAST(N'2026-06-22T20:14:31.750' AS DateTime), N'Admin', N'Usuario desbloqueado: 46948668Maximo (Rol: SuperAdmin) (Actor: 46905013Lucas)', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (369, N'46905013Lucas', CAST(N'2026-06-22T20:15:16.873' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (370, N'46948668Maximo', CAST(N'2026-06-22T20:15:25.267' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (371, N'46948668Maximo', CAST(N'2026-06-22T20:15:28.050' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (372, N'46948668Maximo', CAST(N'2026-06-22T20:15:35.477' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (373, N'46948668Maximo', CAST(N'2026-06-22T20:15:49.463' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (374, N'46948668Maximo', CAST(N'2026-06-22T20:15:58.953' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (375, N'46948668Maximo', CAST(N'2026-06-22T20:16:36.770' AS DateTime), N'Usuarios', N'Contraseña modificada: 46948668Maximo (Actor: 46948668Maximo)', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (376, N'46948668Maximo', CAST(N'2026-06-22T20:17:55.493' AS DateTime), N'Admin', N'Bitácora exportada a PDF: 91 eventos', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (377, N'46948668Maximo', CAST(N'2026-06-23T17:55:16.127' AS DateTime), N'Usuarios', N'Intento fallido de login: 46948668Maximo', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (378, N'46948668Maximo', CAST(N'2026-06-23T17:55:20.867' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (379, N'46948668Maximo', CAST(N'2026-06-23T17:56:15.233' AS DateTime), N'Admin', N'Nueva familia creada: Abuelo (Actor: 46948668Maximo)', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (380, N'46948668Maximo', CAST(N'2026-06-23T17:56:28.910' AS DateTime), N'Admin', N'Familia modificada: Abuelo (Actor: 46948668Maximo)', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (381, N'46948668Maximo', CAST(N'2026-06-23T17:57:22.593' AS DateTime), N'Admin', N'Familia eliminada: Abuelo (Codigo: 18) (Actor: 46948668Maximo)', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (382, N'46948668Maximo', CAST(N'2026-06-23T17:57:41.553' AS DateTime), N'Admin', N'Familia eliminada: CrearROL PRUBEA (Codigo: 14) (Actor: 46948668Maximo)', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (383, N'46948668Maximo', CAST(N'2026-06-23T17:59:40.237' AS DateTime), N'Admin', N'Nuevo rol creado: Rol prueba (Actor: 46948668Maximo)', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (384, N'46948668Maximo', CAST(N'2026-06-23T18:00:29.793' AS DateTime), N'Admin', N'Rol modificado: Rol prueba (Actor: 46948668Maximo)', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (385, N'46948668Maximo', CAST(N'2026-06-23T18:01:06.510' AS DateTime), N'Admin', N'Rol modificado: Rol prueba (Actor: 46948668Maximo)', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (386, N'46948668Maximo', CAST(N'2026-06-23T18:01:38.353' AS DateTime), N'Admin', N'Rol modificado: Rol prueba (Actor: 46948668Maximo)', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (387, N'46948668Maximo', CAST(N'2026-06-23T18:02:07.317' AS DateTime), N'Admin', N'Rol eliminado: Rol prueba (Codigo: 11) (Actor: 46948668Maximo)', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (388, N'46948668Maximo', CAST(N'2026-06-23T18:03:15.277' AS DateTime), N'Admin', N'Nueva familia creada: abuelo prueba (Actor: 46948668Maximo)', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (389, N'46948668Maximo', CAST(N'2026-06-23T18:03:27.040' AS DateTime), N'Admin', N'Familia modificada: abuelo prueba (Actor: 46948668Maximo)', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (390, N'46948668Maximo', CAST(N'2026-06-23T18:04:52.410' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (391, N'46948668Maximo', CAST(N'2026-06-23T18:12:01.630' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (392, N'46948668Maximo', CAST(N'2026-06-23T18:13:27.080' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (393, N'46948668Maximo', CAST(N'2026-06-23T19:24:55.080' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (394, N'46948668Maximo', CAST(N'2026-06-23T19:25:49.113' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (395, N'46948668Maximo', CAST(N'2026-06-24T02:21:26.653' AS DateTime), N'Usuarios', N'Intento fallido de login: 46948668Maximo', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (396, N'46948668Maximo', CAST(N'2026-06-24T02:21:30.907' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (397, N'46948668Maximo', CAST(N'2026-06-24T02:25:50.580' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (398, N'46948668Maximo', CAST(N'2026-06-24T02:27:04.303' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (399, N'46948668Maximo', CAST(N'2026-06-24T02:31:48.860' AS DateTime), N'Admin', N'Nuevo rol creado: PruebaAdmin (Actor: 46948668Maximo)', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (400, N'46905013Lucas', CAST(N'2026-06-24T02:32:27.070' AS DateTime), N'Admin', N'Usuario modificado: DNI 46905013. Email: lucas@gmail.com. Rol: PruebaAdmin. Actor: 46948668Maximo', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (401, N'46948668Maximo', CAST(N'2026-06-24T02:32:32.523' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+GO
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (402, N'46905013Lucas', CAST(N'2026-06-24T02:33:00.463' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (403, N'46905013Lucas', CAST(N'2026-06-24T02:33:09.400' AS DateTime), N'Admin', N'Bitácora exportada a PDF: 110 eventos', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (404, N'46905013Lucas', CAST(N'2026-06-24T02:33:42.677' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (405, N'46948668Maximo', CAST(N'2026-06-24T02:33:53.377' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (406, N'46948668Maximo', CAST(N'2026-06-24T02:34:25.180' AS DateTime), N'Admin', N'Rol modificado: PruebaAdmin (Actor: 46948668Maximo)', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (407, N'46948668Maximo', CAST(N'2026-06-24T02:34:36.540' AS DateTime), N'Admin', N'Rol modificado: PruebaAdmin (Actor: 46948668Maximo)', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (408, N'46948668Maximo', CAST(N'2026-06-24T02:34:39.967' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (409, N'46905013Lucas', CAST(N'2026-06-24T02:34:45.213' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (410, N'46905013Lucas', CAST(N'2026-06-24T02:35:19.120' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (411, N'46948668Maximo', CAST(N'2026-06-24T02:35:27.060' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (412, N'46948668Maximo', CAST(N'2026-06-24T02:35:44.987' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (413, N'46905013Lucas', CAST(N'2026-06-24T02:39:31.363' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (414, N'46905013Lucas', CAST(N'2026-06-24T02:39:43.357' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (415, N'46948668Maximo', CAST(N'2026-06-24T02:40:04.863' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (416, N'46948668Maximo', CAST(N'2026-06-24T02:40:19.147' AS DateTime), N'Admin', N'Familia modificada: AdministrarBitacora (Actor: 46948668Maximo)', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (417, N'46948668Maximo', CAST(N'2026-06-24T02:40:42.923' AS DateTime), N'Admin', N'Familia modificada: Auditoria (Actor: 46948668Maximo)', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (418, N'46948668Maximo', CAST(N'2026-06-24T02:41:20.603' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (419, N'46905013Lucas', CAST(N'2026-06-24T02:41:38.917' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (420, N'46905013Lucas', CAST(N'2026-06-24T02:41:47.037' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (421, N'46905013Lucas', CAST(N'2026-06-24T02:43:44.647' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (422, N'46905013Lucas', CAST(N'2026-06-24T02:43:56.560' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (423, N'46948668Maximo', CAST(N'2026-06-24T02:44:09.097' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (424, N'46948668Maximo', CAST(N'2026-06-24T02:44:24.457' AS DateTime), N'Admin', N'Familia modificada: AdministrarBitacora (Actor: 46948668Maximo)', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (425, N'46948668Maximo', CAST(N'2026-06-24T02:44:33.460' AS DateTime), N'Admin', N'Familia modificada: AdministrarBitacora (Actor: 46948668Maximo)', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (426, N'46948668Maximo', CAST(N'2026-06-24T02:44:50.113' AS DateTime), N'Admin', N'Familia modificada: Auditoria (Actor: 46948668Maximo)', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (427, N'46948668Maximo', CAST(N'2026-06-24T02:45:02.580' AS DateTime), N'Admin', N'Familia modificada: Auditoria (Actor: 46948668Maximo)', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (428, N'46948668Maximo', CAST(N'2026-06-24T02:45:07.897' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (429, N'46905013Lucas', CAST(N'2026-06-24T02:45:14.210' AS DateTime), N'Usuarios', N'Login exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (430, N'46905013Lucas', CAST(N'2026-06-24T02:45:46.550' AS DateTime), N'Usuarios', N'Logout exitoso: 46905013Lucas', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (431, N'46948668Maximo', CAST(N'2026-06-24T02:45:53.587' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (432, N'12345672Nahuel', CAST(N'2026-06-24T02:46:34.060' AS DateTime), N'Admin', N'Nuevo usuario creado: 12345672Nahuel (Rol: RolSimple) (Actor: 46948668Maximo)', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (433, N'46948668Maximo', CAST(N'2026-06-24T02:51:53.243' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (434, N'12345672Nahuel', CAST(N'2026-06-24T02:52:49.773' AS DateTime), N'Usuarios', N'Login exitoso: 12345672Nahuel', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (435, N'12345672Nahuel', CAST(N'2026-06-24T02:52:54.210' AS DateTime), N'Usuarios', N'Logout exitoso: 12345672Nahuel', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (436, N'12345672Nahuel', CAST(N'2026-06-24T02:52:58.830' AS DateTime), N'Usuarios', N'Login exitoso: 12345672Nahuel', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (437, N'12345672Nahuel', CAST(N'2026-06-24T02:53:12.193' AS DateTime), N'Usuarios', N'Contraseña modificada: 12345672Nahuel (Actor: 12345672Nahuel)', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (438, N'12345672Nahuel', CAST(N'2026-06-24T02:53:26.910' AS DateTime), N'Usuarios', N'Logout exitoso: 12345672Nahuel', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (439, N'12345672Nahuel', CAST(N'2026-06-24T03:17:38.257' AS DateTime), N'Usuarios', N'Login exitoso: 12345672Nahuel', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (440, N'12345672Nahuel', CAST(N'2026-06-24T03:17:51.523' AS DateTime), N'Usuarios', N'Logout exitoso: 12345672Nahuel', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (441, N'46948668Maximo', CAST(N'2026-06-24T03:18:09.960' AS DateTime), N'Usuarios', N'Intento fallido de login: 46948668Maximo', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (442, N'46948668Maximo', CAST(N'2026-06-24T03:18:15.363' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (443, N'46948668Maximo', CAST(N'2026-06-24T03:23:47.103' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (444, N'46948668Maximo', CAST(N'2026-06-24T03:36:27.567' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (445, N'46948668Maximo', CAST(N'2026-06-24T03:37:23.767' AS DateTime), N'Admin', N'Familia modificada: Usuario (Actor: 46948668Maximo)', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (446, N'46948668Maximo', CAST(N'2026-06-24T03:37:29.287' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (447, N'46948668Maximo', CAST(N'2026-06-24T03:37:45.973' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (448, N'46948668Maximo', CAST(N'2026-06-24T03:38:26.827' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (452, N'46948668Maximo', CAST(N'2026-07-06T23:47:52.090' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (453, N'46948668Maximo', CAST(N'2026-07-06T23:49:29.500' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (454, N'46948668Maximo', CAST(N'2026-07-06T23:52:26.177' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (455, N'46948668Maximo', CAST(N'2026-07-07T01:37:52.413' AS DateTime), N'Admin', N'Integridad de datos comprometida', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (456, N'46905013Lucas', CAST(N'2026-07-07T01:38:29.187' AS DateTime), N'Admin', N'Integridad de datos comprometida', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (457, N'46905013Lucas', CAST(N'2026-07-07T01:38:33.757' AS DateTime), N'Admin', N'Integridad de datos comprometida', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (458, N'46905013Lucas', CAST(N'2026-07-07T01:46:36.033' AS DateTime), N'Admin', N'Integridad de datos comprometida', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (460, N'46948668Maximo', CAST(N'2026-07-07T02:01:31.630' AS DateTime), N'Admin', N'Integridad de datos comprometida', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (461, N'46948668Maximo', CAST(N'2026-07-07T02:01:33.790' AS DateTime), N'Admin', N'Integridad de datos comprometida', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (462, N'46905013Lucas', CAST(N'2026-07-07T02:02:00.563' AS DateTime), N'Admin', N'Integridad de datos comprometida', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (464, N'46948668Maximo', CAST(N'2026-07-07T02:06:55.080' AS DateTime), N'Admin', N'Integridad de datos comprometida', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (465, N'46948668Maximo', CAST(N'2026-07-07T02:09:04.640' AS DateTime), N'Admin', N'Integridad de datos comprometida', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (466, N'46948668Maximo', CAST(N'2026-07-07T02:09:16.700' AS DateTime), N'Admin', N'Integridad de datos comprometida', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (467, N'46948668Maximo', CAST(N'2026-07-07T02:10:34.107' AS DateTime), N'Admin', N'Integridad de datos comprometida', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (468, N'46948668Maximo', CAST(N'2026-07-07T02:12:07.940' AS DateTime), N'Admin', N'Integridad de datos comprometida', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (470, N'46948668Maximo', CAST(N'2026-07-07T02:25:57.383' AS DateTime), N'Admin', N'Integridad de datos comprometida', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (471, N'46948668Maximo', CAST(N'2026-07-07T02:26:54.957' AS DateTime), N'Admin', N'Integridad de datos comprometida', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (472, N'46948668Maximo', CAST(N'2026-07-07T02:30:13.760' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (473, N'46948668Maximo', CAST(N'2026-07-07T02:34:55.220' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (474, N'46948668Maximo', CAST(N'2026-07-07T02:55:05.717' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (475, N'46948668Maximo', CAST(N'2026-07-07T02:56:47.500' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (476, N'46948668Maximo', CAST(N'2026-07-07T03:03:30.910' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (477, N'46948668Maximo', CAST(N'2026-07-07T03:16:51.120' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (478, N'46948668Maximo', CAST(N'2026-07-07T03:17:10.810' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (479, N'46948668Maximo', CAST(N'2026-07-07T03:17:17.127' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (480, N'46948668Maximo', CAST(N'2026-07-07T03:17:18.930' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (481, N'46948668Maximo', CAST(N'2026-07-07T03:17:24.253' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (482, N'46948668Maximo', CAST(N'2026-07-07T03:17:58.107' AS DateTime), N'Admin', N'Recálculo de hashes ejecutado: 46948668Maximo', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (483, N'46948668Maximo', CAST(N'2026-07-07T03:22:33.463' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (484, N'46948668Maximo', CAST(N'2026-07-07T03:26:09.893' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (485, N'46948668Maximo', CAST(N'2026-07-07T03:26:13.003' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (486, N'46948668Maximo', CAST(N'2026-07-07T03:27:08.690' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (487, N'46948668Maximo', CAST(N'2026-07-07T03:27:14.050' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (488, N'46948668Maximo', CAST(N'2026-07-07T03:27:19.187' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (489, N'46948668Maximo', CAST(N'2026-07-07T03:27:22.810' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (490, N'46948668Maximo', CAST(N'2026-07-07T03:30:39.833' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (491, N'46948668Maximo', CAST(N'2026-07-07T03:33:42.263' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (492, N'46948668Maximo', CAST(N'2026-07-07T03:42:56.080' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (493, N'46948668Maximo', CAST(N'2026-07-07T03:42:58.767' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (494, N'46948668Maximo', CAST(N'2026-07-07T03:43:17.647' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (495, N'46948668Maximo', CAST(N'2026-07-07T03:43:20.553' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (496, N'46948668Maximo', CAST(N'2026-07-07T03:43:56.053' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (497, N'46948668Maximo', CAST(N'2026-07-07T03:43:59.083' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (498, N'46948668Maximo', CAST(N'2026-07-07T03:44:05.243' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (499, N'46948668Maximo', CAST(N'2026-07-07T03:44:08.953' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (500, N'46948668Maximo', CAST(N'2026-07-07T03:45:13.163' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (501, N'46948668Maximo', CAST(N'2026-07-07T03:45:18.943' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (502, N'46948668Maximo', CAST(N'2026-07-07T03:50:01.623' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (503, N'46948668Maximo', CAST(N'2026-07-07T03:50:06.920' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (504, N'46948668Maximo', CAST(N'2026-07-07T03:57:39.363' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (505, N'46948668Maximo', CAST(N'2026-07-07T03:59:24.860' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (506, N'46948668Maximo', CAST(N'2026-07-07T04:00:29.957' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (507, N'46948668Maximo', CAST(N'2026-07-07T04:01:52.083' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+GO
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (508, N'46948668Maximo', CAST(N'2026-07-07T04:05:17.747' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (509, N'46948668Maximo', CAST(N'2026-07-07T04:06:54.837' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (510, N'46948668Maximo', CAST(N'2026-07-07T04:11:58.513' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (511, N'46948668Maximo', CAST(N'2026-07-07T04:12:02.263' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (512, N'46948668Maximo', CAST(N'2026-07-07T04:24:44.153' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (513, N'46948668Maximo', CAST(N'2026-07-07T04:24:53.400' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (514, N'46948668Maximo', CAST(N'2026-07-07T04:25:05.800' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (515, N'46948668Maximo', CAST(N'2026-07-07T04:25:09.377' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (516, N'46948668Maximo', CAST(N'2026-07-07T04:25:45.510' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (517, N'46948668Maximo', CAST(N'2026-07-07T04:25:51.133' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (518, N'46948668Maximo', CAST(N'2026-07-07T04:29:07.980' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (519, N'46948668Maximo', CAST(N'2026-07-07T04:29:30.230' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (520, N'46948668Maximo', CAST(N'2026-07-07T04:29:56.207' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (521, N'46948668Maximo', CAST(N'2026-07-07T04:30:26.177' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (522, N'46948668Maximo', CAST(N'2026-07-07T04:32:39.490' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (523, N'46948668Maximo', CAST(N'2026-07-07T04:32:46.533' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (524, N'46948668Maximo', CAST(N'2026-07-07T04:33:07.820' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (525, N'46948668Maximo', CAST(N'2026-07-07T04:33:46.063' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (528, N'46948668Maximo', CAST(N'2026-07-07T04:36:28.523' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (529, N'46948668Maximo', CAST(N'2026-07-07T04:37:23.617' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (530, N'46948668Maximo', CAST(N'2026-07-07T04:44:35.037' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (531, N'46948668Maximo', CAST(N'2026-07-07T04:44:41.513' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (532, N'46948668Maximo', CAST(N'2026-07-07T04:44:45.677' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (533, N'46948668Maximo', CAST(N'2026-07-07T04:44:47.060' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (534, N'46948668Maximo', CAST(N'2026-07-07T04:45:24.070' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (535, N'46948668Maximo', CAST(N'2026-07-07T04:45:51.167' AS DateTime), N'Admin', N'Recálculo de hashes ejecutado: 46948668Maximo', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (536, N'46948668Maximo', CAST(N'2026-07-07T04:45:55.317' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (537, N'46948668Maximo', CAST(N'2026-07-07T04:46:10.810' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (538, N'46948668Maximo', CAST(N'2026-07-07T04:46:14.867' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (539, N'46948668Maximo', CAST(N'2026-07-07T04:46:18.257' AS DateTime), N'Usuarios', N'Intento fallido de login: 46948668Maximo', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (540, N'46948668Maximo', CAST(N'2026-07-07T04:49:49.300' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (541, N'46948668Maximo', CAST(N'2026-07-07T04:49:50.353' AS DateTime), N'Admin', N'Recálculo de hashes ejecutado: 46948668Maximo', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (542, N'46948668Maximo', CAST(N'2026-07-07T04:49:57.610' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (543, N'46948668Maximo', CAST(N'2026-07-07T04:50:05.953' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (544, N'46948668Maximo', CAST(N'2026-07-07T04:55:51.297' AS DateTime), N'Admin', N'Restauración de base de datos ejecutada: 46948668Maximo — Ruta: D:\GestionUsuarios_backup_20260707_015009.bak', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (545, N'46948668Maximo', CAST(N'2026-07-07T04:56:20.063' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (546, N'46948668Maximo', CAST(N'2026-07-07T04:57:25.640' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (547, N'46948668Maximo', CAST(N'2026-07-07T04:58:47.173' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (548, N'46948668Maximo', CAST(N'2026-07-07T05:27:58.290' AS DateTime), N'Admin', N'Restauración de base de datos ejecutada: 46948668Maximo — Ruta: D:\GestionUsuarios_backup_ultima.bak', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (549, N'46948668Maximo', CAST(N'2026-07-07T05:28:05.870' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (550, N'46948668Maximo', CAST(N'2026-07-07T05:28:12.947' AS DateTime), N'Admin', N'Recálculo de hashes ejecutado: 46948668Maximo', 1)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (551, N'46948668Maximo', CAST(N'2026-07-07T05:28:13.913' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (552, N'46948668Maximo', CAST(N'2026-07-07T05:28:47.713' AS DateTime), N'Usuarios', N'Login exitoso: 46948668Maximo', 3)
+INSERT [dbo].[BitacoraEventos] ([Id], [Username], [Fecha], [Modulo], [Descripcion], [Criticidad]) VALUES (553, N'46948668Maximo', CAST(N'2026-07-07T05:28:50.427' AS DateTime), N'Usuarios', N'Logout exitoso: 46948668Maximo', 3)
+SET IDENTITY_INSERT [dbo].[BitacoraEventos] OFF
+GO
+INSERT [dbo].[DigitoVerificador_83KI] ([NombreTabla], [DVV], [FechaActualizacion]) VALUES (N'FamiliaFamilia', N'bab16e3f51626195d348479720445001c9c50f819ea5804e0a37c9ffad3a801f', CAST(N'2026-07-07T02:28:12.950' AS DateTime))
+INSERT [dbo].[DigitoVerificador_83KI] ([NombreTabla], [DVV], [FechaActualizacion]) VALUES (N'FamiliaPatente', N'773f267b9ff2c337b7e1df1fbb1d7d34a4a046753dceebbf9e44ed14646242b7', CAST(N'2026-07-07T02:28:12.943' AS DateTime))
+INSERT [dbo].[DigitoVerificador_83KI] ([NombreTabla], [DVV], [FechaActualizacion]) VALUES (N'Familias', N'0393d20d6abeaac2d08ee00257bbc99a38e9904ff64cd51d6842387fc0794858', CAST(N'2026-07-07T02:28:12.917' AS DateTime))
+INSERT [dbo].[DigitoVerificador_83KI] ([NombreTabla], [DVV], [FechaActualizacion]) VALUES (N'Patentes', N'af43c3bac4cfc2070f11cc1778432d9d3cfed6e17c014fd951f85c5af64c6533', CAST(N'2026-07-07T02:28:12.923' AS DateTime))
+INSERT [dbo].[DigitoVerificador_83KI] ([NombreTabla], [DVV], [FechaActualizacion]) VALUES (N'Roles', N'befd6c81ff9538fdb685237af658337576a9a88f0c84470c98a8f50ed1e94fa6', CAST(N'2026-07-07T02:28:12.913' AS DateTime))
+INSERT [dbo].[DigitoVerificador_83KI] ([NombreTabla], [DVV], [FechaActualizacion]) VALUES (N'RolFamilia', N'5885a3e77918009a70bbca18457571b5ce2cefbfd66cdc731e65b9e6ee5a347f', CAST(N'2026-07-07T02:28:12.937' AS DateTime))
+INSERT [dbo].[DigitoVerificador_83KI] ([NombreTabla], [DVV], [FechaActualizacion]) VALUES (N'RolPatente', N'1345f08958353d8d97068d0361e8ee2dd10b6c6af4c5bf7d4e9e137dd8cf8c43', CAST(N'2026-07-07T02:28:12.933' AS DateTime))
+INSERT [dbo].[DigitoVerificador_83KI] ([NombreTabla], [DVV], [FechaActualizacion]) VALUES (N'Usuarios', N'cf31f4ff4c48155f628e421acca2716153c6f359b5cceb63fbba4c72d368befd', CAST(N'2026-07-07T02:28:47.700' AS DateTime))
+GO
+INSERT [dbo].[FamiliaFamilia] ([CodigoFamiliaPadre], [CodigoFamiliaHija], [DVH]) VALUES (1, 7, N'549bfe4f1093183397a50682e70849cfeeeab4277cc0a71a4e9b4992bfb577f3')
+INSERT [dbo].[FamiliaFamilia] ([CodigoFamiliaPadre], [CodigoFamiliaHija], [DVH]) VALUES (5, 4, N'641a59117c9eda2fa6935dad31f9f6f4f5e92eec97b17667979b188f45a7462f')
+INSERT [dbo].[FamiliaFamilia] ([CodigoFamiliaPadre], [CodigoFamiliaHija], [DVH]) VALUES (8, 9, N'7a5891873be362cca4c8458e967974667d3e445a450c669806b01eb62801183e')
+INSERT [dbo].[FamiliaFamilia] ([CodigoFamiliaPadre], [CodigoFamiliaHija], [DVH]) VALUES (10, 2, N'302e40ed8c8743f55fabdf2a59897d614d16a91b02f9d343b1faed8a22daee39')
+INSERT [dbo].[FamiliaFamilia] ([CodigoFamiliaPadre], [CodigoFamiliaHija], [DVH]) VALUES (16, 15, N'e944ab168c416b62c53b859e67c8123f1c9c64243bdd6d82a27da4f22ec7add2')
+INSERT [dbo].[FamiliaFamilia] ([CodigoFamiliaPadre], [CodigoFamiliaHija], [DVH]) VALUES (19, 16, N'627d06ec9cb0e30cd6fa62db881e17ddc29595e21118a04b6d17b41458e47f88')
+GO
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (1, 1, N'7183009a547deee4e1388f54aa2744d7cdad6d1791f559023426fae5d8509add')
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (1, 2, N'8466f8b8350b74aeafba0dbfbcf81347f6ddacdc27c6f7ab0cd951ebfab673f6')
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (1, 3, N'705d5ec35a2a8e6427f8e5a69a4d86d72a56a188b3428e061dffcd8cce68e80e')
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (1, 4, N'0b2a69bfa8ed25353cc883c828a175152fc825b2510c97b0274b02daada7ccdf')
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (1, 5, N'fd63a18ceb3a63335392392992f92148bcbc6243388d6727db535d07474bc77d')
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (1, 14, N'70737d9dbeaf7819027b297218d2eb496a2c66ae8c31803245093513b2957786')
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (1, 15, N'61d9569469895e2bf8251f828da41deb9f4649d1da01e0f3ef8c77bf13a9cf47')
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (2, 6, N'6985cfdc20992f921f00d4a23fc48494c5d823b7ce7b62af337d5d4b2cb5d223')
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (2, 31, N'9c803c7871fa3d5f26e82ad59daf5e7bccea67107e21445f663d1be32a6ecf19')
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (2, 32, N'0d76bebf0fd95e0438c12b3e7271d768fde8b36b87f0dc57f1f077d6d9acb9c8')
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (2, 33, N'7c39fb2ee8a4dda4d9ed5d2e7670b91b9b75abb5ee71a3a4c98f03447f7bdc30')
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (4, 9, N'f2e60f07a095d2972658947164f4d29cf5687d31b71569e4bc8e5d3d5fbf2c02')
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (5, 7, N'a7f93066db876f8311961e61d6473ba0aaab4c457f03132eba80507968c1b61f')
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (5, 8, N'7d8fdf38dd7fb6c7443b4c6048933c8259e9aaf14a7acc36608a0a08d9030e7a')
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (5, 10, N'84fd3550fb84f7a3b3f0d284dffdbfa180cda22894645bf9d3c6239adc3bc01c')
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (5, 37, N'6786f86ed4a7c3dad1091bfe9d7a2fdf64f9c8edd42ae51b38c4640f79226255')
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (7, 35, N'3c120f49d6daf04e3cdda4875a1da5c4d3529179b2ef6b956ed03655cd96b5f5')
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (8, 24, N'd3ea81e7a8f059e6ab760add45c0a3ded9b3c17118a2b2b91e60caca62cd0893')
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (8, 25, N'2ff122e591d4f9a85ef1e6dec954bf001f944756d5e1c6f6341d0fb710600b78')
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (8, 26, N'29bef49b1128a86664be3a977877323fdc80d09191cd0a52fd45c690e874de2d')
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (8, 27, N'0d76694ec44ab21793e71399cba3b270109a807e21efe768a4dc7fdb3d1e6381')
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (8, 28, N'd990e3b24361d762301090816da3a4338ac06cd964e2a9565c817e233efbe2bb')
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (8, 29, N'c6d3caa5c3b3f24086285a9441b7f485d2827a704dcc1592fc142a6b0dac34c0')
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (8, 30, N'cfdea1591b15652fa1a33a612cae60e020f0f2f5e7b59d0c288449f48220604b')
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (8, 36, N'7201d2c5b0e48914df3a7e83513097ae6d807722b9b2ed97e8971bbf6475c5ec')
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (9, 16, N'e67f6c21308823b7a6d8a692b854eaa7360cb9f6724dbdf94cce881a1d17b73c')
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (9, 17, N'4aa3e071801538e4e9d4aa77f824f73423a445b06d41239b132b0076a2b5f663')
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (9, 18, N'cb4c603f241ce5c9be23c9f20bcb4bd5b37de307b0d47a42f390316af21462ec')
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (9, 19, N'31fccabac5db289191554849104e8c8e0fb33e3d1705847e78cd7f6914f25022')
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (9, 20, N'e5e12a9ddbb37eb6b2c11447dec401336776fa62533979e648eb4f79acf288e6')
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (9, 21, N'89bc9e49079fc34ab5090db4273e1351c3f7ab7711ad3936c31908da01d9403a')
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (9, 22, N'66f6454256aecc46210373ebddd60652909c303764da3ccff827dac2506fa2dd')
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (9, 23, N'f37391f026659afb8afb26f753898270a203e5df35c1d678802e429ec2430970')
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (10, 34, N'814e6fedba5776f5cdc53c2f9137feb4c77fa920c17c422fc734bf26c39298e1')
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (15, 27, N'1226859c0ba6daca326c019d738620237ae46ce22d6e53c982c541c7fe1e556e')
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (16, 20, N'0baa07cbaf5842c956c45df5aee547dca889f39d917a63e5a4aa30284c8c3c0e')
+INSERT [dbo].[FamiliaPatente] ([CodigoFamilia], [CodigoPatente], [DVH]) VALUES (19, 15, N'd4ca907fee76e92995da0c15d6314f78b4c665892212493ee939da13e0288676')
+GO
+SET IDENTITY_INSERT [dbo].[Familias] ON 
+
+INSERT [dbo].[Familias] ([CodigoFamilia], [Nombre], [DVH]) VALUES (1, N'Administrador usuarios', N'7199939b029f493680eda649ecdbefa0f4d8c20592537e41c34b160d94b4fcc8')
+INSERT [dbo].[Familias] ([CodigoFamilia], [Nombre], [DVH]) VALUES (2, N'Auditoria', N'190672d0aec50f1f0000e1f8bbd5843da43e6198e93fbad84a300ef8d8b59dd1')
+INSERT [dbo].[Familias] ([CodigoFamilia], [Nombre], [DVH]) VALUES (4, N'Simple', N'6b86a6283531614bf1d7870e50a3bcf296840396eedc3ff21b5114c4f94d3665')
+INSERT [dbo].[Familias] ([CodigoFamilia], [Nombre], [DVH]) VALUES (5, N'Usuario', N'08ea2caf69fc03d801cac5960b84e4195d1de6941ef0a65ac58156ae41a2ac88')
+INSERT [dbo].[Familias] ([CodigoFamilia], [Nombre], [DVH]) VALUES (7, N'Administrador', N'98bc0ecf80c0f7525d008625f20a013c5bb6da312426c980229a93a8f8039a8d')
+INSERT [dbo].[Familias] ([CodigoFamilia], [Nombre], [DVH]) VALUES (8, N'AdministrarRoles', N'66c6ee3fedb616f64df4e42311ac8ae1c63d9edb458c6c7e5e8eb22183ab3039')
+INSERT [dbo].[Familias] ([CodigoFamilia], [Nombre], [DVH]) VALUES (9, N'AdministrarFamilias', N'7f45922470a2c10168acc858aec48c818181b31d3525aacab1d6ab4ccdf55e3b')
+INSERT [dbo].[Familias] ([CodigoFamilia], [Nombre], [DVH]) VALUES (10, N'AdministrarBitacora', N'8e573e13dde0eb194257f0c747ec8634f35361948b735de7f9d6fdee227bd534')
+INSERT [dbo].[Familias] ([CodigoFamilia], [Nombre], [DVH]) VALUES (15, N'Hijo', N'7e05c3e5fed95fbb9ad2220ac701cc72d27bdcf6735436aa7b30144fe973b884')
+INSERT [dbo].[Familias] ([CodigoFamilia], [Nombre], [DVH]) VALUES (16, N'Padre', N'a34344d1c87383844d27872df9b91c1cc604c62b752163a8d6c0118275f1c427')
+INSERT [dbo].[Familias] ([CodigoFamilia], [Nombre], [DVH]) VALUES (19, N'abue prueba', N'ac30c4c826162934ed8654bc5517323fdb85343d9bf3b12cc48d3d21ac3b3c08')
+SET IDENTITY_INSERT [dbo].[Familias] OFF
+GO
+SET IDENTITY_INSERT [dbo].[Patentes] ON 
+
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (1, N'Crear usuario', N'98178bb1cd4ff706ba30edd632cc9601eb59b8076d8b0606a6cc43136a339a51')
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (2, N'Modificar usuario', N'001286a32ca7f1f4a3190e1e6c1e6cf08f0dc6a875c5c004d6e85b07bf121759')
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (3, N'Habilitar usuario', N'3355b10aff631aed14bc4e07ded558022400f77c25b2e4821c8e76d25f529ecb')
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (4, N'Deshabilitar usuario', N'bc09253874dbc8279bf6e6ea0f837a2fcb7ca1a6a753af077489db5b0ba8a01b')
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (5, N'Desbloquear usuario', N'eca24c30f34d9c57986b21bda2b14b7740901aacf8c8c1ab60d568c702495e54')
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (6, N'Ver bitacora de eventos', N'b1758738ad9a7abf029e5a04ce55aea9258016c218e07b31219f3a1eee63d83e')
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (7, N'Cerrar sesion', N'4f496c0d9c6ebc384243755f2055b103df4997a484ff75b5161dffbba796f7c4')
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (8, N'ReLogin', N'd93dbfa4e04e72beab00b71315a8559fc353614ddbaf68f1f42595ef270c75b4')
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (9, N'Ayuda', N'e816342ecf57262b2104d24f7a5c16ab9b7381abef3d97e4744ae7c6abe04f38')
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (10, N'Cambiar Contraseña', N'0b8c584239a57e68fcd01e8e9a0ea1947ba32be9ed70926b46ce9851a57aad77')
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (14, N'Gestion de usuarios', N'f56e8755a285740993d3bf3965795bf12ca89b07a17eef278fba46ca8a1f8873')
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (15, N'Ver usuarios', N'd6d5d1b580db491a6acf82c3fb4d256f59101ed5226c802ee27c4a1e2125dca8')
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (16, N'Gestion de familias', N'1dae0956e5d9859728fe8013b0eb8a3c392073e954d898a1cfd337589285b66d')
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (17, N'Ver familias', N'3d46f6f4e3b5a343ac501a7f1df3ab0f052b780b49706b1ad4875d081364e5be')
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (18, N'Crear familia', N'68d27c53938da21ee9b5c99fb3b5000ec01aa7c1ffcfca4e61d757f2a372d2a7')
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (19, N'Eliminar familia', N'ddfe8d06e359ee3b4af8103379c6a4a50cfea6f2928aacc6c779614b9d373fb3')
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (20, N'Agregar patente a familia', N'6a135037eef6ac4c3ea8da69165e46154b62b615490230cca1f82524fcbc8ef5')
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (21, N'Quitar patente de familia', N'875db51724a21b3d21beb1f908e43a9f0362860644cb1a9753ba710154993a6c')
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (22, N'Agregar subfamilia', N'21851f8679a9c75acc5b27351893e153fba7f1c68b88fb49499fc3037fa474b7')
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (23, N'Quitar subfamilia', N'bf02190defc50bb6ad193fbf1dbb04a81d023bb069fbc43b0db7662d4bd1fb5a')
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (24, N'Gestion de roles', N'4a29bead2f4abd82d703d04e50159c645d602044e834810b670de89e7e513c99')
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (25, N'Ver roles', N'0cc308af79d2a2ed794fd1c7b69b3f81c80588041e4cfc71831ac89af6aa6029')
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (26, N'Ver permisos efectivos de rol', N'b1099fbfd6f4e08c2531f548c81d215c3b4f08ea53205221a5517730e5ac4af2')
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (27, N'Agregar familia a rol', N'32a2447ba5dd287daa3b244e0130317e5905ad611ef027180f79838c05e54596')
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (28, N'Quitar familia de rol', N'696b5095c897b7b26c0f72ee4227d93bcf2a42346f39a6afee2832f6848798a2')
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (29, N'Asignar patente a rol', N'70e95b88b31dacf7bb679110cad8296bde5953e4dc84b7df2577a9e0443ae55c')
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (30, N'Quitar patente de rol', N'10dc9a4793d699bc73ebd73fe8be33c1ba313f7f9f78101f497ba7d9bfe52b29')
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (31, N'Consultar bitacora de eventos', N'e0a22a429b7deae30d3021d24a332820faf81eb1eb69785add0d4c8228584320')
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (32, N'Filtrar bitacora de eventos', N'c88bfe08bdfb7c90172f3643034bd7955e0d06fb0b2018462a05257422078f49')
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (33, N'Limpiar filtros de bitacora', N'9e41dd9d60548fcef6168e6dd3b479c4e4d7be01573caa6b7cbade1c12fde898')
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (34, N'Exportar bitacora a PDF', N'16e74a4036fd0c20cf7fa125a39f2961c4b35327c3a63d0242b46d2db2930176')
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (35, N'GestionAdmin', N'e873447dead71fe04e7d4e18223d1b631756e0742d4d31f1319c33411c2f9c2f')
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (36, N'EliminarRol', N'0a54804137485b8f83e89e4f8f228486a7fbf42beeae9f934170530f568ba4e7')
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (37, N'Cambiar Idioma', N'a171accd8b6ea3ff8ef4e970ab40cda0078e18d70363575f800743d25650d66f')
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (38, N'EjecutarBackup', N'f7ca0d296cd3a44490af198fedae968e8af0b2f9fcc46716b5760f54dd8f5b30')
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (39, N'EjecutarRestore', N'99765682d30f78e31d2f39ac19f26d4da45876782faac78bcd9daede83aa4010')
+INSERT [dbo].[Patentes] ([CodigoPatente], [Nombre], [DVH]) VALUES (40, N'RecalcularHashes', N'55f4f57af9007897c3851de51ca8696c61744a4461ce6482a86376c52f628813')
+SET IDENTITY_INSERT [dbo].[Patentes] OFF
+GO
+SET IDENTITY_INSERT [dbo].[Roles] ON 
+
+INSERT [dbo].[Roles] ([CodigoRol], [Nombre], [DVH]) VALUES (1, N'Admin', N'b1fc372b2b8e30f8c8ce3d861f3d3123cbc216167f29ad580c3ef0a2981488cd')
+INSERT [dbo].[Roles] ([CodigoRol], [Nombre], [DVH]) VALUES (2, N'RolSimple', N'bf83688350fff83d3aaf8f31ec21ef581034cb83e068cc8f6d169e96d8b04a03')
+INSERT [dbo].[Roles] ([CodigoRol], [Nombre], [DVH]) VALUES (3, N'RolAdminSinAuditoria', N'9c3abce1b30296f148d191f4cf7a32e60215604833ff67523a3e3273aaea6ad4')
+INSERT [dbo].[Roles] ([CodigoRol], [Nombre], [DVH]) VALUES (4, N'SuperAdmin', N'b07537540ff0e84763567b81c54c800e460e61d72be87a49d59cd88effb6e525')
+INSERT [dbo].[Roles] ([CodigoRol], [Nombre], [DVH]) VALUES (12, N'PruebaAdmin', N'b61f21048ef6375350cab9cf1eddea775440a0f7bc7f8350c3a8cf599b557646')
+SET IDENTITY_INSERT [dbo].[Roles] OFF
+GO
+INSERT [dbo].[RolFamilia] ([CodigoRol], [CodigoFamilia], [DVH]) VALUES (2, 5, N'03ddb99028eb7f8c417a4c0d0c2af1e97e75d872f73a81cb4b20d194b418a518')
+INSERT [dbo].[RolFamilia] ([CodigoRol], [CodigoFamilia], [DVH]) VALUES (3, 1, N'a9288e59aa963e2177bf60f4a8ed2cae67a9e0d70c285011f17907dbaad47c85')
+INSERT [dbo].[RolFamilia] ([CodigoRol], [CodigoFamilia], [DVH]) VALUES (3, 5, N'4c45462aecbc25b2698f904eeee4282b021aaab1d1cb410ee8b4b834ca8f93ca')
+INSERT [dbo].[RolFamilia] ([CodigoRol], [CodigoFamilia], [DVH]) VALUES (4, 1, N'9610aa9dface0816bbf1fc9d38e401aed274a6ad7f1073223496c504b8a303ce')
+INSERT [dbo].[RolFamilia] ([CodigoRol], [CodigoFamilia], [DVH]) VALUES (4, 5, N'5e9b92425a0b53de447ed38edcdc09da248003a41861009c018e74cd5c9badc6')
+INSERT [dbo].[RolFamilia] ([CodigoRol], [CodigoFamilia], [DVH]) VALUES (4, 7, N'0481f06f493ea1104cc0eb7bbe62f4ffb9a571396cbacea258f2e28b58a409d1')
+INSERT [dbo].[RolFamilia] ([CodigoRol], [CodigoFamilia], [DVH]) VALUES (4, 8, N'64c7b6fc0284fb593eb595039a729b87c671290343c2c1febd82a33174ef46f5')
+INSERT [dbo].[RolFamilia] ([CodigoRol], [CodigoFamilia], [DVH]) VALUES (4, 10, N'bf668ce9f9bedb034680d803043abebd849b1c968847b14e1913862b7f03c9f8')
+INSERT [dbo].[RolFamilia] ([CodigoRol], [CodigoFamilia], [DVH]) VALUES (12, 2, N'c8da1b47b9625fd59499d843bbb575be44aba070d69eac6205f35170540bef44')
+INSERT [dbo].[RolFamilia] ([CodigoRol], [CodigoFamilia], [DVH]) VALUES (12, 5, N'68897aba2650cd2bce4f1d53ee75a5abe1542f6ad85cb2b7c69da5d92cec885f')
+INSERT [dbo].[RolFamilia] ([CodigoRol], [CodigoFamilia], [DVH]) VALUES (12, 7, N'3ba32c9421dd8aba7236471894241a64e12a813d850141b6d6d8bf94ebea66bf')
+GO
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (1, 1, N'cc3793c04f34e113510979abb2673398b57775190af8edc45728456913c430e0')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (1, 2, N'fb46410db6c53827512925b844dfdce6c352157612d1c04064db507dbf1de158')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (1, 3, N'b33bb3d5836852c23e52e08aea2ee8506fcb854b325d6c8b7bd6efb27147a4c2')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (1, 4, N'f7a59aea87ac42f8fb2161e42dc2dcc9583a1f0f8a38c7ab0a7170f231e194a7')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (1, 5, N'fac0a4c3ab7cd8fa07e856afcb2bd3facde724e5f3d94b72c8360906e4949a1f')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (1, 6, N'ff10be3fcea367f8c698d111e6aacf41bd55a75899be6b75a6f5857222d51fac')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (1, 7, N'fe4aeef375b329684b8442a3b73507be91ff69f273b673d66d1dc8b8b27ab436')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (1, 8, N'92ae7f03923d5f84527c0a9f188ef86ee9e2c621d539536fe841a06b40cd7e17')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (1, 9, N'e1966da5760a9a49e9efff4c1c0c6e518929ae82ea4405966c7273b826d74ef0')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (1, 10, N'6d5c14099857b3087424c8c779e5495bdddae0dce416226a99d49a906543e6b9')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (1, 14, N'5dfe2802b73785e751a95c1ed698a3c81b6fe423c5ea242bd24981870ef8d914')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (1, 15, N'2563a9c6b55af385a80ccb9315e212fe1b66938876671166a652e53be835e7b7')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (1, 16, N'e8392a7d18c9f0ec6bb6c858b40e8cb25f443164d08e3d7d14fa2150597bc7a3')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (1, 17, N'040d022c7b97f357707a66bf07c497ded402b9ba35d56663f4b549d2edc920c6')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (1, 18, N'7a2f9cd8af4d2eff3f034c66ff0646d6f7afe757432a29876caefff35d78e366')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (1, 19, N'401cda189f740e91625b947c1e49a90779de8c7a87647593563db388e64c7129')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (1, 20, N'09cf073ec3a43889a632c5f807718da05d78305fe23d30e4ae413c71486ddbc2')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (1, 21, N'f52bf93f95e893c4e1fdde27d5f1414961084734b29161dc38bc18a43f651f9e')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (1, 22, N'cb61d29e9bf7bbb7f74714fe169470d7a7dfae5a57d19decbe72e6414864d2d9')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (1, 23, N'3465ea84e3f7d2198389ffb19f44cd41f3dfdb5c2bc3eee0acdced07eb0e9fca')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (1, 24, N'c7e93d01f0a88fdfe171941a4d761f0158e7a6e73cc67efa2c47551ffbf15aaa')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (1, 25, N'1807866806df494dbd0ce35aac2b4fcf6a5bcb84534d4b3d82499b610dc1876b')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (1, 26, N'8d8ce9f3a7c6006b99236e22c03132bd87ad7580e5626f07b47d2ed80812ca8e')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (1, 27, N'95869330a7d0bac4416c5f2611c4209c32c3ccfe0b587e70b5081f3db7762d59')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (1, 28, N'd0af3bbbfd02609244ced2cbc7abc15bfd7cb6138f9d07a59c8cf653891a2155')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (1, 29, N'898f1a13d1d68cbe04fef57ead3aca0849c707d72bf299cfa74ead69c15af027')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (1, 30, N'992f9eb0c3c7f79d678e7351147f7cc85d08f9b5ff4efad700893478fae9b50e')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (1, 31, N'5e1f1e77a2ee557719ba20c676a9d41b27ba6285dce541bbc280c5ef81e3696e')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (1, 32, N'2e0c12eff6f6fe687c7e210934b4adcf59391913d9c8afe23e82dd58b46a035e')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (1, 33, N'aaeb20b8b6cc40e7d92e4d01d1d6618697c4f5f356df2fdecf70bd2d1ffdd4c9')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (1, 34, N'59e2db0d465ec033e7c0dbe31a20d83c32504e9f4863f4e7f5667d53f83c8757')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (1, 35, N'00b61b8ef931c4ab6446f5eed2a9a26836763387120631ccdb2a02b15627f217')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (1, 36, N'9dd27fbd89fc3d97180e9c524f547c24d172d7a1635e791486136472a06b1d1a')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (1, 38, N'c38d3a53a0244e44764f9ee98962c22de196d8bd7d8723a6e09f9b112fb69f97')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (1, 39, N'f33d48f3a91783741f4e973cff9d946755b56b472fc1977f1010fa67a1da3cab')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (1, 40, N'3a0ab4dbf7ba109bef0fad444a58f4758ca43eda313d91af62e96824891e29ab')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (4, 30, N'8fe458e7880382464168ef622b9b647b214405cab6a37dbefeeddf57eb0a1fdc')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (4, 38, N'0302a3d3ee1b1f41866ccebc5dc3e305858d0e81f25fcc36c261ba56071fc422')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (4, 39, N'69c1c66d7f041e57ea397515ccd0e466f7bbb62eb88cb2329376597b86da9ba9')
+INSERT [dbo].[RolPatente] ([CodigoRol], [CodigoPatente], [DVH]) VALUES (4, 40, N'c70d4cde7960ee3a04b08019750bff29103c76becb965d1e55ae1cfe059965fc')
+GO
+INSERT [dbo].[Usuarios] ([DNI], [Nombre], [Apellido], [Email], [Bloqueado], [Contrasena], [Username], [Activo], [CodigoRol], [IntentosRealizados], [FechaUltimoIntento], [IdiomaId], [DVH]) VALUES (N'12345672', N'Nahuel', N'Sanchez', N'error@test.com                                                                                                                                                                                          ', 0, N'1cdcfc3885f538bc4c6ef194013dc7450af9a44e26cfa2a4d0f89344406caf26', N'12345672Nahuel', 1, 2, 0, NULL, N'es-AR', N'a82949f1d016b3d47c8f11039c286cbf68049b3903d8ed41b280a01b956db901')
+INSERT [dbo].[Usuarios] ([DNI], [Nombre], [Apellido], [Email], [Bloqueado], [Contrasena], [Username], [Activo], [CodigoRol], [IntentosRealizados], [FechaUltimoIntento], [IdiomaId], [DVH]) VALUES (N'124231241', N'fas', N'asf', N'asf@gmail.com                                                                                                                                                                                           ', 0, N'd2689e1efc50095936ec5f2d18d28b66734d192b63ef64c15f42703ede94292b', N'124231241fas', 0, 1, 0, NULL, N'es-AR', N'f471ab8452cc81f69dabfc16d85c54e811949b3b870bec88ec93555d14caf2f2')
+INSERT [dbo].[Usuarios] ([DNI], [Nombre], [Apellido], [Email], [Bloqueado], [Contrasena], [Username], [Activo], [CodigoRol], [IntentosRealizados], [FechaUltimoIntento], [IdiomaId], [DVH]) VALUES (N'23456789', N'as', N'as', N'AS@gmail.com                                                                                                                                                                                            ', 0, N'2194518bf4e3e64b7363f0768136569ae2f9204a44252623f85f9471048c2827', N'23456789as', 1, 1, 0, NULL, N'es-AR', N'1ad46763825ad78bfd573dcb445fa443a0ce4e219ea55ad747dd3742ff61f28d')
+INSERT [dbo].[Usuarios] ([DNI], [Nombre], [Apellido], [Email], [Bloqueado], [Contrasena], [Username], [Activo], [CodigoRol], [IntentosRealizados], [FechaUltimoIntento], [IdiomaId], [DVH]) VALUES (N'46905013', N'Lucas', N'Molinari', N'lucas@gmail.com                                                                                                                                                                                         ', 0, N'934797de82eee77c0eca90f94d93cdfe9b4f51d41d80aa49d6f130b0caa3709b', N'46905013Lucas', 1, 12, 0, NULL, N'es-AR', N'43f8a333aef919829cb63bb9fd1455c6350a09880b08c5e186a4e60ec8b660ff')
+INSERT [dbo].[Usuarios] ([DNI], [Nombre], [Apellido], [Email], [Bloqueado], [Contrasena], [Username], [Activo], [CodigoRol], [IntentosRealizados], [FechaUltimoIntento], [IdiomaId], [DVH]) VALUES (N'46948668', N'Maximo', N'Kirichuk', N'MaximoKirichuk@gmail.com                                                                                                                                                                                ', 0, N'f3af358d1bca104bf69aaf41ee785504f50d22ea78cbce4d060268db618b4e97', N'46948668Maximo', 1, 4, 0, NULL, N'es-AR', N'258a86db838ad04edb1ade00cd51916aeb73936a5bb973473b843c90b1f0ca03')
+INSERT [dbo].[Usuarios] ([DNI], [Nombre], [Apellido], [Email], [Bloqueado], [Contrasena], [Username], [Activo], [CodigoRol], [IntentosRealizados], [FechaUltimoIntento], [IdiomaId], [DVH]) VALUES (N'47006530', N'Benjamin', N'Aguila', N'benjaaguila6@gmail.com                                                                                                                                                                                  ', 0, N'21481fa29aa0a6048019b0e3690484221ceed8d77bf4f9c14721c7f56a5035ba', N'47006530Benjamin', 1, 2, 0, NULL, N'es-AR', N'398ab007324ab388e4f43a9978523f8eabb0efb834d9719306c80f6c6efb2b1a')
+GO
+SET ANSI_PADDING ON
+GO
+/****** Object:  Index [UQ_Familias_Nombre]    Script Date: 7/7/2026 2:35:03 AM ******/
+ALTER TABLE [dbo].[Familias] ADD  CONSTRAINT [UQ_Familias_Nombre] UNIQUE NONCLUSTERED 
+(
+	[Nombre] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+SET ANSI_PADDING ON
+GO
+/****** Object:  Index [UQ_Patentes_Nombre]    Script Date: 7/7/2026 2:35:03 AM ******/
+ALTER TABLE [dbo].[Patentes] ADD  CONSTRAINT [UQ_Patentes_Nombre] UNIQUE NONCLUSTERED 
+(
+	[Nombre] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+SET ANSI_PADDING ON
+GO
+/****** Object:  Index [UQ__Roles__75E3EFCF6E3FB7D0]    Script Date: 7/7/2026 2:35:03 AM ******/
+ALTER TABLE [dbo].[Roles] ADD  CONSTRAINT [UQ__Roles__75E3EFCF6E3FB7D0] UNIQUE NONCLUSTERED 
+(
+	[Nombre] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+SET ANSI_PADDING ON
+GO
+/****** Object:  Index [IX_Usuarios]    Script Date: 7/7/2026 2:35:03 AM ******/
+ALTER TABLE [dbo].[Usuarios] ADD  CONSTRAINT [IX_Usuarios] UNIQUE NONCLUSTERED 
+(
+	[Username] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+SET ANSI_PADDING ON
+GO
+/****** Object:  Index [IX_Usuarios_Email]    Script Date: 7/7/2026 2:35:03 AM ******/
+ALTER TABLE [dbo].[Usuarios] ADD  CONSTRAINT [IX_Usuarios_Email] UNIQUE NONCLUSTERED 
+(
+	[Email] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+ALTER TABLE [dbo].[DigitoVerificador_83KI] ADD  CONSTRAINT [DF_DigitoVerificador_Fecha]  DEFAULT (getdate()) FOR [FechaActualizacion]
+GO
+ALTER TABLE [dbo].[FamiliaFamilia] ADD  CONSTRAINT [DF_FamiliaFamilia_DVH]  DEFAULT ('') FOR [DVH]
+GO
+ALTER TABLE [dbo].[FamiliaPatente] ADD  CONSTRAINT [DF_FamiliaPatente_DVH]  DEFAULT ('') FOR [DVH]
+GO
+ALTER TABLE [dbo].[Familias] ADD  CONSTRAINT [DF_Familias_DVH]  DEFAULT ('') FOR [DVH]
+GO
+ALTER TABLE [dbo].[Patentes] ADD  CONSTRAINT [DF_Patentes_DVH]  DEFAULT ('') FOR [DVH]
+GO
+ALTER TABLE [dbo].[Roles] ADD  CONSTRAINT [DF_Roles_DVH]  DEFAULT ('') FOR [DVH]
+GO
+ALTER TABLE [dbo].[RolFamilia] ADD  CONSTRAINT [DF_RolFamilia_DVH]  DEFAULT ('') FOR [DVH]
+GO
+ALTER TABLE [dbo].[RolPatente] ADD  CONSTRAINT [DF_RolPatente_DVH]  DEFAULT ('') FOR [DVH]
+GO
+ALTER TABLE [dbo].[Usuarios] ADD  CONSTRAINT [DF_Usuarios_Activo]  DEFAULT ((1)) FOR [Activo]
+GO
+ALTER TABLE [dbo].[Usuarios] ADD  CONSTRAINT [DF_Usuarios_Intentos]  DEFAULT ((0)) FOR [IntentosRealizados]
+GO
+ALTER TABLE [dbo].[Usuarios] ADD  CONSTRAINT [DF_Usuarios_IdiomaId]  DEFAULT ('es-AR') FOR [IdiomaId]
+GO
+ALTER TABLE [dbo].[Usuarios] ADD  CONSTRAINT [DF_Usuarios_DVH]  DEFAULT ('') FOR [DVH]
+GO
+ALTER TABLE [dbo].[BitacoraEventos]  WITH CHECK ADD  CONSTRAINT [FK_BitacoraEventos_BitacoraEventos] FOREIGN KEY([Username])
+REFERENCES [dbo].[Usuarios] ([Username])
+GO
+ALTER TABLE [dbo].[BitacoraEventos] CHECK CONSTRAINT [FK_BitacoraEventos_BitacoraEventos]
+GO
+ALTER TABLE [dbo].[FamiliaFamilia]  WITH CHECK ADD  CONSTRAINT [FK_FamiliaFamilia_Hija] FOREIGN KEY([CodigoFamiliaHija])
+REFERENCES [dbo].[Familias] ([CodigoFamilia])
+GO
+ALTER TABLE [dbo].[FamiliaFamilia] CHECK CONSTRAINT [FK_FamiliaFamilia_Hija]
+GO
+ALTER TABLE [dbo].[FamiliaFamilia]  WITH CHECK ADD  CONSTRAINT [FK_FamiliaFamilia_Padre] FOREIGN KEY([CodigoFamiliaPadre])
+REFERENCES [dbo].[Familias] ([CodigoFamilia])
+GO
+ALTER TABLE [dbo].[FamiliaFamilia] CHECK CONSTRAINT [FK_FamiliaFamilia_Padre]
+GO
+ALTER TABLE [dbo].[FamiliaPatente]  WITH CHECK ADD  CONSTRAINT [FK_FamiliaPatente_Familias] FOREIGN KEY([CodigoFamilia])
+REFERENCES [dbo].[Familias] ([CodigoFamilia])
+GO
+ALTER TABLE [dbo].[FamiliaPatente] CHECK CONSTRAINT [FK_FamiliaPatente_Familias]
+GO
+ALTER TABLE [dbo].[FamiliaPatente]  WITH CHECK ADD  CONSTRAINT [FK_FamiliaPatente_Patentes] FOREIGN KEY([CodigoPatente])
+REFERENCES [dbo].[Patentes] ([CodigoPatente])
+GO
+ALTER TABLE [dbo].[FamiliaPatente] CHECK CONSTRAINT [FK_FamiliaPatente_Patentes]
+GO
+ALTER TABLE [dbo].[RolFamilia]  WITH CHECK ADD  CONSTRAINT [FK_RolFamilia_Familias] FOREIGN KEY([CodigoFamilia])
+REFERENCES [dbo].[Familias] ([CodigoFamilia])
+GO
+ALTER TABLE [dbo].[RolFamilia] CHECK CONSTRAINT [FK_RolFamilia_Familias]
+GO
+ALTER TABLE [dbo].[RolFamilia]  WITH CHECK ADD  CONSTRAINT [FK_RolFamilia_Roles] FOREIGN KEY([CodigoRol])
+REFERENCES [dbo].[Roles] ([CodigoRol])
+GO
+ALTER TABLE [dbo].[RolFamilia] CHECK CONSTRAINT [FK_RolFamilia_Roles]
+GO
+ALTER TABLE [dbo].[RolPatente]  WITH CHECK ADD  CONSTRAINT [FK_RolPatente_Patentes] FOREIGN KEY([CodigoPatente])
+REFERENCES [dbo].[Patentes] ([CodigoPatente])
+GO
+ALTER TABLE [dbo].[RolPatente] CHECK CONSTRAINT [FK_RolPatente_Patentes]
+GO
+ALTER TABLE [dbo].[RolPatente]  WITH CHECK ADD  CONSTRAINT [FK_RolPatente_Roles] FOREIGN KEY([CodigoRol])
+REFERENCES [dbo].[Roles] ([CodigoRol])
+GO
+ALTER TABLE [dbo].[RolPatente] CHECK CONSTRAINT [FK_RolPatente_Roles]
+GO
+ALTER TABLE [dbo].[Usuarios]  WITH CHECK ADD  CONSTRAINT [FK_Usuarios_Roles] FOREIGN KEY([CodigoRol])
+REFERENCES [dbo].[Roles] ([CodigoRol])
+GO
+ALTER TABLE [dbo].[Usuarios] CHECK CONSTRAINT [FK_Usuarios_Roles]
+GO
+ALTER TABLE [dbo].[FamiliaFamilia]  WITH CHECK ADD  CONSTRAINT [CK_FamiliaFamilia_NoAutoReferencia] CHECK  (([CodigoFamiliaPadre]<>[CodigoFamiliaHija]))
+GO
+ALTER TABLE [dbo].[FamiliaFamilia] CHECK CONSTRAINT [CK_FamiliaFamilia_NoAutoReferencia]
+GO
+GO
+SET NOEXEC OFF;
+GO
+
+-- ============================================================================
+-- Esquema con guardas (siempre) - origen: EsquemaCompleto.sql
+-- ============================================================================
+GO
+IF OBJECT_ID(N'[dbo].[Profesor]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [dbo].[Profesor](
+        [IdProfesor] INT IDENTITY(1,1) NOT NULL,
+        [DNI] NVARCHAR(20) NOT NULL,
+        [Nombre] NVARCHAR(100) NOT NULL,
+        [Apellido] NVARCHAR(100) NOT NULL,
+        [Email] NVARCHAR(255) NOT NULL,
+        [EstadoActivo] BIT NOT NULL CONSTRAINT [DF_Profesor_EstadoActivo] DEFAULT (1),
+        [DVH] VARCHAR(64) NOT NULL CONSTRAINT [DF_Profesor_DVH] DEFAULT (''),
+        CONSTRAINT [PK_Profesor] PRIMARY KEY CLUSTERED ([IdProfesor] ASC),
+        CONSTRAINT [UQ_Profesor_DNI] UNIQUE ([DNI])
+    );
+END
+GO
+
+IF OBJECT_ID(N'[dbo].[Curso]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [dbo].[Curso](
+        [IdCurso] INT IDENTITY(1,1) NOT NULL,
+        [Nombre] NVARCHAR(100) NOT NULL,
+        [Descripcion] NVARCHAR(500) NOT NULL CONSTRAINT [DF_Curso_Descripcion] DEFAULT (''),
+        [CargaHoraria] INT NOT NULL,
+        [EstadoActivo] BIT NOT NULL CONSTRAINT [DF_Curso_EstadoActivo] DEFAULT (1),
+        [DVH] VARCHAR(64) NOT NULL CONSTRAINT [DF_Curso_DVH] DEFAULT (''),
+        CONSTRAINT [PK_Curso] PRIMARY KEY CLUSTERED ([IdCurso] ASC),
+        CONSTRAINT [UQ_Curso_Nombre] UNIQUE ([Nombre]),
+        CONSTRAINT [CK_Curso_CargaHoraria] CHECK ([CargaHoraria] > 0)
+    );
+END
+GO
+
+IF OBJECT_ID(N'[dbo].[Curso]', N'U') IS NOT NULL AND COL_LENGTH('dbo.Curso', 'Descripcion') IS NULL
+BEGIN
+    ALTER TABLE [dbo].[Curso] ADD [Descripcion] NVARCHAR(500) NOT NULL CONSTRAINT [DF_Curso_Descripcion] DEFAULT ('');
+END
+GO
+
+IF OBJECT_ID(N'[dbo].[CursoProfesor]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [dbo].[CursoProfesor](
+        [IdCurso] INT NOT NULL,
+        [IdProfesor] INT NOT NULL,
+        [EstadoActivo] BIT NOT NULL CONSTRAINT [DF_CursoProfesor_EstadoActivo] DEFAULT (1),
+        [DVH] VARCHAR(64) NOT NULL CONSTRAINT [DF_CursoProfesor_DVH] DEFAULT (''),
+        CONSTRAINT [PK_CursoProfesor] PRIMARY KEY CLUSTERED ([IdCurso] ASC, [IdProfesor] ASC),
+        CONSTRAINT [FK_CursoProfesor_Curso] FOREIGN KEY ([IdCurso]) REFERENCES [dbo].[Curso]([IdCurso]),
+        CONSTRAINT [FK_CursoProfesor_Profesor] FOREIGN KEY ([IdProfesor]) REFERENCES [dbo].[Profesor]([IdProfesor])
+    );
+END
+GO
+
+IF OBJECT_ID(N'[dbo].[DisponibilidadProfesor]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [dbo].[DisponibilidadProfesor](
+        [IdDisponibilidadProfesor] INT IDENTITY(1,1) NOT NULL,
+        [IdProfesor] INT NOT NULL,
+        [DiaSemana] NVARCHAR(20) NOT NULL,
+        [HoraInicio] TIME NOT NULL,
+        [HoraFin] TIME NOT NULL,
+        [EstadoActivo] BIT NOT NULL CONSTRAINT [DF_DisponibilidadProfesor_EstadoActivo] DEFAULT (1),
+        [DVH] VARCHAR(64) NOT NULL CONSTRAINT [DF_DisponibilidadProfesor_DVH] DEFAULT (''),
+        CONSTRAINT [PK_DisponibilidadProfesor] PRIMARY KEY CLUSTERED ([IdDisponibilidadProfesor] ASC),
+        CONSTRAINT [FK_DisponibilidadProfesor_Profesor] FOREIGN KEY ([IdProfesor]) REFERENCES [dbo].[Profesor]([IdProfesor]),
+        CONSTRAINT [CK_DisponibilidadProfesor_Horario] CHECK ([HoraInicio] < [HoraFin])
+    );
+END
+GO
+
+SET IDENTITY_INSERT [dbo].[Patentes] ON
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.Patentes WHERE CodigoPatente = 41)
+BEGIN
+    INSERT INTO dbo.Patentes (CodigoPatente, Nombre, DVH) VALUES
+    (41, N'Gestion de profesores', ''), (42, N'Ver profesores', ''),
+    (43, N'Crear profesor', ''), (44, N'Modificar profesor', ''),
+    (45, N'Activar profesor', ''), (46, N'Desactivar profesor', '');
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.Patentes WHERE CodigoPatente = 47)
+BEGIN
+    INSERT INTO dbo.Patentes (CodigoPatente, Nombre, DVH) VALUES
+    (47, N'Gestion de cursos', ''), (48, N'Ver cursos', ''),
+    (49, N'Crear curso', ''), (50, N'Modificar curso', ''),
+    (51, N'Activar curso', ''), (52, N'Desactivar curso', '');
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.Patentes WHERE CodigoPatente = 53)
+BEGIN
+    INSERT INTO dbo.Patentes (CodigoPatente, Nombre, DVH) VALUES
+    (53, N'Gestion de curso-profesor', ''), (54, N'Ver curso-profesor', ''),
+    (55, N'Habilitar curso-profesor', ''), (56, N'Deshabilitar curso-profesor', '');
+END
+GO
+
+DECLARE @PermisosComisiones TABLE (CodigoPatente INT NOT NULL PRIMARY KEY, Nombre NVARCHAR(100) NOT NULL);
+INSERT INTO @PermisosComisiones (CodigoPatente, Nombre) VALUES
+(61, N'Ver comisiones'), (62, N'Modificar comisión'), (63, N'Eliminar comisión');
+
+IF EXISTS (
+    SELECT 1
+    FROM dbo.Patentes p
+    INNER JOIN @PermisosComisiones pc ON pc.CodigoPatente = p.CodigoPatente
+    WHERE p.Nombre <> pc.Nombre
+)
+BEGIN
+    RAISERROR(N'No se pueden insertar permisos de comisiones: uno de los códigos 61-63 ya existe con otro nombre.', 16, 1);
+    RETURN;
+END
+
+IF EXISTS (
+    SELECT 1
+    FROM dbo.Patentes p
+    INNER JOIN @PermisosComisiones pc ON pc.Nombre = p.Nombre
+    WHERE p.CodigoPatente <> pc.CodigoPatente
+)
+BEGIN
+    RAISERROR(N'No se pueden insertar permisos de comisiones: existe un permiso de comisiones con otro código. Revise/repárelo manualmente antes de continuar.', 16, 1);
+    RETURN;
+END
+
+INSERT INTO dbo.Patentes (CodigoPatente, Nombre, DVH)
+SELECT pc.CodigoPatente, pc.Nombre, ''
+FROM @PermisosComisiones pc
+WHERE NOT EXISTS (SELECT 1 FROM dbo.Patentes p WHERE p.CodigoPatente = pc.CodigoPatente);
+GO
+
+SET IDENTITY_INSERT [dbo].[Patentes] OFF
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.RolPatente WHERE CodigoRol = 1 AND CodigoPatente = 41)
+BEGIN
+    INSERT INTO dbo.RolPatente (CodigoRol, CodigoPatente, DVH)
+    SELECT 1, CodigoPatente, '' FROM dbo.Patentes WHERE CodigoPatente BETWEEN 41 AND 46;
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.RolPatente WHERE CodigoRol = 1 AND CodigoPatente = 47)
+BEGIN
+    INSERT INTO dbo.RolPatente (CodigoRol, CodigoPatente, DVH)
+    SELECT 1, CodigoPatente, '' FROM dbo.Patentes WHERE CodigoPatente BETWEEN 47 AND 52;
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.RolPatente WHERE CodigoRol = 1 AND CodigoPatente = 53)
+BEGIN
+    INSERT INTO dbo.RolPatente (CodigoRol, CodigoPatente, DVH)
+    SELECT 1, CodigoPatente, '' FROM dbo.Patentes WHERE CodigoPatente BETWEEN 53 AND 56;
+END
+GO
+
+INSERT INTO dbo.RolPatente (CodigoRol, CodigoPatente, DVH)
+SELECT 1, pc.CodigoPatente, ''
+FROM (VALUES (61, N'Ver comisiones'), (62, N'Modificar comisión'), (63, N'Eliminar comisión')) pc(CodigoPatente, Nombre)
+WHERE EXISTS (SELECT 1 FROM dbo.Patentes p WHERE p.CodigoPatente = pc.CodigoPatente AND p.Nombre = pc.Nombre)
+  AND NOT EXISTS (SELECT 1 FROM dbo.RolPatente rp WHERE rp.CodigoRol = 1 AND rp.CodigoPatente = pc.CodigoPatente);
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'Profesor')
+BEGIN
+    INSERT INTO dbo.DigitoVerificador_83KI (NombreTabla, DVV, FechaActualizacion) VALUES (N'Profesor', '', GETDATE());
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'Curso')
+BEGIN
+    INSERT INTO dbo.DigitoVerificador_83KI (NombreTabla, DVV, FechaActualizacion) VALUES (N'Curso', '', GETDATE());
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'CursoProfesor')
+BEGIN
+    INSERT INTO dbo.DigitoVerificador_83KI (NombreTabla, DVV, FechaActualizacion) VALUES (N'CursoProfesor', '', GETDATE());
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'DisponibilidadProfesor')
+BEGIN
+    INSERT INTO dbo.DigitoVerificador_83KI (NombreTabla, DVV, FechaActualizacion) VALUES (N'DisponibilidadProfesor', '', GETDATE());
+END
+GO
+
+UPDATE dbo.Patentes
+SET DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+    N'CodigoPatente=', CONVERT(NVARCHAR(128), CodigoPatente), N'|',
+    N'Nombre=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Nombre), N'∅')))
+)), 2));
+GO
+UPDATE dbo.RolPatente
+SET DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+    N'CodigoPatente=', CONVERT(NVARCHAR(128), CodigoPatente), N'|',
+    N'CodigoRol=', CONVERT(NVARCHAR(128), CodigoRol)
+)), 2));
+GO
+UPDATE dbo.Curso
+SET DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+    N'CargaHoraria=', CONVERT(NVARCHAR(128), CargaHoraria), N'|',
+    N'Descripcion=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Descripcion), N'∅'))), N'|',
+    N'EstadoActivo=', CASE WHEN EstadoActivo = 1 THEN N'1' ELSE N'0' END, N'|',
+    N'IdCurso=', CONVERT(NVARCHAR(128), IdCurso), N'|',
+    N'Nombre=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Nombre), N'∅')))
+)), 2));
+GO
+UPDATE dbo.CursoProfesor
+SET DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+    N'EstadoActivo=', CASE WHEN EstadoActivo = 1 THEN N'1' ELSE N'0' END, N'|',
+    N'IdCurso=', CONVERT(NVARCHAR(128), IdCurso), N'|',
+    N'IdProfesor=', CONVERT(NVARCHAR(128), IdProfesor)
+)), 2));
+GO
+UPDATE dbo.DigitoVerificador_83KI SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.Patentes ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)), FechaActualizacion = GETDATE() WHERE NombreTabla = N'Patentes';
+UPDATE dbo.DigitoVerificador_83KI SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.RolPatente ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)), FechaActualizacion = GETDATE() WHERE NombreTabla = N'RolPatente';
+UPDATE dbo.DigitoVerificador_83KI SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.Profesor ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)), FechaActualizacion = GETDATE() WHERE NombreTabla = N'Profesor';
+UPDATE dbo.DigitoVerificador_83KI SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.Curso ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)), FechaActualizacion = GETDATE() WHERE NombreTabla = N'Curso';
+UPDATE dbo.DigitoVerificador_83KI SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.CursoProfesor ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)), FechaActualizacion = GETDATE() WHERE NombreTabla = N'CursoProfesor';
+GO
+
+IF OBJECT_ID(N'[dbo].[PlanesDePago]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [dbo].[PlanesDePago](
+        [IdPlanDePago] INT IDENTITY(1,1) NOT NULL,
+        [Nombre] NVARCHAR(100) NOT NULL,
+        [RecargoPorcentaje] DECIMAL(9,4) NOT NULL CONSTRAINT [DF_PlanesDePago_Recargo] DEFAULT (0),
+        [EstadoActivo] BIT NOT NULL CONSTRAINT [DF_PlanesDePago_EstadoActivo] DEFAULT (1),
+        CONSTRAINT [PK_PlanesDePago] PRIMARY KEY CLUSTERED ([IdPlanDePago] ASC),
+        CONSTRAINT [UQ_PlanesDePago_Nombre] UNIQUE ([Nombre]),
+        CONSTRAINT [CK_PlanesDePago_Recargo] CHECK ([RecargoPorcentaje] >= 0)
+    );
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.PlanesDePago)
+BEGIN
+    INSERT INTO dbo.PlanesDePago (Nombre, RecargoPorcentaje, EstadoActivo) VALUES
+    (N'Contado', 0.0000, 1),
+    (N'3 cuotas', 5.1250, 1),
+    (N'6 cuotas', 10.0000, 1);
+END
+GO
+
+IF OBJECT_ID(N'[dbo].[Comision]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [dbo].[Comision](
+        [IdComision] INT IDENTITY(1,1) NOT NULL,
+        [Codigo] NVARCHAR(30) NOT NULL,
+        [IdCurso] INT NOT NULL,
+        [IdProfesor] INT NOT NULL,
+        [DiaSemana] NVARCHAR(20) NOT NULL,
+        [HoraInicio] TIME NOT NULL,
+        [HoraFin] TIME NOT NULL,
+        [CupoMinimo] INT NOT NULL,
+        [CupoMaximo] INT NOT NULL,
+        [FechaLimitePago] DATE NOT NULL,
+        [FechaInicio] DATE NOT NULL,
+        [FechaFin] DATE NOT NULL,
+        [ArancelBase] DECIMAL(18,2) NOT NULL,
+        [IdPlanDePago] INT NOT NULL,
+        [RecargoPlanSnapshot] DECIMAL(9,4) NOT NULL,
+        [Estado] NVARCHAR(30) NOT NULL CONSTRAINT [DF_Comision_Estado] DEFAULT (N'preapertura'),
+        [DVH] VARCHAR(64) NOT NULL CONSTRAINT [DF_Comision_DVH] DEFAULT (''),
+        CONSTRAINT [PK_Comision] PRIMARY KEY CLUSTERED ([IdComision] ASC),
+        CONSTRAINT [FK_Comision_Curso] FOREIGN KEY ([IdCurso]) REFERENCES [dbo].[Curso]([IdCurso]),
+        CONSTRAINT [FK_Comision_Profesor] FOREIGN KEY ([IdProfesor]) REFERENCES [dbo].[Profesor]([IdProfesor]),
+        CONSTRAINT [FK_Comision_PlanesDePago] FOREIGN KEY ([IdPlanDePago]) REFERENCES [dbo].[PlanesDePago]([IdPlanDePago]),
+        CONSTRAINT [CK_Comision_Cupos] CHECK ([CupoMinimo] > 0 AND [CupoMaximo] >= [CupoMinimo]),
+        CONSTRAINT [CK_Comision_Horario] CHECK ([HoraInicio] < [HoraFin]),
+        CONSTRAINT [CK_Comision_Fechas] CHECK ([FechaInicio] <= [FechaFin]),
+        CONSTRAINT [CK_Comision_ArancelBase] CHECK ([ArancelBase] > 0),
+        CONSTRAINT [CK_Comision_RecargoPlan] CHECK ([RecargoPlanSnapshot] >= 0)
+    );
+END
+GO
+
+IF OBJECT_ID(N'[dbo].[Comision]', N'U') IS NOT NULL AND COL_LENGTH('dbo.Comision', 'ArancelBase') IS NULL
+BEGIN
+    ALTER TABLE [dbo].[Comision] ADD [ArancelBase] DECIMAL(18,2) NOT NULL CONSTRAINT [DF_Comision_ArancelBase] DEFAULT (0.01);
+END
+GO
+IF OBJECT_ID(N'[dbo].[Comision]', N'U') IS NOT NULL AND COL_LENGTH('dbo.Comision', 'IdPlanDePago') IS NULL
+BEGIN
+    ALTER TABLE [dbo].[Comision] ADD [IdPlanDePago] INT NULL;
+END
+GO
+IF OBJECT_ID(N'[dbo].[Comision]', N'U') IS NOT NULL AND COL_LENGTH('dbo.Comision', 'RecargoPlanSnapshot') IS NULL
+BEGIN
+    ALTER TABLE [dbo].[Comision] ADD [RecargoPlanSnapshot] DECIMAL(9,4) NOT NULL CONSTRAINT [DF_Comision_RecargoPlanSnapshot] DEFAULT (0);
+END
+GO
+
+IF OBJECT_ID(N'[dbo].[Comision]', N'U') IS NOT NULL AND COL_LENGTH('dbo.Comision', 'FechaInicio') IS NULL
+BEGIN
+    ALTER TABLE [dbo].[Comision] ADD [FechaInicio] DATE NOT NULL CONSTRAINT [DF_Comision_FechaInicio] DEFAULT (CONVERT(date, GETDATE()));
+END
+GO
+IF OBJECT_ID(N'[dbo].[Comision]', N'U') IS NOT NULL AND COL_LENGTH('dbo.Comision', 'FechaFin') IS NULL
+BEGIN
+    ALTER TABLE [dbo].[Comision] ADD [FechaFin] DATE NOT NULL CONSTRAINT [DF_Comision_FechaFin] DEFAULT (DATEADD(month, 4, CONVERT(date, GETDATE())));
+END
+GO
+IF OBJECT_ID(N'[dbo].[CK_Comision_Fechas]', N'C') IS NULL AND OBJECT_ID(N'[dbo].[Comision]', N'U') IS NOT NULL
+BEGIN
+    ALTER TABLE [dbo].[Comision] ADD CONSTRAINT [CK_Comision_Fechas] CHECK ([FechaInicio] <= [FechaFin]);
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'Comision')
+BEGIN
+    INSERT INTO dbo.DigitoVerificador_83KI (NombreTabla, DVV, FechaActualizacion) VALUES (N'Comision', '', GETDATE());
+END
+GO
+
+IF OBJECT_ID(N'[dbo].[sp_CUN01_ListarPlanesDePagoActivos]', N'P') IS NOT NULL
+    DROP PROCEDURE [dbo].[sp_CUN01_ListarPlanesDePagoActivos];
+GO
+CREATE PROCEDURE [dbo].[sp_CUN01_ListarPlanesDePagoActivos]
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT IdPlanDePago, Nombre, RecargoPorcentaje, EstadoActivo
+    FROM dbo.PlanesDePago
+    WHERE EstadoActivo = 1
+    ORDER BY Nombre;
+END
+GO
+
+IF OBJECT_ID(N'[dbo].[sp_CUN01_RegistrarPreaperturaComision]', N'P') IS NOT NULL
+    DROP PROCEDURE [dbo].[sp_CUN01_RegistrarPreaperturaComision];
+GO
+CREATE PROCEDURE [dbo].[sp_CUN01_RegistrarPreaperturaComision]
+    @IdCurso INT,
+    @IdProfesor INT,
+    @DiaSemana NVARCHAR(20),
+    @HoraInicio TIME,
+    @HoraFin TIME,
+    @CupoMinimo INT,
+    @CupoMaximo INT,
+    @FechaLimitePago DATE,
+    @FechaInicio DATE,
+    @FechaFin DATE,
+    @ArancelBase DECIMAL(18,2),
+    @IdPlanDePago INT,
+    @RecargoPlanSnapshot DECIMAL(9,4)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @StartedTransaction BIT = 0;
+    DECLARE @IdComision INT;
+    DECLARE @Codigo NVARCHAR(30);
+
+    IF @@TRANCOUNT = 0
+    BEGIN
+        SET @StartedTransaction = 1;
+        BEGIN TRANSACTION;
+    END
+
+    BEGIN TRY
+        IF EXISTS (
+            SELECT 1
+            FROM dbo.Comision WITH (UPDLOCK, HOLDLOCK)
+            WHERE IdProfesor = @IdProfesor
+              AND DiaSemana = @DiaSemana
+              AND Estado <> N'eliminada'
+              AND HoraInicio < @HoraFin
+              AND HoraFin > @HoraInicio
+        )
+            THROW 51001, N'Errores.ProfesorSolapamientoComision', 1;
+
+        INSERT INTO dbo.Comision (Codigo, IdCurso, IdProfesor, DiaSemana, HoraInicio, HoraFin, CupoMinimo, CupoMaximo, FechaLimitePago, FechaInicio, FechaFin, ArancelBase, IdPlanDePago, RecargoPlanSnapshot, Estado, DVH)
+        VALUES (N'', @IdCurso, @IdProfesor, @DiaSemana, @HoraInicio, @HoraFin, @CupoMinimo, @CupoMaximo, @FechaLimitePago, @FechaInicio, @FechaFin, @ArancelBase, @IdPlanDePago, @RecargoPlanSnapshot, N'preapertura', N'');
+
+        SET @IdComision = SCOPE_IDENTITY();
+        SET @Codigo = CONCAT(N'COM-', RIGHT(CONCAT(N'000000', @IdComision), 6));
+
+        UPDATE dbo.Comision SET Codigo = @Codigo WHERE IdComision = @IdComision;
+
+        IF @StartedTransaction = 1
+            COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @StartedTransaction = 1 AND XACT_STATE() <> 0
+            ROLLBACK TRANSACTION;
+
+        THROW;
+    END CATCH;
+
+    SELECT IdComision, Codigo, IdCurso, IdProfesor, DiaSemana, HoraInicio, HoraFin, CupoMinimo, CupoMaximo,
+           FechaLimitePago, FechaInicio, FechaFin, ArancelBase, IdPlanDePago, RecargoPlanSnapshot, Estado, DVH
+    FROM dbo.Comision
+    WHERE IdComision = @IdComision;
+END
+GO
+
+IF OBJECT_ID(N'[dbo].[sp_CUN01_ListarComisiones]', N'P') IS NOT NULL
+    DROP PROCEDURE [dbo].[sp_CUN01_ListarComisiones];
+GO
+CREATE PROCEDURE [dbo].[sp_CUN01_ListarComisiones]
+    @IdCurso INT = NULL,
+    @IdProfesor INT = NULL,
+    @Estado NVARCHAR(30) = NULL,
+    @FechaInicioDesde DATE = NULL,
+    @FechaFinHasta DATE = NULL,
+    @Codigo NVARCHAR(30) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT c.IdComision, c.Codigo, c.IdCurso, cu.Nombre AS Curso, c.IdProfesor,
+           CONCAT(p.Apellido, N', ', p.Nombre) AS Profesor, c.DiaSemana, c.HoraInicio, c.HoraFin,
+           c.CupoMinimo, c.CupoMaximo, c.FechaLimitePago, c.FechaInicio, c.FechaFin,
+           c.ArancelBase, c.Estado
+    FROM dbo.Comision c
+    INNER JOIN dbo.Curso cu ON cu.IdCurso = c.IdCurso
+    INNER JOIN dbo.Profesor p ON p.IdProfesor = c.IdProfesor
+    WHERE (@IdCurso IS NULL OR c.IdCurso = @IdCurso)
+      AND (@IdProfesor IS NULL OR c.IdProfesor = @IdProfesor)
+      AND (@Estado IS NULL OR c.Estado = @Estado)
+      AND (@FechaInicioDesde IS NULL OR c.FechaInicio >= @FechaInicioDesde)
+      AND (@FechaFinHasta IS NULL OR c.FechaFin <= @FechaFinHasta)
+      AND (@Codigo IS NULL OR c.Codigo LIKE N'%' + @Codigo + N'%')
+    ORDER BY c.FechaInicio DESC, c.Codigo;
+END
+GO
+
+IF OBJECT_ID(N'[dbo].[sp_CUN01_ObtenerComision]', N'P') IS NOT NULL
+    DROP PROCEDURE [dbo].[sp_CUN01_ObtenerComision];
+GO
+CREATE PROCEDURE [dbo].[sp_CUN01_ObtenerComision]
+    @IdComision INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT IdComision, Codigo, IdCurso, IdProfesor, DiaSemana, HoraInicio, HoraFin, CupoMinimo, CupoMaximo,
+           FechaLimitePago, FechaInicio, FechaFin, ArancelBase, IdPlanDePago, RecargoPlanSnapshot, Estado, DVH
+    FROM dbo.Comision
+    WHERE IdComision = @IdComision;
+END
+GO
+
+IF OBJECT_ID(N'[dbo].[sp_CUN01_ModificarComision]', N'P') IS NOT NULL
+    DROP PROCEDURE [dbo].[sp_CUN01_ModificarComision];
+GO
+CREATE PROCEDURE [dbo].[sp_CUN01_ModificarComision]
+    @IdComision INT,
+    @IdCurso INT,
+    @IdProfesor INT,
+    @DiaSemana NVARCHAR(20),
+    @HoraInicio TIME,
+    @HoraFin TIME,
+    @CupoMinimo INT,
+    @CupoMaximo INT,
+    @FechaLimitePago DATE,
+    @FechaInicio DATE,
+    @FechaFin DATE,
+    @ArancelBase DECIMAL(18,2)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @StartedTransaction BIT = 0;
+
+    IF @@TRANCOUNT = 0
+    BEGIN
+        SET @StartedTransaction = 1;
+        BEGIN TRANSACTION;
+    END
+
+    BEGIN TRY
+        IF EXISTS (
+            SELECT 1
+            FROM dbo.Comision WITH (UPDLOCK, HOLDLOCK)
+            WHERE IdProfesor = @IdProfesor
+              AND DiaSemana = @DiaSemana
+              AND Estado <> N'eliminada'
+              AND IdComision <> @IdComision
+              AND HoraInicio < @HoraFin
+              AND HoraFin > @HoraInicio
+        )
+            THROW 51001, N'Errores.ProfesorSolapamientoComision', 1;
+
+        UPDATE dbo.Comision
+        SET IdCurso = @IdCurso,
+            IdProfesor = @IdProfesor,
+            DiaSemana = @DiaSemana,
+            HoraInicio = @HoraInicio,
+            HoraFin = @HoraFin,
+            CupoMinimo = @CupoMinimo,
+            CupoMaximo = @CupoMaximo,
+            FechaLimitePago = @FechaLimitePago,
+            FechaInicio = @FechaInicio,
+            FechaFin = @FechaFin,
+            ArancelBase = @ArancelBase
+        WHERE IdComision = @IdComision AND Estado <> N'eliminada';
+
+        IF @StartedTransaction = 1
+            COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @StartedTransaction = 1 AND XACT_STATE() <> 0
+            ROLLBACK TRANSACTION;
+
+        THROW;
+    END CATCH;
+END
+GO
+
+IF OBJECT_ID(N'[dbo].[sp_CUN01_EliminarComisionLogica]', N'P') IS NOT NULL
+    DROP PROCEDURE [dbo].[sp_CUN01_EliminarComisionLogica];
+GO
+CREATE PROCEDURE [dbo].[sp_CUN01_EliminarComisionLogica]
+    @IdComision INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE dbo.Comision
+    SET Estado = N'eliminada'
+    WHERE IdComision = @IdComision AND Estado = N'preapertura';
+END
+GO
+
+IF OBJECT_ID(N'dbo.CK_Comision_EstadoPreapertura', N'C') IS NOT NULL
+BEGIN
+    ALTER TABLE dbo.Comision DROP CONSTRAINT CK_Comision_EstadoPreapertura;
+END
+GO
+
+IF OBJECT_ID(N'[dbo].[sp_CUN01_ValidarSolapamientoProfesor]', N'P') IS NOT NULL
+    DROP PROCEDURE [dbo].[sp_CUN01_ValidarSolapamientoProfesor];
+GO
+CREATE PROCEDURE [dbo].[sp_CUN01_ValidarSolapamientoProfesor]
+    @IdProfesor INT,
+    @DiaSemana NVARCHAR(20),
+    @HoraInicio TIME,
+    @HoraFin TIME,
+    @IdComisionIgnorar INT = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF EXISTS (
+        SELECT 1 FROM dbo.Comision
+        WHERE IdProfesor = @IdProfesor
+          AND DiaSemana = @DiaSemana
+          AND Estado <> N'eliminada'
+          AND (@IdComisionIgnorar IS NULL OR IdComision <> @IdComisionIgnorar)
+          AND HoraInicio < @HoraFin AND HoraFin > @HoraInicio
+    )
+        SELECT 1 AS Solapamiento;
+    ELSE
+        SELECT 0 AS Solapamiento;
+END
+GO
+
+IF OBJECT_ID(N'dbo.sp_CUN01_ListarCursosActivos', N'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_CUN01_ListarCursosActivos;
+GO
+CREATE PROCEDURE dbo.sp_CUN01_ListarCursosActivos
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT IdCurso, Nombre, Descripcion, CargaHoraria, EstadoActivo, DVH
+    FROM dbo.Curso
+    WHERE EstadoActivo = 1
+    ORDER BY Nombre;
+END
+GO
+
+IF OBJECT_ID(N'dbo.sp_CUN01_ListarProfesoresDisponibles', N'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_CUN01_ListarProfesoresDisponibles;
+GO
+CREATE PROCEDURE dbo.sp_CUN01_ListarProfesoresDisponibles
+    @IdCurso INT,
+    @DiaSemana NVARCHAR(20),
+    @HoraInicio TIME,
+    @HoraFin TIME
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT DISTINCT p.IdProfesor, p.DNI, p.Nombre, p.Apellido, p.Email, p.EstadoActivo, p.DVH
+    FROM dbo.Profesor p
+    INNER JOIN dbo.CursoProfesor cp ON cp.IdProfesor = p.IdProfesor AND cp.IdCurso = @IdCurso AND cp.EstadoActivo = 1
+    INNER JOIN dbo.Curso c ON c.IdCurso = cp.IdCurso AND c.EstadoActivo = 1
+    INNER JOIN dbo.DisponibilidadProfesor dp ON dp.IdProfesor = p.IdProfesor
+        AND dp.EstadoActivo = 1
+        AND dp.DiaSemana = @DiaSemana
+        AND dp.HoraInicio <= @HoraInicio
+        AND dp.HoraFin >= @HoraFin
+    WHERE p.EstadoActivo = 1
+    ORDER BY p.Apellido, p.Nombre;
+END
+GO
+
+IF OBJECT_ID(N'dbo.sp_CUN01_ValidarCursoProfesorDisponibilidad', N'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_CUN01_ValidarCursoProfesorDisponibilidad;
+GO
+CREATE PROCEDURE dbo.sp_CUN01_ValidarCursoProfesorDisponibilidad
+    @IdCurso INT,
+    @IdProfesor INT,
+    @DiaSemana NVARCHAR(20),
+    @HoraInicio TIME,
+    @HoraFin TIME
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT CASE WHEN EXISTS (
+        SELECT 1
+        FROM dbo.Profesor p
+        INNER JOIN dbo.CursoProfesor cp ON cp.IdProfesor = p.IdProfesor AND cp.IdCurso = @IdCurso AND cp.EstadoActivo = 1
+        INNER JOIN dbo.Curso c ON c.IdCurso = cp.IdCurso AND c.EstadoActivo = 1
+        INNER JOIN dbo.DisponibilidadProfesor dp ON dp.IdProfesor = p.IdProfesor
+            AND dp.EstadoActivo = 1
+            AND dp.DiaSemana = @DiaSemana
+            AND dp.HoraInicio <= @HoraInicio
+            AND dp.HoraFin >= @HoraFin
+        WHERE p.IdProfesor = @IdProfesor AND p.EstadoActivo = 1
+    ) THEN 1 ELSE 0 END;
+END
+GO
+
+IF OBJECT_ID(N'dbo.sp_CUN01_InsertarDisponibilidadProfesor', N'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_CUN01_InsertarDisponibilidadProfesor;
+GO
+CREATE PROCEDURE dbo.sp_CUN01_InsertarDisponibilidadProfesor
+    @IdProfesor INT,
+    @DiaSemana NVARCHAR(20),
+    @HoraInicio TIME,
+    @HoraFin TIME,
+    @EstadoActivo BIT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    INSERT INTO dbo.DisponibilidadProfesor (IdProfesor, DiaSemana, HoraInicio, HoraFin, EstadoActivo)
+    VALUES (@IdProfesor, @DiaSemana, @HoraInicio, @HoraFin, @EstadoActivo);
+    SELECT CAST(SCOPE_IDENTITY() AS INT) AS IdDisponibilidadProfesor;
+END
+GO
+
+IF OBJECT_ID(N'dbo.sp_CUN01_ActualizarDisponibilidadProfesor', N'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_CUN01_ActualizarDisponibilidadProfesor;
+GO
+CREATE PROCEDURE dbo.sp_CUN01_ActualizarDisponibilidadProfesor
+    @IdDisponibilidadProfesor INT,
+    @IdProfesor INT,
+    @DiaSemana NVARCHAR(20),
+    @HoraInicio TIME,
+    @HoraFin TIME,
+    @EstadoActivo BIT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE dbo.DisponibilidadProfesor
+    SET IdProfesor = @IdProfesor, DiaSemana = @DiaSemana, HoraInicio = @HoraInicio, HoraFin = @HoraFin, EstadoActivo = @EstadoActivo
+    WHERE IdDisponibilidadProfesor = @IdDisponibilidadProfesor;
+END
+GO
+
+IF OBJECT_ID(N'dbo.sp_CUN01_ListarDisponibilidadProfesor', N'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_CUN01_ListarDisponibilidadProfesor;
+GO
+CREATE PROCEDURE dbo.sp_CUN01_ListarDisponibilidadProfesor
+    @IdProfesor INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT IdDisponibilidadProfesor, IdProfesor, DiaSemana, HoraInicio, HoraFin, EstadoActivo, DVH
+    FROM dbo.DisponibilidadProfesor
+    WHERE IdProfesor = @IdProfesor
+    ORDER BY DiaSemana, HoraInicio;
+END
+GO
+
+UPDATE dbo.Patentes
+SET DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+    N'CodigoPatente=', CONVERT(NVARCHAR(128), CodigoPatente), N'|',
+    N'Nombre=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Nombre), N'∅')))
+)), 2));
+GO
+UPDATE dbo.Roles
+SET DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+    N'CodigoRol=', CONVERT(NVARCHAR(128), CodigoRol), N'|',
+    N'Nombre=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Nombre), N'∅')))
+)), 2));
+GO
+UPDATE dbo.RolPatente
+SET DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+    N'CodigoPatente=', CONVERT(NVARCHAR(128), CodigoPatente), N'|',
+    N'CodigoRol=', CONVERT(NVARCHAR(128), CodigoRol)
+)), 2));
+GO
+UPDATE dbo.Comision
+SET DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+    N'Codigo=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Codigo), N'∅'))), N'|',
+    N'CupoMaximo=', CONVERT(NVARCHAR(128), CupoMaximo), N'|',
+    N'CupoMinimo=', CONVERT(NVARCHAR(128), CupoMinimo), N'|',
+    N'DiaSemana=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), DiaSemana), N'∅'))), N'|',
+    N'Estado=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Estado), N'∅'))), N'|',
+    N'FechaLimitePago=', CONVERT(NVARCHAR(30), CONVERT(DATETIME, FechaLimitePago), 126), N'.000|',
+    N'HoraFin=', CONVERT(NVARCHAR(128), HoraFin), N'|',
+    N'HoraInicio=', CONVERT(NVARCHAR(128), HoraInicio), N'|',
+    N'IdComision=', CONVERT(NVARCHAR(128), IdComision), N'|',
+    N'IdCurso=', CONVERT(NVARCHAR(128), IdCurso), N'|',
+    N'IdProfesor=', CONVERT(NVARCHAR(128), IdProfesor)
+)), 2));
+GO
+UPDATE dbo.DisponibilidadProfesor
+SET DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+    N'DiaSemana=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), DiaSemana), N'∅'))), N'|',
+    N'EstadoActivo=', CASE WHEN EstadoActivo = 1 THEN N'1' ELSE N'0' END, N'|',
+    N'HoraFin=', CONVERT(NVARCHAR(128), HoraFin), N'|',
+    N'HoraInicio=', CONVERT(NVARCHAR(128), HoraInicio), N'|',
+    N'IdDisponibilidadProfesor=', CONVERT(NVARCHAR(128), IdDisponibilidadProfesor), N'|',
+    N'IdProfesor=', CONVERT(NVARCHAR(128), IdProfesor)
+)), 2));
+GO
+UPDATE dbo.DigitoVerificador_83KI SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.Patentes ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)), FechaActualizacion = GETDATE() WHERE NombreTabla = N'Patentes';
+UPDATE dbo.DigitoVerificador_83KI SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.Roles ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)), FechaActualizacion = GETDATE() WHERE NombreTabla = N'Roles';
+UPDATE dbo.DigitoVerificador_83KI SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.RolPatente ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)), FechaActualizacion = GETDATE() WHERE NombreTabla = N'RolPatente';
+UPDATE dbo.DigitoVerificador_83KI SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.Comision ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)), FechaActualizacion = GETDATE() WHERE NombreTabla = N'Comision';
+UPDATE dbo.DigitoVerificador_83KI SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.DisponibilidadProfesor ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)), FechaActualizacion = GETDATE() WHERE NombreTabla = N'DisponibilidadProfesor';
+GO
+
+-- CUN02 Registrar consulta de lead ------------------------------------------------
+IF OBJECT_ID(N'[dbo].[Lead]', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.[Lead](
+        IdLead INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_Lead PRIMARY KEY,
+        DNI NVARCHAR(20) NULL,
+        Nombre NVARCHAR(100) NOT NULL,
+        Apellido NVARCHAR(100) NOT NULL,
+        Email NVARCHAR(255) NOT NULL,
+        Telefono NVARCHAR(50) NOT NULL,
+        FechaAlta DATETIME NOT NULL CONSTRAINT DF_Lead_FechaAlta DEFAULT GETDATE(),
+        Estado NVARCHAR(30) NOT NULL CONSTRAINT DF_Lead_Estado DEFAULT N'activo',
+        DVH VARCHAR(64) NOT NULL CONSTRAINT DF_Lead_DVH DEFAULT '',
+        CONSTRAINT CK_Lead_Estado CHECK (Estado = N'activo')
+    );
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_Lead_DNI' AND object_id = OBJECT_ID(N'dbo.Lead'))
+    CREATE UNIQUE INDEX UX_Lead_DNI ON dbo.[Lead](DNI) WHERE DNI IS NOT NULL AND DNI <> N'';
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Lead_Email' AND object_id = OBJECT_ID(N'dbo.Lead'))
+    CREATE INDEX IX_Lead_Email ON dbo.[Lead](Email);
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Lead_Telefono' AND object_id = OBJECT_ID(N'dbo.Lead'))
+    CREATE INDEX IX_Lead_Telefono ON dbo.[Lead](Telefono);
+GO
+
+IF OBJECT_ID(N'[dbo].[ConsultaLead]', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.ConsultaLead(
+        IdConsultaLead INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_ConsultaLead PRIMARY KEY,
+        Codigo NVARCHAR(30) NOT NULL CONSTRAINT UQ_ConsultaLead_Codigo UNIQUE,
+        IdLead INT NOT NULL,
+        IdComision INT NOT NULL,
+        FechaConsulta DATETIME NOT NULL CONSTRAINT DF_ConsultaLead_Fecha DEFAULT GETDATE(),
+        MedioContacto NVARCHAR(80) NOT NULL,
+        Motivo NVARCHAR(200) NOT NULL,
+        Observaciones NVARCHAR(1000) NULL,
+        Estado NVARCHAR(30) NOT NULL CONSTRAINT DF_ConsultaLead_Estado DEFAULT N'registrada',
+        DVH VARCHAR(64) NOT NULL CONSTRAINT DF_ConsultaLead_DVH DEFAULT '',
+        CONSTRAINT FK_ConsultaLead_Lead FOREIGN KEY (IdLead) REFERENCES dbo.[Lead](IdLead),
+        CONSTRAINT FK_ConsultaLead_Comision FOREIGN KEY (IdComision) REFERENCES dbo.Comision(IdComision),
+        CONSTRAINT CK_ConsultaLead_Estado CHECK (Estado = N'registrada')
+    );
+END
+GO
+
+IF OBJECT_ID(N'dbo.Seq_ConsultaLeadCodigo', N'SO') IS NULL
+    CREATE SEQUENCE dbo.Seq_ConsultaLeadCodigo AS INT START WITH 1 INCREMENT BY 1;
+GO
+
+SET IDENTITY_INSERT dbo.Patentes ON
+GO
+IF NOT EXISTS (SELECT 1 FROM dbo.Patentes WHERE CodigoPatente = 58)
+    INSERT INTO dbo.Patentes (CodigoPatente, Nombre, DVH) VALUES (58, N'RegistrarConsultaLead', '');
+GO
+SET IDENTITY_INSERT dbo.Patentes OFF
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.RolPatente WHERE CodigoRol = 1 AND CodigoPatente = 58)
+    INSERT INTO dbo.RolPatente (CodigoRol, CodigoPatente, DVH) VALUES (1, 58, '');
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'Lead')
+    INSERT INTO dbo.DigitoVerificador_83KI (NombreTabla, DVV, FechaActualizacion) VALUES (N'Lead', '', GETDATE());
+GO
+IF NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'ConsultaLead')
+    INSERT INTO dbo.DigitoVerificador_83KI (NombreTabla, DVV, FechaActualizacion) VALUES (N'ConsultaLead', '', GETDATE());
+GO
+
+UPDATE dbo.DigitoVerificador_83KI
+SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.[Lead] ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)), FechaActualizacion = GETDATE()
+WHERE NombreTabla = N'Lead';
+GO
+
+UPDATE dbo.DigitoVerificador_83KI
+SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.ConsultaLead ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)), FechaActualizacion = GETDATE()
+WHERE NombreTabla = N'ConsultaLead';
+GO
+
+IF OBJECT_ID(N'dbo.sp_CUN02_ListarComisionesPreapertura', N'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_CUN02_ListarComisionesPreapertura;
+GO
+CREATE PROCEDURE dbo.sp_CUN02_ListarComisionesPreapertura
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT c.IdComision, c.Codigo, c.IdCurso, cu.Nombre AS Curso, c.IdProfesor,
+           CONCAT(p.Apellido, N', ', p.Nombre) AS Profesor, c.DiaSemana, c.HoraInicio, c.HoraFin,
+           c.CupoMinimo, c.CupoMaximo, c.FechaLimitePago, c.FechaInicio, c.FechaFin,
+           c.ArancelBase, c.Estado
+    FROM dbo.Comision c
+    INNER JOIN dbo.Curso cu ON cu.IdCurso = c.IdCurso
+    INNER JOIN dbo.Profesor p ON p.IdProfesor = c.IdProfesor
+    WHERE c.Estado = N'preapertura'
+      AND c.FechaLimitePago >= CONVERT(date, GETDATE())
+    ORDER BY c.FechaInicio DESC, c.Codigo;
+END
+GO
+
+IF OBJECT_ID(N'dbo.sp_CUN02_BuscarLead', N'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_CUN02_BuscarLead;
+GO
+CREATE PROCEDURE dbo.sp_CUN02_BuscarLead
+    @DNI NVARCHAR(20) = NULL,
+    @Email NVARCHAR(255) = NULL,
+    @Telefono NVARCHAR(50) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF NULLIF(LTRIM(RTRIM(@DNI)), N'') IS NOT NULL AND EXISTS (SELECT 1 FROM dbo.[Lead] WHERE DNI = LTRIM(RTRIM(@DNI)))
+    BEGIN
+        SELECT * FROM dbo.[Lead] WHERE DNI = LTRIM(RTRIM(@DNI)); RETURN;
+    END
+    IF NULLIF(LTRIM(RTRIM(@Email)), N'') IS NOT NULL AND EXISTS (SELECT 1 FROM dbo.[Lead] WHERE Email = LOWER(LTRIM(RTRIM(@Email))))
+    BEGIN
+        SELECT * FROM dbo.[Lead] WHERE Email = LOWER(LTRIM(RTRIM(@Email))); RETURN;
+    END
+    IF NULLIF(LTRIM(RTRIM(@Telefono)), N'') IS NOT NULL
+        SELECT * FROM dbo.[Lead] WHERE Telefono = LTRIM(RTRIM(@Telefono));
+END
+GO
+
+IF OBJECT_ID(N'dbo.sp_CUN02_RegistrarConsultaLead', N'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_CUN02_RegistrarConsultaLead;
+GO
+CREATE PROCEDURE dbo.sp_CUN02_RegistrarConsultaLead
+    @DNI NVARCHAR(20), @Nombre NVARCHAR(100), @Apellido NVARCHAR(100), @Email NVARCHAR(255), @Telefono NVARCHAR(50),
+    @IdComision INT, @MedioContacto NVARCHAR(80), @Motivo NVARCHAR(200), @Observaciones NVARCHAR(1000) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF NOT EXISTS (SELECT 1 FROM dbo.Comision WHERE IdComision = @IdComision AND Estado = N'preapertura' AND FechaLimitePago >= CONVERT(date, GETDATE())) THROW 52001, 'Comision no disponible.', 1;
+    DECLARE @IdLead INT = NULL, @IdConsultaLead INT = NULL, @LeadCreado BIT = 0;
+    SELECT TOP 1 @IdLead = IdLead FROM dbo.[Lead] WHERE NULLIF(@DNI, N'') IS NOT NULL AND DNI = @DNI;
+    IF @IdLead IS NULL SELECT TOP 1 @IdLead = IdLead FROM dbo.[Lead] WHERE Email = LOWER(LTRIM(RTRIM(@Email))) ORDER BY IdLead;
+    IF @IdLead IS NULL SELECT TOP 1 @IdLead = IdLead FROM dbo.[Lead] WHERE Telefono = LTRIM(RTRIM(@Telefono)) ORDER BY IdLead;
+    IF @IdLead IS NULL
+    BEGIN
+        INSERT INTO dbo.[Lead] (DNI, Nombre, Apellido, Email, Telefono, FechaAlta, Estado)
+        VALUES (NULLIF(LTRIM(RTRIM(@DNI)), N''), LTRIM(RTRIM(@Nombre)), LTRIM(RTRIM(@Apellido)), LOWER(LTRIM(RTRIM(@Email))), LTRIM(RTRIM(@Telefono)), GETDATE(), N'activo');
+        SET @IdLead = SCOPE_IDENTITY(); SET @LeadCreado = 1;
+    END
+    ELSE
+    BEGIN
+        UPDATE dbo.[Lead]
+        SET Nombre = LTRIM(RTRIM(@Nombre)), Apellido = LTRIM(RTRIM(@Apellido)), Email = LOWER(LTRIM(RTRIM(@Email))), Telefono = LTRIM(RTRIM(@Telefono))
+        WHERE IdLead = @IdLead;
+    END
+    DECLARE @Codigo NVARCHAR(30) = CONCAT(N'CON-', FORMAT(GETDATE(), 'yyyyMMdd'), N'-', RIGHT(CONCAT(N'0000', CONVERT(NVARCHAR(10), NEXT VALUE FOR dbo.Seq_ConsultaLeadCodigo)), 4));
+    INSERT INTO dbo.ConsultaLead (Codigo, IdLead, IdComision, FechaConsulta, MedioContacto, Motivo, Observaciones, Estado)
+    VALUES (@Codigo, @IdLead, @IdComision, GETDATE(), LTRIM(RTRIM(@MedioContacto)), LTRIM(RTRIM(@Motivo)), @Observaciones, N'registrada');
+    SET @IdConsultaLead = SCOPE_IDENTITY();
+
+    UPDATE dbo.[Lead]
+    SET DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+        N'Apellido=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Apellido), N'∅'))), N'|',
+        N'DNI=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), DNI), N'∅'))), N'|',
+        N'Email=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Email), N'∅'))), N'|',
+        N'Estado=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Estado), N'∅'))), N'|',
+        N'FechaAlta=', CONVERT(NVARCHAR(25), FechaAlta, 126), N'|',
+        N'IdLead=', CONVERT(NVARCHAR(128), IdLead), N'|',
+        N'Nombre=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Nombre), N'∅'))), N'|',
+        N'Telefono=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Telefono), N'∅')))
+    )), 2))
+    WHERE IdLead = @IdLead;
+
+    UPDATE dbo.ConsultaLead
+    SET DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+        N'Codigo=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Codigo), N'∅'))), N'|',
+        N'Estado=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Estado), N'∅'))), N'|',
+        N'FechaConsulta=', CONVERT(NVARCHAR(25), FechaConsulta, 126), N'|',
+        N'IdComision=', CONVERT(NVARCHAR(128), IdComision), N'|',
+        N'IdConsultaLead=', CONVERT(NVARCHAR(128), IdConsultaLead), N'|',
+        N'IdLead=', CONVERT(NVARCHAR(128), IdLead), N'|',
+        N'MedioContacto=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), MedioContacto), N'∅'))), N'|',
+        N'Motivo=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Motivo), N'∅'))), N'|',
+        N'Observaciones=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Observaciones), N'∅')))
+    )), 2))
+    WHERE IdConsultaLead = @IdConsultaLead;
+
+    UPDATE dbo.DigitoVerificador_83KI
+    SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.[Lead] ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)), FechaActualizacion = GETDATE()
+    WHERE NombreTabla = N'Lead';
+
+    UPDATE dbo.DigitoVerificador_83KI
+    SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.ConsultaLead ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)), FechaActualizacion = GETDATE()
+    WHERE NombreTabla = N'ConsultaLead';
+
+    SELECT IdLead,DNI,Nombre,Apellido,Email,Telefono,FechaAlta,Estado,DVH,@LeadCreado AS LeadCreado FROM dbo.[Lead] WHERE IdLead = @IdLead;
+    SELECT IdConsultaLead,Codigo,IdLead,IdComision,FechaConsulta,MedioContacto,Motivo,Observaciones,Estado,DVH FROM dbo.ConsultaLead WHERE IdConsultaLead = @IdConsultaLead;
+END
+GO
+
+-- =============================================================================
+-- CUN03 Registrar solicitud de inscripcion - additive schema/procedures
+-- Keep this block aligned with Scripts/Sql/cun03/001_migracion.sql for fresh DBs.
+-- =============================================================================
+IF COL_LENGTH('dbo.Comision', 'MontoMatricula') IS NULL
+BEGIN
+    ALTER TABLE dbo.Comision ADD MontoMatricula DECIMAL(18,2) NULL;
+END
+GO
+
+UPDATE dbo.Comision
+SET MontoMatricula = CASE WHEN ISNULL(MontoMatricula, 0) <= 0 THEN ISNULL(NULLIF(ArancelBase, 0), 0.01) ELSE MontoMatricula END
+WHERE MontoMatricula IS NULL OR MontoMatricula <= 0;
+GO
+
+IF COL_LENGTH('dbo.Comision', 'MontoMatricula') IS NOT NULL
+BEGIN
+    ALTER TABLE dbo.Comision ALTER COLUMN MontoMatricula DECIMAL(18,2) NOT NULL;
+END
+GO
+
+IF OBJECT_ID(N'dbo.CK_Comision_MontoMatricula', N'C') IS NULL
+BEGIN
+    ALTER TABLE dbo.Comision ADD CONSTRAINT CK_Comision_MontoMatricula CHECK (MontoMatricula > 0);
+END
+GO
+
+IF OBJECT_ID(N'dbo.Alumno', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Alumno(
+        IdAlumno INT IDENTITY(1,1) NOT NULL,
+        DNI VARCHAR(20) NOT NULL,
+        Nombre NVARCHAR(80) NOT NULL,
+        Apellido NVARCHAR(80) NOT NULL,
+        Email NVARCHAR(200) NOT NULL,
+        Telefono NVARCHAR(50) NOT NULL,
+        FechaAlta DATETIME NOT NULL CONSTRAINT DF_Alumno_FechaAlta DEFAULT (GETDATE()),
+        Estado NVARCHAR(30) NOT NULL CONSTRAINT DF_Alumno_Estado DEFAULT (N'activo'),
+        DVH VARCHAR(64) NOT NULL CONSTRAINT DF_Alumno_DVH DEFAULT (''),
+        CONSTRAINT PK_Alumno PRIMARY KEY CLUSTERED (IdAlumno),
+        CONSTRAINT UQ_Alumno_DNI UNIQUE (DNI)
+    );
+END
+GO
+
+IF OBJECT_ID(N'dbo.SolicitudInscripcion', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.SolicitudInscripcion(
+        IdSolicitudInscripcion INT IDENTITY(1,1) NOT NULL,
+        Codigo NVARCHAR(30) NOT NULL,
+        IdAlumno INT NOT NULL,
+        IdLeadOrigen INT NULL,
+        IdComision INT NOT NULL,
+        IdPlanDePago INT NOT NULL,
+        RecargoPlanSnapshot DECIMAL(9,4) NOT NULL CONSTRAINT DF_SolicitudInscripcion_Recargo DEFAULT (0),
+        FechaSolicitud DATETIME NOT NULL CONSTRAINT DF_SolicitudInscripcion_Fecha DEFAULT (GETDATE()),
+        Estado NVARCHAR(30) NOT NULL CONSTRAINT DF_SolicitudInscripcion_Estado DEFAULT (N'pendiente'),
+        Observaciones NVARCHAR(500) NOT NULL CONSTRAINT DF_SolicitudInscripcion_Observaciones DEFAULT (N''),
+        DVH VARCHAR(64) NOT NULL CONSTRAINT DF_SolicitudInscripcion_DVH DEFAULT (''),
+        CONSTRAINT PK_SolicitudInscripcion PRIMARY KEY CLUSTERED (IdSolicitudInscripcion),
+        CONSTRAINT UQ_SolicitudInscripcion_Codigo UNIQUE (Codigo),
+        CONSTRAINT FK_SolicitudInscripcion_Alumno FOREIGN KEY (IdAlumno) REFERENCES dbo.Alumno(IdAlumno),
+        CONSTRAINT FK_SolicitudInscripcion_Lead FOREIGN KEY (IdLeadOrigen) REFERENCES dbo.Lead(IdLead),
+        CONSTRAINT FK_SolicitudInscripcion_Comision FOREIGN KEY (IdComision) REFERENCES dbo.Comision(IdComision),
+        CONSTRAINT FK_SolicitudInscripcion_Plan FOREIGN KEY (IdPlanDePago) REFERENCES dbo.PlanesDePago(IdPlanDePago)
+    );
+END
+GO
+
+IF OBJECT_ID(N'dbo.Cuota', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Cuota(
+        IdCuota INT IDENTITY(1,1) NOT NULL,
+        IdSolicitudInscripcion INT NOT NULL,
+        NumeroCuota INT NOT NULL,
+        MontoOriginal DECIMAL(18,2) NOT NULL,
+        BalanceAdeudado DECIMAL(18,2) NOT NULL,
+        FechaVencimiento DATE NOT NULL,
+        Estado NVARCHAR(30) NOT NULL CONSTRAINT DF_Cuota_Estado DEFAULT (N'pendiente'),
+        DVH VARCHAR(64) NOT NULL CONSTRAINT DF_Cuota_DVH DEFAULT (''),
+        CONSTRAINT PK_Cuota PRIMARY KEY CLUSTERED (IdCuota),
+        CONSTRAINT FK_Cuota_SolicitudInscripcion FOREIGN KEY (IdSolicitudInscripcion) REFERENCES dbo.SolicitudInscripcion(IdSolicitudInscripcion),
+        CONSTRAINT CK_Cuota_Numero CHECK (NumeroCuota > 0),
+        CONSTRAINT CK_Cuota_Montos CHECK (MontoOriginal > 0 AND BalanceAdeudado >= 0)
+    );
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_SolicitudInscripcion_AlumnoComision_Activa' AND object_id = OBJECT_ID(N'dbo.SolicitudInscripcion'))
+BEGIN
+    SET QUOTED_IDENTIFIER ON;
+    CREATE UNIQUE INDEX UX_SolicitudInscripcion_AlumnoComision_Activa ON dbo.SolicitudInscripcion (IdAlumno, IdComision) WHERE Estado IN (N'pendiente', N'confirmada', N'activa');
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_SolicitudInscripcion_AlumnoComision' AND object_id = OBJECT_ID(N'dbo.SolicitudInscripcion'))
+    CREATE INDEX IX_SolicitudInscripcion_AlumnoComision ON dbo.SolicitudInscripcion (IdAlumno, IdComision) INCLUDE (Estado, IdSolicitudInscripcion);
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Cuota_SolicitudEstadoBalance' AND object_id = OBJECT_ID(N'dbo.Cuota'))
+    CREATE INDEX IX_Cuota_SolicitudEstadoBalance ON dbo.Cuota (IdSolicitudInscripcion, Estado, BalanceAdeudado);
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'Alumno')
+    INSERT INTO dbo.DigitoVerificador_83KI (NombreTabla, DVV, FechaActualizacion) VALUES (N'Alumno', '', GETDATE());
+IF NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'SolicitudInscripcion')
+    INSERT INTO dbo.DigitoVerificador_83KI (NombreTabla, DVV, FechaActualizacion) VALUES (N'SolicitudInscripcion', '', GETDATE());
+IF NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'Cuota')
+    INSERT INTO dbo.DigitoVerificador_83KI (NombreTabla, DVV, FechaActualizacion) VALUES (N'Cuota', '', GETDATE());
+GO
+
+IF OBJECT_ID(N'dbo.Beca', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Beca(
+        IdBeca INT IDENTITY(1,1) NOT NULL,
+        IdAlumno INT NOT NULL,
+        IdComision INT NOT NULL,
+        IdSolicitudInscripcion INT NOT NULL,
+        TipoBeneficio NVARCHAR(100) NOT NULL,
+        FechaSolicitud DATETIME NOT NULL,
+        EstadoBeca NVARCHAR(30) NOT NULL,
+        MotivoDecision NVARCHAR(500) NOT NULL,
+        DVH VARCHAR(64) NOT NULL CONSTRAINT DF_Beca_DVH DEFAULT (''),
+        CONSTRAINT PK_Beca PRIMARY KEY CLUSTERED (IdBeca),
+        CONSTRAINT FK_Beca_Alumno FOREIGN KEY (IdAlumno) REFERENCES dbo.Alumno(IdAlumno),
+        CONSTRAINT FK_Beca_Comision FOREIGN KEY (IdComision) REFERENCES dbo.Comision(IdComision),
+        CONSTRAINT FK_Beca_SolicitudInscripcion FOREIGN KEY (IdSolicitudInscripcion) REFERENCES dbo.SolicitudInscripcion(IdSolicitudInscripcion),
+        CONSTRAINT CK_Beca_EstadoBeca CHECK (EstadoBeca IN (N'Aprobada', N'Denegada'))
+    );
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_Beca_SolicitudComision' AND object_id = OBJECT_ID(N'dbo.Beca'))
+BEGIN
+    SET QUOTED_IDENTIFIER ON;
+    CREATE UNIQUE INDEX UX_Beca_SolicitudComision ON dbo.Beca (IdSolicitudInscripcion, IdComision);
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'Beca')
+    INSERT INTO dbo.DigitoVerificador_83KI (NombreTabla, DVV, FechaActualizacion) VALUES (N'Beca', '', GETDATE());
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.Patentes WHERE CodigoPatente = 64)
+BEGIN
+    SET IDENTITY_INSERT dbo.Patentes ON;
+    INSERT INTO dbo.Patentes (CodigoPatente, Nombre, DVH) VALUES (64, N'Registrar solicitud de inscripción', '');
+    SET IDENTITY_INSERT dbo.Patentes OFF;
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.RolPatente WHERE CodigoRol = 1 AND CodigoPatente = 64)
+BEGIN
+    INSERT INTO dbo.RolPatente (CodigoRol, CodigoPatente, DVH) VALUES (1, 64, '');
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.Patentes WHERE CodigoPatente = 65)
+BEGIN
+    SET IDENTITY_INSERT dbo.Patentes ON;
+    INSERT INTO dbo.Patentes (CodigoPatente, Nombre, DVH) VALUES (65, N'Registrar decisión de beca', '');
+    SET IDENTITY_INSERT dbo.Patentes OFF;
+END
+GO
+
+DECLARE @RolesCun04 TABLE (CodigoRol INT NOT NULL PRIMARY KEY);
+
+INSERT INTO @RolesCun04 (CodigoRol)
+SELECT 1
+WHERE EXISTS (SELECT 1 FROM dbo.Roles WHERE CodigoRol = 1)
+UNION
+SELECT r.CodigoRol
+FROM dbo.Roles r
+WHERE r.Nombre COLLATE Latin1_General_CI_AI IN (N'Coordinador Academico', N'Coordinadora Academica', N'Coordinadora Academia')
+   OR r.Nombre COLLATE Latin1_General_CI_AI LIKE N'Coordinador%Academic%'
+   OR r.Nombre COLLATE Latin1_General_CI_AI LIKE N'Coordinadora%Academic%';
+
+INSERT INTO dbo.RolPatente (CodigoRol, CodigoPatente, DVH)
+SELECT r.CodigoRol, 65, ''
+FROM @RolesCun04 r
+WHERE NOT EXISTS (SELECT 1 FROM dbo.RolPatente rp WHERE rp.CodigoRol = r.CodigoRol AND rp.CodigoPatente = 65);
+GO
+
+IF OBJECT_ID(N'dbo.sp_CUN03_BuscarAlumnoLead', N'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_CUN03_BuscarAlumnoLead;
+GO
+CREATE PROCEDURE dbo.sp_CUN03_BuscarAlumnoLead
+    @Texto NVARCHAR(100)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @Like NVARCHAR(110) = N'%' + LTRIM(RTRIM(ISNULL(@Texto, N''))) + N'%';
+    SELECT N'Alumno' AS Tipo, a.IdAlumno AS IdPersona, a.DNI, a.Nombre, a.Apellido, a.Email, a.Telefono, a.FechaAlta, a.Estado, a.DVH, CAST(NULL AS INT) AS IdComisionSugerida
+    FROM dbo.Alumno a
+    WHERE a.DNI LIKE @Like OR a.Nombre LIKE @Like OR a.Apellido LIKE @Like
+    UNION ALL
+    SELECT N'Lead' AS Tipo, l.IdLead AS IdPersona, l.DNI, l.Nombre, l.Apellido, l.Email, l.Telefono, l.FechaAlta, l.Estado, l.DVH, cl.IdComision AS IdComisionSugerida
+    FROM dbo.Lead l
+    OUTER APPLY (SELECT TOP 1 IdComision FROM dbo.ConsultaLead c WHERE c.IdLead = l.IdLead AND c.Estado <> N'eliminada' ORDER BY c.FechaConsulta DESC, c.IdConsultaLead DESC) cl
+    WHERE l.DNI LIKE @Like OR l.Nombre LIKE @Like OR l.Apellido LIKE @Like;
+END
+GO
+
+IF OBJECT_ID(N'dbo.sp_CUN03_ListarComisionesElegibles', N'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_CUN03_ListarComisionesElegibles;
+GO
+CREATE PROCEDURE dbo.sp_CUN03_ListarComisionesElegibles
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT c.IdComision, c.Codigo, c.IdCurso, cu.Nombre AS Curso, c.IdProfesor, CONCAT(p.Apellido, N', ', p.Nombre) AS Profesor,
+           c.DiaSemana, c.HoraInicio, c.HoraFin, c.CupoMinimo, c.CupoMaximo, c.FechaLimitePago, c.FechaInicio, c.FechaFin,
+           c.ArancelBase, c.MontoMatricula, c.Estado, c.CupoMaximo - ISNULL(s.Ocupadas, 0) AS VacantesDisponibles
+    FROM dbo.Comision c
+    INNER JOIN dbo.Curso cu ON cu.IdCurso = c.IdCurso
+    INNER JOIN dbo.Profesor p ON p.IdProfesor = c.IdProfesor
+    OUTER APPLY (SELECT COUNT(1) AS Ocupadas FROM dbo.SolicitudInscripcion si WHERE si.IdComision = c.IdComision AND si.Estado IN (N'pendiente', N'confirmada', N'activa')) s
+    WHERE c.Estado <> N'eliminada' AND c.FechaLimitePago >= CONVERT(date, GETDATE()) AND c.MontoMatricula > 0
+      AND EXISTS (SELECT 1 FROM dbo.PlanesDePago pp WHERE pp.IdPlanDePago = c.IdPlanDePago AND pp.EstadoActivo = 1)
+      AND c.CupoMaximo - ISNULL(s.Ocupadas, 0) > 0
+    ORDER BY c.FechaInicio, c.Codigo;
+END
+GO
+
+IF OBJECT_ID(N'dbo.sp_CUN03_ObtenerPlanesComision', N'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_CUN03_ObtenerPlanesComision;
+GO
+CREATE PROCEDURE dbo.sp_CUN03_ObtenerPlanesComision
+    @IdComision INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT pp.IdPlanDePago, pp.Nombre, pp.EstadoActivo, pp.RecargoPorcentaje
+    FROM dbo.Comision c INNER JOIN dbo.PlanesDePago pp ON pp.IdPlanDePago = c.IdPlanDePago
+    WHERE c.IdComision = @IdComision AND pp.EstadoActivo = 1;
+END
+GO
+
+IF OBJECT_ID(N'dbo.sp_CUN03_RegistrarSolicitudInscripcion', N'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_CUN03_RegistrarSolicitudInscripcion;
+GO
+CREATE PROCEDURE dbo.sp_CUN03_RegistrarSolicitudInscripcion
+    @DNI VARCHAR(20), @Nombre NVARCHAR(80), @Apellido NVARCHAR(80), @Email NVARCHAR(200), @Telefono NVARCHAR(50),
+    @IdLead INT = NULL, @IdAlumno INT = NULL, @IdComision INT, @IdPlanDePago INT, @Observaciones NVARCHAR(500) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @StartedTransaction BIT = 0, @IdSolicitud INT, @IdCuota INT, @Codigo NVARCHAR(30), @MontoMatricula DECIMAL(18,2), @Recargo DECIMAL(9,4), @VacantesDisponibles INT;
+    IF @@TRANCOUNT = 0 BEGIN SET @StartedTransaction = 1; BEGIN TRANSACTION; END
+    BEGIN TRY
+        SELECT @MontoMatricula = c.MontoMatricula FROM dbo.Comision c WITH (UPDLOCK, HOLDLOCK) WHERE c.IdComision = @IdComision AND c.Estado <> N'eliminada' AND c.FechaLimitePago >= CONVERT(date, GETDATE()) AND c.MontoMatricula > 0;
+        IF @MontoMatricula IS NULL THROW 52001, N'Errores.ComisionElegibleNoDisponible', 1;
+        SELECT @Recargo = pp.RecargoPorcentaje FROM dbo.Comision c INNER JOIN dbo.PlanesDePago pp ON pp.IdPlanDePago = c.IdPlanDePago WHERE c.IdComision = @IdComision AND pp.IdPlanDePago = @IdPlanDePago AND pp.EstadoActivo = 1;
+        IF @Recargo IS NULL THROW 52002, N'Errores.PlanDePagoNoDisponible', 1;
+        IF @IdAlumno IS NULL SELECT @IdAlumno = IdAlumno FROM dbo.Alumno WITH (UPDLOCK, HOLDLOCK) WHERE DNI = @DNI;
+        IF @IdAlumno IS NULL BEGIN INSERT INTO dbo.Alumno (DNI, Nombre, Apellido, Email, Telefono, FechaAlta, Estado, DVH) VALUES (@DNI, @Nombre, @Apellido, @Email, @Telefono, GETDATE(), N'activo', N''); SET @IdAlumno = SCOPE_IDENTITY(); END
+        IF EXISTS (SELECT 1 FROM dbo.SolicitudInscripcion WITH (UPDLOCK, HOLDLOCK) WHERE IdAlumno = @IdAlumno AND IdComision = @IdComision AND Estado IN (N'pendiente', N'confirmada', N'activa')) THROW 52003, N'Errores.InscripcionDuplicada', 1;
+        IF EXISTS (
+            SELECT 1 FROM dbo.SolicitudInscripcion si WITH (UPDLOCK, HOLDLOCK, INDEX(IX_SolicitudInscripcion_AlumnoComision))
+            INNER JOIN dbo.Cuota cu WITH (UPDLOCK, HOLDLOCK, INDEX(IX_Cuota_SolicitudEstadoBalance)) ON cu.IdSolicitudInscripcion = si.IdSolicitudInscripcion
+            WHERE si.IdAlumno = @IdAlumno AND si.IdComision = @IdComision
+              AND cu.Estado = N'pendiente' AND cu.BalanceAdeudado > 0
+        ) THROW 52005, N'Errores.InscripcionPendienteDeuda', 1;
+        SELECT @VacantesDisponibles = c.CupoMaximo - COUNT(si.IdSolicitudInscripcion) FROM dbo.Comision c WITH (UPDLOCK, HOLDLOCK) LEFT JOIN dbo.SolicitudInscripcion si ON si.IdComision = c.IdComision AND si.Estado IN (N'pendiente', N'confirmada', N'activa') WHERE c.IdComision = @IdComision GROUP BY c.CupoMaximo;
+        IF ISNULL(@VacantesDisponibles, 0) <= 0 THROW 52004, N'Errores.SinVacantesComision', 1;
+        INSERT INTO dbo.SolicitudInscripcion (Codigo, IdAlumno, IdLeadOrigen, IdComision, IdPlanDePago, RecargoPlanSnapshot, FechaSolicitud, Estado, Observaciones, DVH) VALUES (N'', @IdAlumno, @IdLead, @IdComision, @IdPlanDePago, @Recargo, GETDATE(), N'pendiente', ISNULL(@Observaciones, N''), N'');
+        SET @IdSolicitud = SCOPE_IDENTITY(); SET @Codigo = CONCAT(N'SI-', RIGHT(CONCAT(N'000000', @IdSolicitud), 6)); UPDATE dbo.SolicitudInscripcion SET Codigo = @Codigo WHERE IdSolicitudInscripcion = @IdSolicitud;
+        INSERT INTO dbo.Cuota (IdSolicitudInscripcion, NumeroCuota, MontoOriginal, BalanceAdeudado, FechaVencimiento, Estado, DVH) VALUES (@IdSolicitud, 1, @MontoMatricula, @MontoMatricula, DATEADD(day, 7, CONVERT(date, GETDATE())), N'pendiente', N'');
+        SET @IdCuota = SCOPE_IDENTITY(); SET @VacantesDisponibles = @VacantesDisponibles - 1;
+        IF @StartedTransaction = 1 COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @StartedTransaction = 1 AND XACT_STATE() <> 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH;
+    SELECT a.IdAlumno, a.DNI AS AlumnoDNI, a.Nombre AS AlumnoNombre, a.Apellido AS AlumnoApellido, a.Email AS AlumnoEmail, a.Telefono AS AlumnoTelefono, a.FechaAlta AS AlumnoFechaAlta, a.Estado AS AlumnoEstado, a.DVH AS AlumnoDVH,
+           si.IdSolicitudInscripcion, si.Codigo, si.IdLeadOrigen, si.IdComision, si.IdPlanDePago, si.RecargoPlanSnapshot, si.FechaSolicitud, si.Estado AS SolicitudEstado, si.Observaciones, si.DVH AS SolicitudDVH,
+           cu.IdCuota, cu.NumeroCuota, cu.MontoOriginal, cu.BalanceAdeudado, cu.FechaVencimiento, cu.Estado AS CuotaEstado, cu.DVH AS CuotaDVH, @VacantesDisponibles AS VacantesDisponibles
+    FROM dbo.SolicitudInscripcion si INNER JOIN dbo.Alumno a ON a.IdAlumno = si.IdAlumno INNER JOIN dbo.Cuota cu ON cu.IdSolicitudInscripcion = si.IdSolicitudInscripcion AND cu.NumeroCuota = 1
+    WHERE si.IdSolicitudInscripcion = @IdSolicitud;
+END
+GO
+
+IF OBJECT_ID(N'[dbo].[sp_CUN01_RegistrarPreaperturaComision]', N'P') IS NOT NULL
+    DROP PROCEDURE [dbo].[sp_CUN01_RegistrarPreaperturaComision];
+GO
+CREATE PROCEDURE [dbo].[sp_CUN01_RegistrarPreaperturaComision]
+    @IdCurso INT, @IdProfesor INT, @DiaSemana NVARCHAR(20), @HoraInicio TIME, @HoraFin TIME,
+    @CupoMinimo INT, @CupoMaximo INT, @FechaLimitePago DATE, @FechaInicio DATE, @FechaFin DATE,
+    @ArancelBase DECIMAL(18,2), @MontoMatricula DECIMAL(18,2), @IdPlanDePago INT, @RecargoPlanSnapshot DECIMAL(9,4)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @StartedTransaction BIT = 0, @IdComision INT, @Codigo NVARCHAR(30);
+    IF @@TRANCOUNT = 0 BEGIN SET @StartedTransaction = 1; BEGIN TRANSACTION; END
+    BEGIN TRY
+        IF EXISTS (SELECT 1 FROM dbo.Comision WITH (UPDLOCK, HOLDLOCK) WHERE IdProfesor = @IdProfesor AND DiaSemana = @DiaSemana AND Estado <> N'eliminada' AND HoraInicio < @HoraFin AND HoraFin > @HoraInicio)
+            THROW 51001, N'Errores.ProfesorSolapamientoComision', 1;
+        INSERT INTO dbo.Comision (Codigo, IdCurso, IdProfesor, DiaSemana, HoraInicio, HoraFin, CupoMinimo, CupoMaximo, FechaLimitePago, FechaInicio, FechaFin, ArancelBase, MontoMatricula, IdPlanDePago, RecargoPlanSnapshot, Estado, DVH)
+        VALUES (N'', @IdCurso, @IdProfesor, @DiaSemana, @HoraInicio, @HoraFin, @CupoMinimo, @CupoMaximo, @FechaLimitePago, @FechaInicio, @FechaFin, @ArancelBase, @MontoMatricula, @IdPlanDePago, @RecargoPlanSnapshot, N'preapertura', N'');
+        SET @IdComision = SCOPE_IDENTITY();
+        SET @Codigo = CONCAT(N'COM-', RIGHT(CONCAT(N'000000', @IdComision), 6));
+        UPDATE dbo.Comision SET Codigo = @Codigo WHERE IdComision = @IdComision;
+        IF @StartedTransaction = 1 COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @StartedTransaction = 1 AND XACT_STATE() <> 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH;
+    SELECT IdComision, Codigo, IdCurso, IdProfesor, DiaSemana, HoraInicio, HoraFin, CupoMinimo, CupoMaximo, FechaLimitePago, FechaInicio, FechaFin, ArancelBase, MontoMatricula, IdPlanDePago, RecargoPlanSnapshot, Estado, DVH
+    FROM dbo.Comision WHERE IdComision = @IdComision;
+END
+GO
+
+IF OBJECT_ID(N'[dbo].[sp_CUN01_ObtenerComision]', N'P') IS NOT NULL
+    DROP PROCEDURE [dbo].[sp_CUN01_ObtenerComision];
+GO
+CREATE PROCEDURE [dbo].[sp_CUN01_ObtenerComision]
+    @IdComision INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT IdComision, Codigo, IdCurso, IdProfesor, DiaSemana, HoraInicio, HoraFin, CupoMinimo, CupoMaximo, FechaLimitePago, FechaInicio, FechaFin, ArancelBase, MontoMatricula, IdPlanDePago, RecargoPlanSnapshot, Estado, DVH
+    FROM dbo.Comision WHERE IdComision = @IdComision;
+END
+GO
+
+IF OBJECT_ID(N'[dbo].[sp_CUN01_ListarComisiones]', N'P') IS NOT NULL
+    DROP PROCEDURE [dbo].[sp_CUN01_ListarComisiones];
+GO
+CREATE PROCEDURE [dbo].[sp_CUN01_ListarComisiones]
+    @IdCurso INT = NULL, @IdProfesor INT = NULL, @Estado NVARCHAR(30) = NULL, @FechaInicioDesde DATE = NULL, @FechaFinHasta DATE = NULL, @Codigo NVARCHAR(30) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT c.IdComision, c.Codigo, c.IdCurso, cu.Nombre AS Curso, c.IdProfesor,
+           CONCAT(p.Apellido, N', ', p.Nombre) AS Profesor, c.DiaSemana, c.HoraInicio, c.HoraFin,
+           c.CupoMinimo, c.CupoMaximo, c.FechaLimitePago, c.FechaInicio, c.FechaFin, c.ArancelBase, c.MontoMatricula, c.Estado
+    FROM dbo.Comision c
+    INNER JOIN dbo.Curso cu ON cu.IdCurso = c.IdCurso
+    INNER JOIN dbo.Profesor p ON p.IdProfesor = c.IdProfesor
+    WHERE (@IdCurso IS NULL OR c.IdCurso = @IdCurso) AND (@IdProfesor IS NULL OR c.IdProfesor = @IdProfesor)
+      AND (@Estado IS NULL OR c.Estado = @Estado) AND (@FechaInicioDesde IS NULL OR c.FechaInicio >= @FechaInicioDesde)
+      AND (@FechaFinHasta IS NULL OR c.FechaFin <= @FechaFinHasta) AND (@Codigo IS NULL OR c.Codigo LIKE N'%' + @Codigo + N'%')
+    ORDER BY c.FechaInicio DESC, c.Codigo;
+END
+GO
+
+IF OBJECT_ID(N'dbo.sp_CUN04_BuscarSolicitudPorDniComision', N'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_CUN04_BuscarSolicitudPorDniComision;
+GO
+CREATE PROCEDURE dbo.sp_CUN04_BuscarSolicitudPorDniComision
+    @DNI VARCHAR(20),
+    @CodigoComision NVARCHAR(30)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @DniNormalizado VARCHAR(20) = LTRIM(RTRIM(ISNULL(@DNI, N'')));
+    DECLARE @CodigoNormalizado NVARCHAR(30) = LTRIM(RTRIM(ISNULL(@CodigoComision, N'')));
+
+    SELECT TOP 1
+        a.IdAlumno,
+        a.DNI AS AlumnoDNI,
+        a.Nombre AS AlumnoNombre,
+        a.Apellido AS AlumnoApellido,
+        a.Email AS AlumnoEmail,
+        a.Telefono AS AlumnoTelefono,
+        a.FechaAlta AS AlumnoFechaAlta,
+        a.Estado AS AlumnoEstado,
+        a.DVH AS AlumnoDVH,
+        si.IdSolicitudInscripcion,
+        si.Codigo AS CodigoSolicitud,
+        si.IdLeadOrigen,
+        si.IdComision,
+        si.IdPlanDePago,
+        si.RecargoPlanSnapshot,
+        si.FechaSolicitud AS FechaSolicitudInscripcion,
+        si.Estado AS SolicitudEstado,
+        si.Observaciones AS SolicitudObservaciones,
+        si.DVH AS SolicitudDVH,
+        c.Codigo AS CodigoComision,
+        cu.Nombre AS Curso
+    FROM dbo.Alumno a
+    INNER JOIN dbo.SolicitudInscripcion si ON si.IdAlumno = a.IdAlumno
+    INNER JOIN dbo.Comision c ON c.IdComision = si.IdComision
+    INNER JOIN dbo.Curso cu ON cu.IdCurso = c.IdCurso
+    WHERE a.DNI = @DniNormalizado
+      AND c.Codigo = @CodigoNormalizado
+      AND si.Estado IN (N'pendiente', N'confirmada', N'activa');
+END
+GO
+
+IF OBJECT_ID(N'dbo.sp_CUN04_RegistrarDecisionBeca', N'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_CUN04_RegistrarDecisionBeca;
+GO
+CREATE PROCEDURE dbo.sp_CUN04_RegistrarDecisionBeca
+    @IdAlumno INT,
+    @IdComision INT,
+    @IdSolicitudInscripcion INT,
+    @TipoBeneficio NVARCHAR(100),
+    @FechaSolicitud DATETIME,
+    @EstadoBeca NVARCHAR(30),
+    @MotivoDecision NVARCHAR(500)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @StartedTransaction BIT = 0, @IdBeca INT;
+
+    IF @@TRANCOUNT = 0 BEGIN SET @StartedTransaction = 1; BEGIN TRANSACTION; END
+
+    BEGIN TRY
+        IF NOT EXISTS (
+            SELECT 1 FROM dbo.SolicitudInscripcion WITH (UPDLOCK, HOLDLOCK)
+            WHERE IdSolicitudInscripcion = @IdSolicitudInscripcion
+              AND IdAlumno = @IdAlumno
+              AND IdComision = @IdComision
+              AND Estado IN (N'pendiente', N'confirmada', N'activa')
+        )
+            THROW 52502, N'Errores.BecaSolicitudInscripcionInactiva', 1;
+
+        IF EXISTS (
+            SELECT 1 FROM dbo.Beca WITH (UPDLOCK, HOLDLOCK)
+            WHERE IdSolicitudInscripcion = @IdSolicitudInscripcion AND IdComision = @IdComision
+        )
+            THROW 52501, N'Errores.BecaDuplicada', 1;
+
+        INSERT INTO dbo.Beca (IdAlumno, IdComision, IdSolicitudInscripcion, TipoBeneficio, FechaSolicitud, EstadoBeca, MotivoDecision, DVH)
+        VALUES (@IdAlumno, @IdComision, @IdSolicitudInscripcion, @TipoBeneficio, @FechaSolicitud, @EstadoBeca, @MotivoDecision, N'');
+
+        SET @IdBeca = SCOPE_IDENTITY();
+
+        IF @StartedTransaction = 1 COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @StartedTransaction = 1 AND XACT_STATE() <> 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH;
+
+    SELECT b.IdBeca, b.IdAlumno, b.IdComision, b.IdSolicitudInscripcion, b.TipoBeneficio, b.FechaSolicitud, b.EstadoBeca, b.MotivoDecision, b.DVH
+    FROM dbo.Beca b
+    WHERE b.IdBeca = @IdBeca;
+END
+GO
+
+IF OBJECT_ID(N'dbo.PagoInscripcion', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.PagoInscripcion(
+        IdPagoInscripcion INT IDENTITY(1,1) NOT NULL,
+        IdAlumno INT NOT NULL,
+        IdSolicitudInscripcion INT NOT NULL,
+        IdCuota INT NOT NULL,
+        MetodoPago NVARCHAR(30) NOT NULL,
+        MontoPagado DECIMAL(18,2) NOT NULL,
+        NumeroReferencia NVARCHAR(100) NOT NULL,
+        FechaPago DATETIME NOT NULL,
+        DVH VARCHAR(64) NOT NULL CONSTRAINT DF_PagoInscripcion_DVH DEFAULT (''),
+        CONSTRAINT PK_PagoInscripcion PRIMARY KEY CLUSTERED (IdPagoInscripcion),
+        CONSTRAINT FK_PagoInscripcion_Alumno FOREIGN KEY (IdAlumno) REFERENCES dbo.Alumno(IdAlumno),
+        CONSTRAINT FK_PagoInscripcion_SolicitudInscripcion FOREIGN KEY (IdSolicitudInscripcion) REFERENCES dbo.SolicitudInscripcion(IdSolicitudInscripcion),
+        CONSTRAINT FK_PagoInscripcion_Cuota FOREIGN KEY (IdCuota) REFERENCES dbo.Cuota(IdCuota),
+        CONSTRAINT CK_PagoInscripcion_MetodoPago CHECK (MetodoPago IN (N'transferencia', N'tarjeta', N'billetera virtual'))
+    );
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_PagoInscripcion_Referencia' AND object_id = OBJECT_ID(N'dbo.PagoInscripcion'))
+BEGIN
+    SET QUOTED_IDENTIFIER ON;
+    CREATE UNIQUE INDEX UX_PagoInscripcion_Referencia ON dbo.PagoInscripcion (NumeroReferencia);
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'PagoInscripcion')
+    INSERT INTO dbo.DigitoVerificador_83KI (NombreTabla, DVV, FechaActualizacion) VALUES (N'PagoInscripcion', '', GETDATE());
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.Patentes WHERE CodigoPatente = 66)
+BEGIN
+    SET IDENTITY_INSERT dbo.Patentes ON;
+    INSERT INTO dbo.Patentes (CodigoPatente, Nombre, DVH) VALUES (66, N'Registrar pago de inscripción', '');
+    SET IDENTITY_INSERT dbo.Patentes OFF;
+END
+GO
+
+INSERT INTO dbo.RolPatente (CodigoRol, CodigoPatente, DVH)
+SELECT 1, 66, ''
+WHERE EXISTS (SELECT 1 FROM dbo.Roles WHERE CodigoRol = 1)
+  AND NOT EXISTS (SELECT 1 FROM dbo.RolPatente WHERE CodigoRol = 1 AND CodigoPatente = 66);
+GO
+
+IF OBJECT_ID(N'dbo.sp_CUN05_BuscarCuotasPendientesPorDni', N'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_CUN05_BuscarCuotasPendientesPorDni;
+GO
+CREATE PROCEDURE dbo.sp_CUN05_BuscarCuotasPendientesPorDni
+    @DNI VARCHAR(20)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @DniNormalizado VARCHAR(20) = LTRIM(RTRIM(ISNULL(@DNI, N'')));
+
+    SELECT
+        a.IdAlumno,
+        a.DNI AS AlumnoDNI,
+        a.Nombre AS AlumnoNombre,
+        a.Apellido AS AlumnoApellido,
+        a.Email AS AlumnoEmail,
+        a.Telefono AS AlumnoTelefono,
+        a.FechaAlta AS AlumnoFechaAlta,
+        a.Estado AS AlumnoEstado,
+        a.DVH AS AlumnoDVH,
+        si.IdSolicitudInscripcion,
+        si.Codigo AS CodigoSolicitud,
+        si.IdLeadOrigen,
+        si.IdComision,
+        si.IdPlanDePago,
+        si.RecargoPlanSnapshot,
+        si.FechaSolicitud AS FechaSolicitudInscripcion,
+        si.Estado AS SolicitudEstado,
+        si.Observaciones AS SolicitudObservaciones,
+        si.DVH AS SolicitudDVH,
+        cu.IdCuota,
+        cu.NumeroCuota,
+        cu.MontoOriginal,
+        cu.BalanceAdeudado,
+        cu.FechaVencimiento,
+        cu.Estado AS CuotaEstado,
+        cu.DVH AS CuotaDVH,
+        c.Codigo AS CodigoComision,
+        cur.Nombre AS Curso
+    FROM dbo.Alumno a
+    INNER JOIN dbo.SolicitudInscripcion si ON si.IdAlumno = a.IdAlumno
+    INNER JOIN dbo.Cuota cu ON cu.IdSolicitudInscripcion = si.IdSolicitudInscripcion
+    INNER JOIN dbo.Comision c ON c.IdComision = si.IdComision
+    INNER JOIN dbo.Curso cur ON cur.IdCurso = c.IdCurso
+    WHERE a.DNI = @DniNormalizado
+      AND cu.Estado = N'pendiente'
+      AND si.Estado IN (N'pendiente', N'confirmada', N'activa')
+    ORDER BY cu.NumeroCuota, cu.FechaVencimiento;
+END
+GO
+
+IF OBJECT_ID(N'dbo.sp_CUN05_RegistrarPagoInscripcion', N'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_CUN05_RegistrarPagoInscripcion;
+GO
+CREATE PROCEDURE dbo.sp_CUN05_RegistrarPagoInscripcion
+    @IdAlumno INT,
+    @IdSolicitudInscripcion INT,
+    @IdCuota INT,
+    @MetodoPago NVARCHAR(30),
+    @MontoRecibido DECIMAL(18,2),
+    @NumeroReferencia NVARCHAR(100),
+    @FechaPago DATETIME
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @StartedTransaction BIT = 0, @IdPago INT;
+    DECLARE @NumeroCuota INT, @BalanceAdeudado DECIMAL(18,2);
+
+    IF @@TRANCOUNT = 0 BEGIN SET @StartedTransaction = 1; BEGIN TRANSACTION; END
+
+    BEGIN TRY
+        SELECT @BalanceAdeudado = BalanceAdeudado, @NumeroCuota = NumeroCuota
+        FROM dbo.Cuota WITH (UPDLOCK, HOLDLOCK)
+        WHERE IdCuota = @IdCuota AND IdSolicitudInscripcion = @IdSolicitudInscripcion;
+
+        IF @BalanceAdeudado IS NULL
+            THROW 52601, N'Errores.PagoCuotaNoPendiente', 1;
+
+        IF @BalanceAdeudado = 0 OR EXISTS (SELECT 1 FROM dbo.Cuota WITH (UPDLOCK, HOLDLOCK) WHERE IdCuota = @IdCuota AND Estado <> N'pendiente')
+            THROW 52601, N'Errores.PagoCuotaNoPendiente', 1;
+
+        IF @MontoRecibido <> @BalanceAdeudado
+            THROW 52602, N'Errores.PagoMontoNoCoincide', 1;
+
+        IF @MetodoPago NOT IN (N'transferencia', N'tarjeta', N'billetera virtual')
+            THROW 52603, N'Errores.PagoMetodoInvalido', 1;
+
+        IF EXISTS (
+            SELECT 1 FROM dbo.PagoInscripcion WITH (UPDLOCK, HOLDLOCK)
+            WHERE NumeroReferencia = @NumeroReferencia
+        )
+            THROW 52604, N'Errores.PagoReferenciaDuplicada', 1;
+
+        IF NOT EXISTS (
+            SELECT 1 FROM dbo.SolicitudInscripcion WITH (UPDLOCK, HOLDLOCK)
+            WHERE IdSolicitudInscripcion = @IdSolicitudInscripcion
+              AND IdAlumno = @IdAlumno
+              AND Estado IN (N'pendiente', N'confirmada', N'activa')
+        )
+            THROW 52605, N'Errores.PagoSolicitudNoActivatable', 1;
+
+        INSERT INTO dbo.PagoInscripcion (IdAlumno, IdSolicitudInscripcion, IdCuota, MetodoPago, MontoPagado, NumeroReferencia, FechaPago, DVH)
+        VALUES (@IdAlumno, @IdSolicitudInscripcion, @IdCuota, @MetodoPago, @MontoRecibido, @NumeroReferencia, @FechaPago, N'');
+
+        SET @IdPago = SCOPE_IDENTITY();
+
+        UPDATE dbo.Cuota
+        SET BalanceAdeudado = 0, Estado = N'pagada', DVH = N''
+        WHERE IdCuota = @IdCuota;
+
+        IF @NumeroCuota = 1
+        BEGIN
+            UPDATE dbo.SolicitudInscripcion
+            SET Estado = N'activa', DVH = N''
+            WHERE IdSolicitudInscripcion = @IdSolicitudInscripcion
+              AND Estado IN (N'pendiente', N'confirmada');
+        END
+
+        IF @StartedTransaction = 1 COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @StartedTransaction = 1 AND XACT_STATE() <> 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH;
+
+    SELECT
+        p.IdPagoInscripcion,
+        p.IdAlumno,
+        p.IdSolicitudInscripcion,
+        p.IdCuota,
+        p.MetodoPago,
+        p.MontoPagado,
+        p.NumeroReferencia,
+        p.FechaPago,
+        p.DVH AS PagoDVH,
+        a.DNI AS AlumnoDNI,
+        a.Nombre AS AlumnoNombre,
+        a.Apellido AS AlumnoApellido,
+        a.Email AS AlumnoEmail,
+        a.Telefono AS AlumnoTelefono,
+        a.FechaAlta AS AlumnoFechaAlta,
+        a.Estado AS AlumnoEstado,
+        a.DVH AS AlumnoDVH,
+        si.Codigo AS CodigoSolicitud,
+        si.IdLeadOrigen,
+        si.IdComision,
+        si.IdPlanDePago,
+        si.RecargoPlanSnapshot,
+        si.FechaSolicitud AS FechaSolicitudInscripcion,
+        si.Estado AS SolicitudEstado,
+        si.Observaciones AS SolicitudObservaciones,
+        si.DVH AS SolicitudDVH,
+        cu.NumeroCuota,
+        cu.MontoOriginal,
+        cu.BalanceAdeudado,
+        cu.FechaVencimiento,
+        cu.Estado AS CuotaEstado,
+        cu.DVH AS CuotaDVH,
+        c.Codigo AS CodigoComision,
+        cur.Nombre AS Curso
+    FROM dbo.PagoInscripcion p
+    INNER JOIN dbo.Alumno a ON a.IdAlumno = p.IdAlumno
+    INNER JOIN dbo.SolicitudInscripcion si ON si.IdSolicitudInscripcion = p.IdSolicitudInscripcion
+    INNER JOIN dbo.Cuota cu ON cu.IdCuota = p.IdCuota
+    INNER JOIN dbo.Comision c ON c.IdComision = si.IdComision
+    INNER JOIN dbo.Curso cur ON cur.IdCurso = c.IdCurso
+    WHERE p.IdPagoInscripcion = @IdPago;
+END
+GO
+/* CUN06 - registrar estado definitivo de comisión.
+   Para bases nuevas o restauradas, aplicar Scripts/Sql/cun06/001_migracion.sql después de este esquema.
+   El cambio agrega AltaOficialComision, ActaCierreComision, permiso 67 y sp_CUN06_*.
+*/
+GO
+
+/* INICIO_AUDITORIA_DISPONIBILIDAD */
+/* Auditoría histórica de disponibilidad. La migración también se aplica a bases existentes. */
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+GO
+IF OBJECT_ID(N'dbo.DisponibilidadProfesor_C', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.DisponibilidadProfesor_C
+    (
+        IdVersion BIGINT IDENTITY(1,1) NOT NULL CONSTRAINT PK_DisponibilidadProfesor_C PRIMARY KEY,
+        IdDisponibilidadProfesor INT NOT NULL,
+        IdProfesor INT NOT NULL,
+        DiaSemana NVARCHAR(20) NOT NULL,
+        HoraInicio TIME NOT NULL,
+        HoraFin TIME NOT NULL,
+        EstadoActivo BIT NOT NULL,
+        DVH VARCHAR(64) NOT NULL,
+        Act BIT NOT NULL CONSTRAINT DF_DisponibilidadProfesor_C_Act DEFAULT (1),
+        FechaRegistro DATETIME2(0) NOT NULL CONSTRAINT DF_DisponibilidadProfesor_C_Fecha DEFAULT (SYSDATETIME()),
+        CONSTRAINT FK_DisponibilidadProfesor_C_Profesor FOREIGN KEY (IdProfesor) REFERENCES dbo.Profesor(IdProfesor),
+        CONSTRAINT FK_DisponibilidadProfesor_C_Disponibilidad FOREIGN KEY (IdDisponibilidadProfesor) REFERENCES dbo.DisponibilidadProfesor(IdDisponibilidadProfesor),
+        CONSTRAINT CK_DisponibilidadProfesor_C_Horario CHECK (HoraInicio < HoraFin)
+    );
+    CREATE UNIQUE INDEX UX_DisponibilidadProfesor_C_Activa ON dbo.DisponibilidadProfesor_C(IdDisponibilidadProfesor) WHERE Act = 1;
+    CREATE INDEX IX_DisponibilidadProfesor_C_Filtro ON dbo.DisponibilidadProfesor_C(IdProfesor, IdDisponibilidadProfesor, FechaRegistro);
+END;
+GO
+IF COL_LENGTH(N'dbo.DisponibilidadProfesor_C', N'TipoOperacion') IS NULL
+    ALTER TABLE dbo.DisponibilidadProfesor_C ADD TipoOperacion NVARCHAR(24) NOT NULL
+        CONSTRAINT DF_DisponibilidadProfesor_C_Operacion DEFAULT (N'SIN_CLASIFICAR') WITH VALUES;
+IF COL_LENGTH(N'dbo.DisponibilidadProfesor_C', N'Usuario') IS NULL
+    ALTER TABLE dbo.DisponibilidadProfesor_C ADD Usuario NVARCHAR(100) NULL;
+GO
+DECLARE @FechaMigracionDisponibilidad DATETIME2(0) = SYSDATETIME();
+INSERT dbo.DisponibilidadProfesor_C (IdDisponibilidadProfesor, IdProfesor, DiaSemana, HoraInicio, HoraFin, EstadoActivo, DVH, Act, FechaRegistro, TipoOperacion, Usuario)
+SELECT d.IdDisponibilidadProfesor, d.IdProfesor, d.DiaSemana, d.HoraInicio, d.HoraFin, d.EstadoActivo, d.DVH, 1, @FechaMigracionDisponibilidad, N'INICIALIZACION', NULL
+FROM dbo.DisponibilidadProfesor d
+WHERE NOT EXISTS (SELECT 1 FROM dbo.DisponibilidadProfesor_C h WHERE h.IdDisponibilidadProfesor = d.IdDisponibilidadProfesor AND h.Act = 1);
+GO
+CREATE OR ALTER TRIGGER dbo.TR_DisponibilidadProfesor_Auditoria
+ON dbo.DisponibilidadProfesor
+AFTER INSERT, UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @Profesores TABLE (IdProfesor INT PRIMARY KEY);
+    INSERT @Profesores SELECT IdProfesor FROM deleted UNION SELECT IdProfesor FROM inserted;
+    DECLARE @LockId INT;
+    DECLARE lock_cursor CURSOR LOCAL FAST_FORWARD FOR SELECT IdProfesor FROM @Profesores ORDER BY IdProfesor;
+    OPEN lock_cursor;
+    FETCH NEXT FROM lock_cursor INTO @LockId;
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        SELECT @LockId = IdProfesor FROM dbo.Profesor WITH (UPDLOCK, HOLDLOCK) WHERE IdProfesor = @LockId;
+        FETCH NEXT FROM lock_cursor INTO @LockId;
+    END;
+    CLOSE lock_cursor;
+    DEALLOCATE lock_cursor;
+    DECLARE @Afectadas TABLE (IdDisponibilidadProfesor INT PRIMARY KEY);
+    INSERT @Afectadas
+    SELECT i.IdDisponibilidadProfesor
+    FROM inserted i LEFT JOIN deleted d ON d.IdDisponibilidadProfesor = i.IdDisponibilidadProfesor
+    WHERE d.IdDisponibilidadProfesor IS NULL
+       OR i.IdProfesor <> d.IdProfesor OR i.DiaSemana <> d.DiaSemana
+       OR i.HoraInicio <> d.HoraInicio OR i.HoraFin <> d.HoraFin
+       OR i.EstadoActivo <> d.EstadoActivo;
+    IF NOT EXISTS (SELECT 1 FROM @Afectadas) RETURN;
+    DECLARE @RestaurarVersion BIGINT = TRY_CONVERT(BIGINT, SESSION_CONTEXT(N'DisponibilidadProfesorVersionRestaurada'));
+    IF @RestaurarVersion IS NULL
+    BEGIN
+        UPDATE h SET Act = 0
+        FROM dbo.DisponibilidadProfesor_C h JOIN @Afectadas x ON x.IdDisponibilidadProfesor = h.IdDisponibilidadProfesor
+        WHERE h.Act = 1;
+        INSERT dbo.DisponibilidadProfesor_C (IdDisponibilidadProfesor, IdProfesor, DiaSemana, HoraInicio, HoraFin, EstadoActivo, DVH, Act, FechaRegistro, TipoOperacion, Usuario)
+        SELECT i.IdDisponibilidadProfesor, i.IdProfesor, i.DiaSemana, i.HoraInicio, i.HoraFin, i.EstadoActivo,
+               LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+                   N'DiaSemana=', LTRIM(RTRIM(i.DiaSemana)), N'|', N'EstadoActivo=', CONVERT(NVARCHAR(1), i.EstadoActivo), N'|',
+                   N'HoraFin=', CONVERT(NVARCHAR(8), i.HoraFin), N'|', N'HoraInicio=', CONVERT(NVARCHAR(8), i.HoraInicio), N'|',
+                   N'IdDisponibilidadProfesor=', CONVERT(NVARCHAR(128), i.IdDisponibilidadProfesor), N'|',
+                     N'IdProfesor=', CONVERT(NVARCHAR(128), i.IdProfesor))), 2)), 1, SYSDATETIME(),
+               CASE WHEN d.IdDisponibilidadProfesor IS NULL THEN N'INSERT'
+                    WHEN d.EstadoActivo = 1 AND i.EstadoActivo = 0 THEN N'BAJA_LOGICA'
+                    WHEN d.EstadoActivo = 0 AND i.EstadoActivo = 1 THEN N'REACTIVACION'
+                    ELSE N'UPDATE' END,
+               NULLIF(CONVERT(NVARCHAR(100), SESSION_CONTEXT(N'DisponibilidadProfesorUsuario')), N'')
+        FROM inserted i JOIN @Afectadas x ON x.IdDisponibilidadProfesor = i.IdDisponibilidadProfesor
+        LEFT JOIN deleted d ON d.IdDisponibilidadProfesor = i.IdDisponibilidadProfesor;
+    END;
+    DECLARE @Codigo NVARCHAR(30), @Hora TIME, @Mensaje NVARCHAR(2048);
+    SELECT TOP (1) @Codigo = co.Codigo, @Hora = co.HoraInicio
+    FROM @Afectadas x
+    JOIN dbo.Comision co ON EXISTS (SELECT 1 FROM @Profesores p WHERE p.IdProfesor = co.IdProfesor)
+    WHERE co.Estado IN (N'preapertura', N'confirmada') AND co.FechaFin >= CONVERT(date, GETDATE())
+      AND NOT EXISTS
+      (SELECT 1 FROM dbo.DisponibilidadProfesor a
+       WHERE a.IdProfesor = co.IdProfesor AND a.EstadoActivo = 1 AND a.DiaSemana = co.DiaSemana
+           AND a.HoraInicio <= co.HoraInicio AND a.HoraFin >= co.HoraFin)
+    ORDER BY co.Codigo;
+    IF @Codigo IS NOT NULL
+    BEGIN
+        SET @Mensaje = CONCAT(N'Errores.DisponibilidadProfesorCompromisoComision: ', @Codigo, N' (', CONVERT(NVARCHAR(5), @Hora, 108), N').');
+        THROW 52801, @Mensaje, 1;
+    END;
+END;
+GO
+CREATE OR ALTER TRIGGER dbo.TR_DisponibilidadProfesor_C_Activar
+ON dbo.DisponibilidadProfesor_C
+AFTER UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF NOT UPDATE(Act) RETURN;
+    DECLARE @Seleccionada TABLE (IdVersion BIGINT PRIMARY KEY, IdDisponibilidadProfesor INT, IdProfesor INT,
+        DiaSemana NVARCHAR(20), HoraInicio TIME, HoraFin TIME, EstadoActivo BIT, DVH VARCHAR(64));
+    INSERT @Seleccionada
+    SELECT i.IdVersion, i.IdDisponibilidadProfesor, i.IdProfesor, i.DiaSemana, i.HoraInicio, i.HoraFin, i.EstadoActivo, i.DVH
+    FROM inserted i JOIN deleted d ON d.IdVersion=i.IdVersion WHERE d.Act=0 AND i.Act=1;
+    IF NOT EXISTS (SELECT 1 FROM @Seleccionada) RETURN;
+    IF (SELECT COUNT(*) FROM @Seleccionada) <> 1 THROW 52802, N'Errores.DisponibilidadProfesorActivacionIndividual', 1;
+    DECLARE @Profesor INT = (SELECT IdProfesor FROM @Seleccionada);
+    SELECT @Profesor = IdProfesor FROM dbo.Profesor WITH (UPDLOCK, HOLDLOCK) WHERE IdProfesor = @Profesor;
+    IF EXISTS (SELECT 1 FROM @Seleccionada s JOIN dbo.DisponibilidadProfesor d
+               ON d.IdProfesor=s.IdProfesor AND d.IdDisponibilidadProfesor<>s.IdDisponibilidadProfesor
+               AND d.EstadoActivo=1 AND s.EstadoActivo=1 AND d.DiaSemana=s.DiaSemana
+               AND d.HoraInicio=s.HoraInicio AND d.HoraFin=s.HoraFin)
+        THROW 52803, N'Errores.DisponibilidadProfesorDuplicada', 1;
+    DECLARE @VersionSeleccionada BIGINT = (SELECT IdVersion FROM @Seleccionada);
+    EXEC sys.sp_set_session_context @key=N'DisponibilidadProfesorVersionRestaurada', @value=@VersionSeleccionada;
+    BEGIN TRY
+        UPDATE d SET IdProfesor=s.IdProfesor, DiaSemana=s.DiaSemana, HoraInicio=s.HoraInicio, HoraFin=s.HoraFin, EstadoActivo=s.EstadoActivo, DVH=s.DVH
+        FROM dbo.DisponibilidadProfesor d JOIN @Seleccionada s ON s.IdDisponibilidadProfesor=d.IdDisponibilidadProfesor;
+        EXEC sys.sp_set_session_context @key=N'DisponibilidadProfesorVersionRestaurada', @value=NULL;
+    END TRY
+    BEGIN CATCH
+        EXEC sys.sp_set_session_context @key=N'DisponibilidadProfesorVersionRestaurada', @value=NULL;
+        THROW;
+    END CATCH;
+END;
+GO
+CREATE OR ALTER TRIGGER dbo.TR_Comision_DisponibilidadProfesor
+ON dbo.Comision
+AFTER INSERT, UPDATE, DELETE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @Profesores TABLE (IdProfesor INT PRIMARY KEY);
+    INSERT @Profesores SELECT IdProfesor FROM deleted UNION SELECT IdProfesor FROM inserted;
+    DECLARE @LockId INT;
+    DECLARE lock_cursor CURSOR LOCAL FAST_FORWARD FOR SELECT IdProfesor FROM @Profesores ORDER BY IdProfesor;
+    OPEN lock_cursor;
+    FETCH NEXT FROM lock_cursor INTO @LockId;
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        SELECT @LockId = IdProfesor FROM dbo.Profesor WITH (UPDLOCK, HOLDLOCK) WHERE IdProfesor = @LockId;
+        FETCH NEXT FROM lock_cursor INTO @LockId;
+    END;
+    CLOSE lock_cursor;
+    DEALLOCATE lock_cursor;
+    DECLARE @Codigo NVARCHAR(30), @Hora TIME, @Mensaje NVARCHAR(2048);
+    SELECT TOP (1) @Codigo = co.Codigo, @Hora = co.HoraInicio
+    FROM inserted co
+    WHERE co.Estado IN (N'preapertura', N'confirmada') AND co.FechaFin >= CONVERT(date, GETDATE())
+      AND NOT EXISTS (SELECT 1 FROM dbo.DisponibilidadProfesor a WHERE a.IdProfesor = co.IdProfesor AND a.EstadoActivo = 1
+        AND a.DiaSemana = co.DiaSemana AND a.HoraInicio <= co.HoraInicio AND a.HoraFin >= co.HoraFin)
+    ORDER BY co.Codigo;
+    IF @Codigo IS NOT NULL
+    BEGIN
+        SET @Mensaje = CONCAT(N'Errores.DisponibilidadProfesorCompromisoComision: ', @Codigo, N' (', CONVERT(NVARCHAR(5), @Hora, 108), N').');
+        THROW 52801, @Mensaje, 1;
+    END;
+END;
+GO
+IF OBJECT_ID(N'dbo.sp_DisponibilidadProfesor_ListarHistorial', N'P') IS NULL
+    EXEC(N'CREATE PROCEDURE dbo.sp_DisponibilidadProfesor_ListarHistorial AS RETURN 0;');
+GO
+ALTER PROCEDURE dbo.sp_DisponibilidadProfesor_ListarHistorial
+    @IdProfesor INT, @IdDisponibilidadProfesor INT = NULL, @FechaDesde DATE = NULL, @FechaHasta DATE = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT IdVersion, IdDisponibilidadProfesor, IdProfesor, DiaSemana, HoraInicio, HoraFin, EstadoActivo, DVH, Act, FechaRegistro, TipoOperacion, Usuario
+    FROM dbo.DisponibilidadProfesor_C
+    WHERE IdProfesor = @IdProfesor AND (@IdDisponibilidadProfesor IS NULL OR IdDisponibilidadProfesor = @IdDisponibilidadProfesor)
+      AND (@FechaDesde IS NULL OR FechaRegistro >= @FechaDesde) AND (@FechaHasta IS NULL OR FechaRegistro < DATEADD(day, 1, @FechaHasta))
+    ORDER BY IdDisponibilidadProfesor, FechaRegistro DESC, IdVersion DESC;
+END;
+GO
+IF OBJECT_ID(N'dbo.sp_DisponibilidadProfesor_ActivarVersion', N'P') IS NULL
+    EXEC(N'CREATE PROCEDURE dbo.sp_DisponibilidadProfesor_ActivarVersion AS RETURN 0;');
+GO
+ALTER PROCEDURE dbo.sp_DisponibilidadProfesor_ActivarVersion @IdVersion BIGINT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @InicioTran INT=@@TRANCOUNT, @IdDisponibilidadProfesor INT, @IdProfesor INT, @DiaSemana NVARCHAR(20), @HoraInicio TIME, @HoraFin TIME, @EstadoActivo BIT, @DVH VARCHAR(64);
+    IF @InicioTran=0 BEGIN TRANSACTION ELSE SAVE TRANSACTION ActivarDisponibilidad;
+    BEGIN TRY
+        SELECT @IdDisponibilidadProfesor=IdDisponibilidadProfesor,@IdProfesor=IdProfesor,@DiaSemana=DiaSemana,@HoraInicio=HoraInicio,@HoraFin=HoraFin,@EstadoActivo=EstadoActivo,@DVH=DVH
+        FROM dbo.DisponibilidadProfesor_C WITH (UPDLOCK,HOLDLOCK) WHERE IdVersion=@IdVersion;
+        IF @IdDisponibilidadProfesor IS NULL THROW 52802, N'Errores.DisponibilidadProfesorVersionNoEncontrada', 1;
+        UPDATE dbo.DisponibilidadProfesor_C SET Act=0 WHERE IdDisponibilidadProfesor=@IdDisponibilidadProfesor AND Act=1 AND IdVersion<>@IdVersion;
+        UPDATE dbo.DisponibilidadProfesor_C SET Act=1 WHERE IdVersion=@IdVersion AND Act=0;
+        IF @InicioTran=0 COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        EXEC sys.sp_set_session_context @key=N'DisponibilidadProfesorVersionRestaurada', @value=NULL;
+        IF XACT_STATE()=1 BEGIN IF @InicioTran=0 ROLLBACK TRANSACTION ELSE ROLLBACK TRANSACTION ActivarDisponibilidad; END
+        ELSE IF XACT_STATE()=-1 AND @InicioTran=0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH;
+END;
+GO
+GO
+
+-- ============================================================================
+-- Migracion (siempre) - origen: Scripts\Sql\financiacion-cuotas\001_modelo.sql
+-- ============================================================================
+-- Requires the existing CUN03/CUN05/CUN06/CUN07 schema. Run aplicar.sql from the repository root.
+SET NOCOUNT ON;
+SET XACT_ABORT ON;
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_PADDING ON;
+SET ANSI_WARNINGS ON;
+SET CONCAT_NULL_YIELDS_NULL ON;
+SET ARITHABORT ON;
+SET NUMERIC_ROUNDABORT OFF;
+GO
+IF COL_LENGTH(N'dbo.PlanesDePago', N'CantidadCuotas') IS NULL
+    ALTER TABLE dbo.PlanesDePago ADD CantidadCuotas INT NULL;
+GO
+-- One-time mapping of the supported legacy names, including seeded test prefixes.
+UPDATE dbo.PlanesDePago SET CantidadCuotas = CASE
+    WHEN LOWER(RTRIM(Nombre)) LIKE N'%contado' THEN 1
+    WHEN LOWER(RTRIM(Nombre)) LIKE N'%3 cuotas' THEN 3
+    WHEN LOWER(RTRIM(Nombre)) LIKE N'%6 cuotas' THEN 6 END
+WHERE CantidadCuotas IS NULL;
+IF EXISTS(SELECT 1 FROM dbo.PlanesDePago WHERE CantidadCuotas IS NULL OR CantidadCuotas NOT BETWEEN 1 AND 120)
+    THROW 52801, N'Asigne CantidadCuotas (1..120) a los planes no reconocidos antes de continuar.', 1;
+ALTER TABLE dbo.PlanesDePago ALTER COLUMN CantidadCuotas INT NOT NULL;
+IF NOT EXISTS(SELECT 1 FROM sys.check_constraints WHERE name=N'CK_PlanesDePago_CantidadCuotas')
+    ALTER TABLE dbo.PlanesDePago ADD CONSTRAINT CK_PlanesDePago_CantidadCuotas CHECK(CantidadCuotas BETWEEN 1 AND 120);
+GO
+IF COL_LENGTH(N'dbo.Cuota', N'TipoConcepto') IS NULL
+    ALTER TABLE dbo.Cuota ADD TipoConcepto NVARCHAR(20) NOT NULL CONSTRAINT DF_Cuota_TipoConcepto DEFAULT(N'matricula');
+IF COL_LENGTH(N'dbo.Cuota', N'Periodo') IS NULL
+    ALTER TABLE dbo.Cuota ADD Periodo DATE NULL;
+IF COL_LENGTH(N'dbo.SolicitudInscripcion', N'ArancelCursoSnapshot') IS NULL
+    ALTER TABLE dbo.SolicitudInscripcion ADD ArancelCursoSnapshot DECIMAL(18,2) NULL,
+        CantidadCuotasSnapshot INT NULL, TotalCursoSnapshot DECIMAL(18,2) NULL,
+        FechaPrimerVencimientoSnapshot DATE NULL, NombrePlanSnapshot NVARCHAR(200) NULL;
+GO
+-- Keep the historical IDs and numbers: matrícula is 1; course installments are 2..N+1.
+UPDATE dbo.Cuota SET TipoConcepto=N'curso', Periodo=DATEFROMPARTS(YEAR(FechaVencimiento),MONTH(FechaVencimiento),1)
+WHERE NumeroCuota>1 AND TipoConcepto=N'matricula';
+IF NOT EXISTS(SELECT 1 FROM sys.check_constraints WHERE name=N'CK_Cuota_ConceptoPeriodo')
+    ALTER TABLE dbo.Cuota ADD CONSTRAINT CK_Cuota_ConceptoPeriodo CHECK(
+        (TipoConcepto=N'matricula' AND NumeroCuota=1 AND Periodo IS NULL) OR
+        (TipoConcepto=N'curso' AND NumeroCuota>1 AND Periodo IS NOT NULL AND DAY(Periodo)=1));
+IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.Cuota') AND name=N'UX_Cuota_InscripcionNumero')
+    CREATE UNIQUE INDEX UX_Cuota_InscripcionNumero ON dbo.Cuota(IdSolicitudInscripcion,NumeroCuota);
+IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.Cuota') AND name=N'UX_Cuota_InscripcionPeriodo')
+    CREATE UNIQUE INDEX UX_Cuota_InscripcionPeriodo ON dbo.Cuota(IdSolicitudInscripcion,Periodo) WHERE TipoConcepto=N'curso';
+GO
+CREATE OR ALTER PROCEDURE dbo.sp_Financiacion_GenerarCuotas @IdSolicitudInscripcion INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+    DECLARE @started BIT=0, @arancel DECIMAL(18,2), @recargo DECIMAL(9,4), @cantidad INT,
+        @total DECIMAL(18,2), @inicio DATE, @nombre NVARCHAR(200), @base DECIMAL(18,2), @numero INT=1,
+        @importe DECIMAL(18,2), @vence DATE, @periodo DATE;
+    IF @@TRANCOUNT=0 BEGIN SET @started=1; BEGIN TRANSACTION; END;
+    BEGIN TRY
+        SELECT @arancel=COALESCE(si.ArancelCursoSnapshot,c.ArancelBase),
+            @cantidad=COALESCE(si.CantidadCuotasSnapshot,pp.CantidadCuotas),
+            @inicio=COALESCE(si.FechaPrimerVencimientoSnapshot,c.FechaInicio),
+            @nombre=COALESCE(si.NombrePlanSnapshot,pp.Nombre), @recargo=si.RecargoPlanSnapshot,
+            @total=si.TotalCursoSnapshot
+        FROM dbo.SolicitudInscripcion si WITH(UPDLOCK,HOLDLOCK)
+        JOIN dbo.Comision c WITH(HOLDLOCK) ON c.IdComision=si.IdComision
+        JOIN dbo.PlanesDePago pp WITH(HOLDLOCK) ON pp.IdPlanDePago=si.IdPlanDePago
+        WHERE si.IdSolicitudInscripcion=@IdSolicitudInscripcion;
+        IF @arancel IS NULL OR @arancel<=0 OR @cantidad IS NULL OR @cantidad NOT BETWEEN 1 AND 120 OR @recargo<0
+            THROW 52802,N'Errores.FinanciacionInvalida',1;
+        SET @total=COALESCE(@total,ROUND(@arancel*(1+@recargo/100.0),2));
+        IF @total<@cantidad*0.01 THROW 52802,N'Errores.FinanciacionInvalida',1;
+        SET @base=FLOOR(@total*100/@cantidad)/100;
+        IF EXISTS(SELECT 1 FROM dbo.Cuota WHERE IdSolicitudInscripcion=@IdSolicitudInscripcion
+            AND TipoConcepto=N'curso' AND NumeroCuota>@cantidad+1)
+            THROW 52803,N'Las cuotas existentes no coinciden con el plan; revise la inscripción sin modificar sus pagos.',1;
+        UPDATE dbo.SolicitudInscripcion SET ArancelCursoSnapshot=@arancel,CantidadCuotasSnapshot=@cantidad,
+            TotalCursoSnapshot=@total,FechaPrimerVencimientoSnapshot=@inicio,NombrePlanSnapshot=@nombre
+        WHERE IdSolicitudInscripcion=@IdSolicitudInscripcion;
+        WHILE @numero<=@cantidad
+        BEGIN
+            SET @importe=CASE WHEN @numero=@cantidad THEN @total-@base*(@cantidad-1) ELSE @base END;
+            -- Always add months to the original anchor, never to the adjusted February date.
+            SET @vence=DATEADD(MONTH,@numero-1,@inicio);
+            SET @periodo=DATEFROMPARTS(YEAR(@vence),MONTH(@vence),1);
+            IF EXISTS(SELECT 1 FROM dbo.Cuota WITH(UPDLOCK,HOLDLOCK)
+                WHERE IdSolicitudInscripcion=@IdSolicitudInscripcion AND NumeroCuota=@numero+1
+                AND (TipoConcepto<>N'curso' OR MontoOriginal<>@importe OR FechaVencimiento<>@vence OR Periodo<>@periodo))
+                THROW 52803,N'Las cuotas existentes no coinciden con el plan; revise la inscripción sin modificar sus pagos.',1;
+            IF NOT EXISTS(SELECT 1 FROM dbo.Cuota WITH(UPDLOCK,HOLDLOCK)
+                WHERE IdSolicitudInscripcion=@IdSolicitudInscripcion AND NumeroCuota=@numero+1)
+                INSERT dbo.Cuota(IdSolicitudInscripcion,NumeroCuota,TipoConcepto,Periodo,MontoOriginal,BalanceAdeudado,FechaVencimiento,Estado,DVH)
+                VALUES(@IdSolicitudInscripcion,@numero+1,N'curso',@periodo,@importe,@importe,@vence,N'pendiente',N'');
+            SET @numero+=1;
+        END;
+        IF @started=1 COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @started=1 AND @@TRANCOUNT>0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH;
+END;
+GO
+CREATE OR ALTER PROCEDURE dbo.sp_CUN01_ListarPlanesDePagoActivos
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT IdPlanDePago,Nombre,RecargoPorcentaje,EstadoActivo,CantidadCuotas
+    FROM dbo.PlanesDePago WHERE EstadoActivo=1 ORDER BY Nombre;
+END;
+GO
+GO
+
+-- ============================================================================
+-- Migracion (siempre) - origen: Scripts\Sql\cun03\001_migracion.sql
+-- ============================================================================
+SET NOCOUNT ON;
+GO
+
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+GO
+
+IF OBJECT_ID(N'dbo.Comision', N'U') IS NULL
+BEGIN
+    RAISERROR(N'dbo.Comision no existe en esta base: use EsquemaCompleto.sql para una base nueva.', 16, 1);
+    RETURN;
+END
+GO
+
+IF COL_LENGTH('dbo.Comision', 'MontoMatricula') IS NULL
+BEGIN
+    ALTER TABLE dbo.Comision ADD MontoMatricula DECIMAL(18,2) NULL;
+END
+GO
+
+UPDATE dbo.Comision
+SET MontoMatricula = CASE WHEN ISNULL(MontoMatricula, 0) <= 0 THEN ISNULL(NULLIF(ArancelBase, 0), 0.01) ELSE MontoMatricula END
+WHERE MontoMatricula IS NULL OR MontoMatricula <= 0;
+GO
+
+IF COL_LENGTH('dbo.Comision', 'MontoMatricula') IS NOT NULL
+BEGIN
+    ALTER TABLE dbo.Comision ALTER COLUMN MontoMatricula DECIMAL(18,2) NOT NULL;
+END
+GO
+
+IF OBJECT_ID(N'dbo.CK_Comision_MontoMatricula', N'C') IS NULL
+BEGIN
+    ALTER TABLE dbo.Comision ADD CONSTRAINT CK_Comision_MontoMatricula CHECK (MontoMatricula > 0);
+END
+GO
+
+IF OBJECT_ID(N'dbo.Alumno', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Alumno(
+        IdAlumno INT IDENTITY(1,1) NOT NULL,
+        DNI VARCHAR(20) NOT NULL,
+        Nombre NVARCHAR(80) NOT NULL,
+        Apellido NVARCHAR(80) NOT NULL,
+        Email NVARCHAR(200) NOT NULL,
+        Telefono NVARCHAR(50) NOT NULL,
+        FechaAlta DATETIME NOT NULL CONSTRAINT DF_Alumno_FechaAlta DEFAULT (GETDATE()),
+        Estado NVARCHAR(30) NOT NULL CONSTRAINT DF_Alumno_Estado DEFAULT (N'activo'),
+        DVH VARCHAR(64) NOT NULL CONSTRAINT DF_Alumno_DVH DEFAULT (''),
+        CONSTRAINT PK_Alumno PRIMARY KEY CLUSTERED (IdAlumno),
+        CONSTRAINT UQ_Alumno_DNI UNIQUE (DNI)
+    );
+END
+GO
+
+IF OBJECT_ID(N'dbo.SolicitudInscripcion', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.SolicitudInscripcion(
+        IdSolicitudInscripcion INT IDENTITY(1,1) NOT NULL,
+        Codigo NVARCHAR(30) NOT NULL,
+        IdAlumno INT NOT NULL,
+        IdLeadOrigen INT NULL,
+        IdComision INT NOT NULL,
+        IdPlanDePago INT NOT NULL,
+        RecargoPlanSnapshot DECIMAL(9,4) NOT NULL CONSTRAINT DF_SolicitudInscripcion_Recargo DEFAULT (0),
+        FechaSolicitud DATETIME NOT NULL CONSTRAINT DF_SolicitudInscripcion_Fecha DEFAULT (GETDATE()),
+        Estado NVARCHAR(30) NOT NULL CONSTRAINT DF_SolicitudInscripcion_Estado DEFAULT (N'pendiente'),
+        Observaciones NVARCHAR(500) NOT NULL CONSTRAINT DF_SolicitudInscripcion_Observaciones DEFAULT (N''),
+        DVH VARCHAR(64) NOT NULL CONSTRAINT DF_SolicitudInscripcion_DVH DEFAULT (''),
+        CONSTRAINT PK_SolicitudInscripcion PRIMARY KEY CLUSTERED (IdSolicitudInscripcion),
+        CONSTRAINT UQ_SolicitudInscripcion_Codigo UNIQUE (Codigo),
+        CONSTRAINT FK_SolicitudInscripcion_Alumno FOREIGN KEY (IdAlumno) REFERENCES dbo.Alumno(IdAlumno),
+        CONSTRAINT FK_SolicitudInscripcion_Lead FOREIGN KEY (IdLeadOrigen) REFERENCES dbo.Lead(IdLead),
+        CONSTRAINT FK_SolicitudInscripcion_Comision FOREIGN KEY (IdComision) REFERENCES dbo.Comision(IdComision),
+        CONSTRAINT FK_SolicitudInscripcion_Plan FOREIGN KEY (IdPlanDePago) REFERENCES dbo.PlanesDePago(IdPlanDePago)
+    );
+END
+GO
+
+IF OBJECT_ID(N'dbo.Cuota', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Cuota(
+        IdCuota INT IDENTITY(1,1) NOT NULL,
+        IdSolicitudInscripcion INT NOT NULL,
+        NumeroCuota INT NOT NULL,
+        MontoOriginal DECIMAL(18,2) NOT NULL,
+        BalanceAdeudado DECIMAL(18,2) NOT NULL,
+        FechaVencimiento DATE NOT NULL,
+        Estado NVARCHAR(30) NOT NULL CONSTRAINT DF_Cuota_Estado DEFAULT (N'pendiente'),
+        DVH VARCHAR(64) NOT NULL CONSTRAINT DF_Cuota_DVH DEFAULT (''),
+        CONSTRAINT PK_Cuota PRIMARY KEY CLUSTERED (IdCuota),
+        CONSTRAINT FK_Cuota_SolicitudInscripcion FOREIGN KEY (IdSolicitudInscripcion) REFERENCES dbo.SolicitudInscripcion(IdSolicitudInscripcion),
+        CONSTRAINT CK_Cuota_Numero CHECK (NumeroCuota > 0),
+        CONSTRAINT CK_Cuota_Montos CHECK (MontoOriginal > 0 AND BalanceAdeudado >= 0)
+    );
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_SolicitudInscripcion_AlumnoComision_Activa' AND object_id = OBJECT_ID(N'dbo.SolicitudInscripcion'))
+BEGIN
+    SET QUOTED_IDENTIFIER ON;
+    CREATE UNIQUE INDEX UX_SolicitudInscripcion_AlumnoComision_Activa
+        ON dbo.SolicitudInscripcion (IdAlumno, IdComision)
+        WHERE Estado IN (N'pendiente', N'confirmada', N'activa');
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_SolicitudInscripcion_ComisionEstado' AND object_id = OBJECT_ID(N'dbo.SolicitudInscripcion'))
+    CREATE INDEX IX_SolicitudInscripcion_ComisionEstado ON dbo.SolicitudInscripcion (IdComision, Estado);
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Cuota_Solicitud' AND object_id = OBJECT_ID(N'dbo.Cuota'))
+    CREATE INDEX IX_Cuota_Solicitud ON dbo.Cuota (IdSolicitudInscripcion);
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_SolicitudInscripcion_AlumnoComision' AND object_id = OBJECT_ID(N'dbo.SolicitudInscripcion'))
+    CREATE INDEX IX_SolicitudInscripcion_AlumnoComision ON dbo.SolicitudInscripcion (IdAlumno, IdComision) INCLUDE (Estado, IdSolicitudInscripcion);
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Cuota_SolicitudEstadoBalance' AND object_id = OBJECT_ID(N'dbo.Cuota'))
+    CREATE INDEX IX_Cuota_SolicitudEstadoBalance ON dbo.Cuota (IdSolicitudInscripcion, Estado, BalanceAdeudado);
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'Alumno')
+    INSERT INTO dbo.DigitoVerificador_83KI (NombreTabla, DVV, FechaActualizacion) VALUES (N'Alumno', '', GETDATE());
+IF NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'SolicitudInscripcion')
+    INSERT INTO dbo.DigitoVerificador_83KI (NombreTabla, DVV, FechaActualizacion) VALUES (N'SolicitudInscripcion', '', GETDATE());
+IF NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'Cuota')
+    INSERT INTO dbo.DigitoVerificador_83KI (NombreTabla, DVV, FechaActualizacion) VALUES (N'Cuota', '', GETDATE());
+GO
+
+DECLARE @PermisoCun03 TABLE (CodigoPatente INT NOT NULL PRIMARY KEY, Nombre NVARCHAR(100) NOT NULL);
+INSERT INTO @PermisoCun03 (CodigoPatente, Nombre) VALUES (64, N'Registrar solicitud de inscripción');
+
+UPDATE p
+SET Nombre = pc.Nombre
+FROM dbo.Patentes p
+INNER JOIN @PermisoCun03 pc ON pc.CodigoPatente = p.CodigoPatente
+WHERE p.Nombre <> pc.Nombre;
+
+SET IDENTITY_INSERT dbo.Patentes ON;
+INSERT INTO dbo.Patentes (CodigoPatente, Nombre, DVH)
+SELECT CodigoPatente, Nombre, '' FROM @PermisoCun03 pc
+WHERE NOT EXISTS (SELECT 1 FROM dbo.Patentes p WHERE p.CodigoPatente = pc.CodigoPatente);
+SET IDENTITY_INSERT dbo.Patentes OFF;
+
+INSERT INTO dbo.RolPatente (CodigoRol, CodigoPatente, DVH)
+SELECT 1, CodigoPatente, '' FROM @PermisoCun03 pc
+WHERE NOT EXISTS (SELECT 1 FROM dbo.RolPatente rp WHERE rp.CodigoRol = 1 AND rp.CodigoPatente = pc.CodigoPatente);
+GO
+
+IF OBJECT_ID(N'dbo.sp_CUN03_BuscarAlumnoLead', N'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_CUN03_BuscarAlumnoLead;
+GO
+CREATE PROCEDURE dbo.sp_CUN03_BuscarAlumnoLead
+    @Texto NVARCHAR(100)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @Like NVARCHAR(110) = N'%' + LTRIM(RTRIM(ISNULL(@Texto, N''))) + N'%';
+
+    SELECT N'Alumno' AS Tipo, a.IdAlumno AS IdPersona, a.DNI, a.Nombre, a.Apellido, a.Email, a.Telefono, a.FechaAlta, a.Estado, a.DVH,
+           CAST(NULL AS INT) AS IdComisionSugerida
+    FROM dbo.Alumno a
+    WHERE a.DNI LIKE @Like OR a.Nombre LIKE @Like OR a.Apellido LIKE @Like
+    UNION ALL
+    SELECT N'Lead' AS Tipo, l.IdLead AS IdPersona, l.DNI, l.Nombre, l.Apellido, l.Email, l.Telefono, l.FechaAlta, l.Estado, l.DVH,
+           cl.IdComision AS IdComisionSugerida
+    FROM dbo.Lead l
+    OUTER APPLY (
+        SELECT TOP 1 IdComision
+        FROM dbo.ConsultaLead c
+        WHERE c.IdLead = l.IdLead AND c.Estado <> N'eliminada'
+        ORDER BY c.FechaConsulta DESC, c.IdConsultaLead DESC
+    ) cl
+    WHERE l.DNI LIKE @Like OR l.Nombre LIKE @Like OR l.Apellido LIKE @Like
+    ORDER BY Tipo, Apellido, Nombre;
+END
+GO
+
+IF OBJECT_ID(N'dbo.sp_CUN03_ListarComisionesElegibles', N'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_CUN03_ListarComisionesElegibles;
+GO
+CREATE PROCEDURE dbo.sp_CUN03_ListarComisionesElegibles
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT c.IdComision, c.Codigo, c.IdCurso, cu.Nombre AS Curso, c.IdProfesor,
+           CONCAT(p.Apellido, N', ', p.Nombre) AS Profesor, c.DiaSemana, c.HoraInicio, c.HoraFin,
+           c.CupoMinimo, c.CupoMaximo, c.FechaLimitePago, c.FechaInicio, c.FechaFin,
+           c.ArancelBase, c.MontoMatricula, c.Estado,
+           c.CupoMaximo - ISNULL(s.Ocupadas, 0) AS VacantesDisponibles
+    FROM dbo.Comision c
+    INNER JOIN dbo.Curso cu ON cu.IdCurso = c.IdCurso
+    INNER JOIN dbo.Profesor p ON p.IdProfesor = c.IdProfesor
+    OUTER APPLY (
+        SELECT COUNT(1) AS Ocupadas
+        FROM dbo.SolicitudInscripcion si
+        WHERE si.IdComision = c.IdComision AND si.Estado IN (N'pendiente', N'confirmada', N'activa')
+    ) s
+    WHERE c.Estado <> N'eliminada'
+      AND c.FechaLimitePago >= CONVERT(date, GETDATE())
+      AND c.MontoMatricula > 0
+      AND EXISTS (SELECT 1 FROM dbo.PlanesDePago pp WHERE pp.IdPlanDePago = c.IdPlanDePago AND pp.EstadoActivo = 1)
+      AND c.CupoMaximo - ISNULL(s.Ocupadas, 0) > 0
+    ORDER BY c.FechaInicio, c.Codigo;
+END
+GO
+
+IF OBJECT_ID(N'dbo.sp_CUN03_ObtenerPlanesComision', N'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_CUN03_ObtenerPlanesComision;
+GO
+CREATE PROCEDURE dbo.sp_CUN03_ObtenerPlanesComision
+    @IdComision INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT pp.IdPlanDePago, pp.Nombre, pp.EstadoActivo, pp.RecargoPorcentaje, pp.CantidadCuotas
+    FROM dbo.Comision c
+    INNER JOIN dbo.PlanesDePago pp ON pp.IdPlanDePago = c.IdPlanDePago
+    WHERE c.IdComision = @IdComision AND pp.EstadoActivo = 1;
+END
+GO
+
+IF OBJECT_ID(N'dbo.sp_CUN03_RegistrarSolicitudInscripcion', N'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_CUN03_RegistrarSolicitudInscripcion;
+GO
+CREATE PROCEDURE dbo.sp_CUN03_RegistrarSolicitudInscripcion
+    @DNI VARCHAR(20), @Nombre NVARCHAR(80), @Apellido NVARCHAR(80), @Email NVARCHAR(200), @Telefono NVARCHAR(50),
+    @IdLead INT = NULL, @IdAlumno INT = NULL, @IdComision INT, @IdPlanDePago INT, @Observaciones NVARCHAR(500) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @StartedTransaction BIT = 0, @IdSolicitud INT, @IdCuota INT, @Codigo NVARCHAR(30),
+            @MontoMatricula DECIMAL(18,2), @Recargo DECIMAL(9,4), @VacantesDisponibles INT;
+
+    IF @@TRANCOUNT = 0 BEGIN SET @StartedTransaction = 1; BEGIN TRANSACTION; END
+
+    BEGIN TRY
+        SELECT @MontoMatricula = c.MontoMatricula
+        FROM dbo.Comision c WITH (UPDLOCK, HOLDLOCK)
+        WHERE c.IdComision = @IdComision
+          AND c.Estado <> N'eliminada'
+          AND c.FechaLimitePago >= CONVERT(date, GETDATE())
+          AND c.MontoMatricula > 0;
+
+        IF @MontoMatricula IS NULL THROW 52001, N'Errores.ComisionElegibleNoDisponible', 1;
+
+        SELECT @Recargo = pp.RecargoPorcentaje
+        FROM dbo.Comision c
+        INNER JOIN dbo.PlanesDePago pp WITH(HOLDLOCK) ON pp.IdPlanDePago = c.IdPlanDePago
+        WHERE c.IdComision = @IdComision AND pp.IdPlanDePago = @IdPlanDePago AND pp.EstadoActivo = 1;
+
+        IF @Recargo IS NULL THROW 52002, N'Errores.PlanDePagoNoDisponible', 1;
+
+        IF @IdAlumno IS NULL
+            SELECT @IdAlumno = IdAlumno FROM dbo.Alumno WITH (UPDLOCK, HOLDLOCK) WHERE DNI = @DNI;
+
+        IF @IdAlumno IS NULL
+        BEGIN
+            INSERT INTO dbo.Alumno (DNI, Nombre, Apellido, Email, Telefono, FechaAlta, Estado, DVH)
+            VALUES (@DNI, @Nombre, @Apellido, @Email, @Telefono, GETDATE(), N'activo', N'');
+            SET @IdAlumno = SCOPE_IDENTITY();
+        END
+
+        IF EXISTS (SELECT 1 FROM dbo.SolicitudInscripcion WITH (UPDLOCK, HOLDLOCK) WHERE IdAlumno = @IdAlumno AND IdComision = @IdComision AND Estado IN (N'pendiente', N'confirmada', N'activa'))
+            THROW 52003, N'Errores.InscripcionDuplicada', 1;
+
+        IF EXISTS (
+            SELECT 1
+            FROM dbo.SolicitudInscripcion si WITH (UPDLOCK, HOLDLOCK, INDEX(IX_SolicitudInscripcion_AlumnoComision))
+            INNER JOIN dbo.Cuota cu WITH (UPDLOCK, HOLDLOCK, INDEX(IX_Cuota_SolicitudEstadoBalance)) ON cu.IdSolicitudInscripcion = si.IdSolicitudInscripcion
+            WHERE si.IdAlumno = @IdAlumno AND si.IdComision = @IdComision
+              AND cu.Estado = N'pendiente' AND cu.BalanceAdeudado > 0
+        ) THROW 52005, N'Errores.InscripcionPendienteDeuda', 1;
+
+        SELECT @VacantesDisponibles = c.CupoMaximo - COUNT(si.IdSolicitudInscripcion)
+        FROM dbo.Comision c WITH (UPDLOCK, HOLDLOCK)
+        LEFT JOIN dbo.SolicitudInscripcion si ON si.IdComision = c.IdComision AND si.Estado IN (N'pendiente', N'confirmada', N'activa')
+        WHERE c.IdComision = @IdComision
+        GROUP BY c.CupoMaximo;
+
+        IF ISNULL(@VacantesDisponibles, 0) <= 0 THROW 52004, N'Errores.SinVacantesComision', 1;
+
+        INSERT INTO dbo.SolicitudInscripcion (Codigo, IdAlumno, IdLeadOrigen, IdComision, IdPlanDePago, RecargoPlanSnapshot, FechaSolicitud, Estado, Observaciones, DVH)
+        VALUES (N'', @IdAlumno, @IdLead, @IdComision, @IdPlanDePago, @Recargo, GETDATE(), N'pendiente', ISNULL(@Observaciones, N''), N'');
+
+        SET @IdSolicitud = SCOPE_IDENTITY();
+        SET @Codigo = CONCAT(N'SI-', RIGHT(CONCAT(N'000000', @IdSolicitud), 6));
+        UPDATE dbo.SolicitudInscripcion SET Codigo = @Codigo WHERE IdSolicitudInscripcion = @IdSolicitud;
+
+        INSERT INTO dbo.Cuota (IdSolicitudInscripcion, NumeroCuota, MontoOriginal, BalanceAdeudado, FechaVencimiento, Estado, DVH)
+        VALUES (@IdSolicitud, 1, @MontoMatricula, @MontoMatricula, DATEADD(day, 7, CONVERT(date, GETDATE())), N'pendiente', N'');
+        SET @IdCuota = SCOPE_IDENTITY();
+        EXEC dbo.sp_Financiacion_GenerarCuotas @IdSolicitud;
+
+        SET @VacantesDisponibles = @VacantesDisponibles - 1;
+
+        IF @StartedTransaction = 1 COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @StartedTransaction = 1 AND XACT_STATE() <> 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH;
+
+    SELECT a.IdAlumno, a.DNI AS AlumnoDNI, a.Nombre AS AlumnoNombre, a.Apellido AS AlumnoApellido,
+           a.Email AS AlumnoEmail, a.Telefono AS AlumnoTelefono, a.FechaAlta AS AlumnoFechaAlta, a.Estado AS AlumnoEstado, a.DVH AS AlumnoDVH,
+           si.IdSolicitudInscripcion, si.Codigo, si.IdLeadOrigen, si.IdComision, si.IdPlanDePago, si.RecargoPlanSnapshot,
+           si.FechaSolicitud, si.Estado AS SolicitudEstado, si.Observaciones, si.DVH AS SolicitudDVH,
+           si.ArancelCursoSnapshot,si.CantidadCuotasSnapshot,si.TotalCursoSnapshot,si.FechaPrimerVencimientoSnapshot,si.NombrePlanSnapshot,
+           cu.IdCuota, cu.NumeroCuota, cu.MontoOriginal, cu.BalanceAdeudado, cu.FechaVencimiento, cu.Estado AS CuotaEstado, cu.DVH AS CuotaDVH,
+           @VacantesDisponibles AS VacantesDisponibles
+    FROM dbo.SolicitudInscripcion si
+    INNER JOIN dbo.Alumno a ON a.IdAlumno = si.IdAlumno
+    INNER JOIN dbo.Cuota cu ON cu.IdSolicitudInscripcion = si.IdSolicitudInscripcion AND cu.TipoConcepto = N'matricula'
+    WHERE si.IdSolicitudInscripcion = @IdSolicitud;
+END
+GO
+
+IF OBJECT_ID(N'[dbo].[sp_CUN01_RegistrarPreaperturaComision]', N'P') IS NOT NULL
+    DROP PROCEDURE [dbo].[sp_CUN01_RegistrarPreaperturaComision];
+GO
+CREATE PROCEDURE [dbo].[sp_CUN01_RegistrarPreaperturaComision]
+    @IdCurso INT, @IdProfesor INT, @DiaSemana NVARCHAR(20), @HoraInicio TIME, @HoraFin TIME,
+    @CupoMinimo INT, @CupoMaximo INT, @FechaLimitePago DATE, @FechaInicio DATE, @FechaFin DATE,
+    @ArancelBase DECIMAL(18,2), @MontoMatricula DECIMAL(18,2), @IdPlanDePago INT, @RecargoPlanSnapshot DECIMAL(9,4)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @StartedTransaction BIT = 0, @IdComision INT, @Codigo NVARCHAR(30);
+    IF @@TRANCOUNT = 0 BEGIN SET @StartedTransaction = 1; BEGIN TRANSACTION; END
+    BEGIN TRY
+        IF EXISTS (SELECT 1 FROM dbo.Comision WITH (UPDLOCK, HOLDLOCK) WHERE IdProfesor = @IdProfesor AND DiaSemana = @DiaSemana AND Estado <> N'eliminada' AND HoraInicio < @HoraFin AND HoraFin > @HoraInicio)
+            THROW 51001, N'Errores.ProfesorSolapamientoComision', 1;
+
+        INSERT INTO dbo.Comision (Codigo, IdCurso, IdProfesor, DiaSemana, HoraInicio, HoraFin, CupoMinimo, CupoMaximo, FechaLimitePago, FechaInicio, FechaFin, ArancelBase, MontoMatricula, IdPlanDePago, RecargoPlanSnapshot, Estado, DVH)
+        VALUES (N'', @IdCurso, @IdProfesor, @DiaSemana, @HoraInicio, @HoraFin, @CupoMinimo, @CupoMaximo, @FechaLimitePago, @FechaInicio, @FechaFin, @ArancelBase, @MontoMatricula, @IdPlanDePago, @RecargoPlanSnapshot, N'preapertura', N'');
+        SET @IdComision = SCOPE_IDENTITY();
+        SET @Codigo = CONCAT(N'COM-', RIGHT(CONCAT(N'000000', @IdComision), 6));
+        UPDATE dbo.Comision SET Codigo = @Codigo WHERE IdComision = @IdComision;
+        IF @StartedTransaction = 1 COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @StartedTransaction = 1 AND XACT_STATE() <> 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH;
+    SELECT IdComision, Codigo, IdCurso, IdProfesor, DiaSemana, HoraInicio, HoraFin, CupoMinimo, CupoMaximo, FechaLimitePago, FechaInicio, FechaFin, ArancelBase, MontoMatricula, IdPlanDePago, RecargoPlanSnapshot, Estado, DVH
+    FROM dbo.Comision WHERE IdComision = @IdComision;
+END
+GO
+
+IF OBJECT_ID(N'[dbo].[sp_CUN01_ObtenerComision]', N'P') IS NOT NULL
+    DROP PROCEDURE [dbo].[sp_CUN01_ObtenerComision];
+GO
+CREATE PROCEDURE [dbo].[sp_CUN01_ObtenerComision]
+    @IdComision INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT IdComision, Codigo, IdCurso, IdProfesor, DiaSemana, HoraInicio, HoraFin, CupoMinimo, CupoMaximo, FechaLimitePago, FechaInicio, FechaFin, ArancelBase, MontoMatricula, IdPlanDePago, RecargoPlanSnapshot, Estado, DVH
+    FROM dbo.Comision WHERE IdComision = @IdComision;
+END
+GO
+
+IF OBJECT_ID(N'[dbo].[sp_CUN01_ListarComisiones]', N'P') IS NOT NULL
+    DROP PROCEDURE [dbo].[sp_CUN01_ListarComisiones];
+GO
+CREATE PROCEDURE [dbo].[sp_CUN01_ListarComisiones]
+    @IdCurso INT = NULL, @IdProfesor INT = NULL, @Estado NVARCHAR(30) = NULL, @FechaInicioDesde DATE = NULL, @FechaFinHasta DATE = NULL, @Codigo NVARCHAR(30) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT c.IdComision, c.Codigo, c.IdCurso, cu.Nombre AS Curso, c.IdProfesor,
+           CONCAT(p.Apellido, N', ', p.Nombre) AS Profesor, c.DiaSemana, c.HoraInicio, c.HoraFin,
+           c.CupoMinimo, c.CupoMaximo, c.FechaLimitePago, c.FechaInicio, c.FechaFin, c.ArancelBase, c.MontoMatricula, c.Estado
+    FROM dbo.Comision c
+    INNER JOIN dbo.Curso cu ON cu.IdCurso = c.IdCurso
+    INNER JOIN dbo.Profesor p ON p.IdProfesor = c.IdProfesor
+    WHERE (@IdCurso IS NULL OR c.IdCurso = @IdCurso) AND (@IdProfesor IS NULL OR c.IdProfesor = @IdProfesor)
+      AND (@Estado IS NULL OR c.Estado = @Estado) AND (@FechaInicioDesde IS NULL OR c.FechaInicio >= @FechaInicioDesde)
+      AND (@FechaFinHasta IS NULL OR c.FechaFin <= @FechaFinHasta) AND (@Codigo IS NULL OR c.Codigo LIKE N'%' + @Codigo + N'%')
+    ORDER BY c.FechaInicio DESC, c.Codigo;
+END
+GO
+
+PRINT 'CUN03 migration applied. Recalculate integrity from the application after running it.';
+GO
+GO
+
+-- ============================================================================
+-- Migracion (siempre) - origen: Scripts\Sql\cun05\001_migracion.sql
+-- ============================================================================
+SET NOCOUNT ON;
+GO
+
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+GO
+
+IF OBJECT_ID(N'dbo.Cuota', N'U') IS NULL
+BEGIN
+    RAISERROR(N'dbo.Cuota no existe en esta base: use EsquemaCompleto.sql para una base nueva.', 16, 1);
+    RETURN;
+END
+GO
+
+IF OBJECT_ID(N'dbo.PagoInscripcion', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.PagoInscripcion(
+        IdPagoInscripcion INT IDENTITY(1,1) NOT NULL,
+        IdAlumno INT NOT NULL,
+        IdSolicitudInscripcion INT NOT NULL,
+        IdCuota INT NOT NULL,
+        MetodoPago NVARCHAR(30) NOT NULL,
+        MontoPagado DECIMAL(18,2) NOT NULL,
+        NumeroReferencia NVARCHAR(100) NOT NULL,
+        FechaPago DATETIME NOT NULL,
+        DVH VARCHAR(64) NOT NULL CONSTRAINT DF_PagoInscripcion_DVH DEFAULT (''),
+        CONSTRAINT PK_PagoInscripcion PRIMARY KEY CLUSTERED (IdPagoInscripcion),
+        CONSTRAINT FK_PagoInscripcion_Alumno FOREIGN KEY (IdAlumno) REFERENCES dbo.Alumno(IdAlumno),
+        CONSTRAINT FK_PagoInscripcion_SolicitudInscripcion FOREIGN KEY (IdSolicitudInscripcion) REFERENCES dbo.SolicitudInscripcion(IdSolicitudInscripcion),
+        CONSTRAINT FK_PagoInscripcion_Cuota FOREIGN KEY (IdCuota) REFERENCES dbo.Cuota(IdCuota),
+        CONSTRAINT CK_PagoInscripcion_MetodoPago CHECK (MetodoPago IN (N'transferencia', N'tarjeta', N'billetera virtual'))
+    );
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_PagoInscripcion_Referencia' AND object_id = OBJECT_ID(N'dbo.PagoInscripcion'))
+BEGIN
+    SET QUOTED_IDENTIFIER ON;
+    CREATE UNIQUE INDEX UX_PagoInscripcion_Referencia ON dbo.PagoInscripcion (NumeroReferencia);
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'PagoInscripcion')
+    INSERT INTO dbo.DigitoVerificador_83KI (NombreTabla, DVV, FechaActualizacion) VALUES (N'PagoInscripcion', '', GETDATE());
+GO
+
+UPDATE p
+SET Nombre = N'Registrar pago de inscripción'
+FROM dbo.Patentes p
+WHERE p.CodigoPatente = 66
+  AND p.Nombre <> N'Registrar pago de inscripción';
+
+SET IDENTITY_INSERT dbo.Patentes ON;
+INSERT INTO dbo.Patentes (CodigoPatente, Nombre, DVH)
+SELECT 66, N'Registrar pago de inscripción', ''
+WHERE NOT EXISTS (SELECT 1 FROM dbo.Patentes p WHERE p.CodigoPatente = 66);
+SET IDENTITY_INSERT dbo.Patentes OFF;
+
+DECLARE @RolesCun05 TABLE (CodigoRol INT NOT NULL PRIMARY KEY);
+
+INSERT INTO @RolesCun05 (CodigoRol)
+SELECT 1
+WHERE EXISTS (SELECT 1 FROM dbo.Roles WHERE CodigoRol = 1)
+UNION
+SELECT r.CodigoRol
+FROM dbo.Roles r
+WHERE r.Nombre COLLATE Latin1_General_CI_AI IN (N'Coordinador Academico', N'Coordinadora Academica', N'Coordinadora Academia')
+   OR r.Nombre COLLATE Latin1_General_CI_AI LIKE N'Coordinador%Academic%'
+   OR r.Nombre COLLATE Latin1_General_CI_AI LIKE N'Coordinadora%Academic%';
+
+INSERT INTO dbo.RolPatente (CodigoRol, CodigoPatente, DVH)
+SELECT r.CodigoRol, 66, ''
+FROM @RolesCun05 r
+WHERE NOT EXISTS (SELECT 1 FROM dbo.RolPatente rp WHERE rp.CodigoRol = r.CodigoRol AND rp.CodigoPatente = 66);
+GO
+
+IF OBJECT_ID(N'dbo.sp_CUN05_BuscarCuotasPendientesPorDni', N'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_CUN05_BuscarCuotasPendientesPorDni;
+GO
+CREATE PROCEDURE dbo.sp_CUN05_BuscarCuotasPendientesPorDni
+    @DNI VARCHAR(20)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @DniNormalizado VARCHAR(20) = LTRIM(RTRIM(ISNULL(@DNI, N'')));
+
+    SELECT
+        a.IdAlumno,
+        a.DNI AS AlumnoDNI,
+        a.Nombre AS AlumnoNombre,
+        a.Apellido AS AlumnoApellido,
+        a.Email AS AlumnoEmail,
+        a.Telefono AS AlumnoTelefono,
+        a.FechaAlta AS AlumnoFechaAlta,
+        a.Estado AS AlumnoEstado,
+        a.DVH AS AlumnoDVH,
+        si.IdSolicitudInscripcion,
+        si.Codigo AS CodigoSolicitud,
+        si.IdLeadOrigen,
+        si.IdComision,
+        si.IdPlanDePago,
+        si.RecargoPlanSnapshot,
+        si.FechaSolicitud AS FechaSolicitudInscripcion,
+        si.Estado AS SolicitudEstado,
+        si.Observaciones AS SolicitudObservaciones,
+        si.DVH AS SolicitudDVH,
+        cu.IdCuota,
+        cu.NumeroCuota,
+        cu.TipoConcepto,
+        cu.Periodo,
+        cu.MontoOriginal,
+        cu.BalanceAdeudado,
+        cu.FechaVencimiento,
+        cu.Estado AS CuotaEstado,
+        cu.DVH AS CuotaDVH,
+        c.Codigo AS CodigoComision,
+        cur.Nombre AS Curso
+    FROM dbo.Alumno a
+    INNER JOIN dbo.SolicitudInscripcion si ON si.IdAlumno = a.IdAlumno
+    INNER JOIN dbo.Cuota cu ON cu.IdSolicitudInscripcion = si.IdSolicitudInscripcion
+    INNER JOIN dbo.Comision c ON c.IdComision = si.IdComision
+    INNER JOIN dbo.Curso cur ON cur.IdCurso = c.IdCurso
+    WHERE a.DNI = @DniNormalizado
+      AND cu.Estado = N'pendiente'
+      AND cu.TipoConcepto = N'matricula'
+      AND si.Estado IN (N'pendiente', N'confirmada', N'activa')
+    ORDER BY cu.NumeroCuota, cu.FechaVencimiento;
+END
+GO
+
+IF OBJECT_ID(N'dbo.sp_CUN05_RegistrarPagoInscripcion', N'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_CUN05_RegistrarPagoInscripcion;
+GO
+CREATE PROCEDURE dbo.sp_CUN05_RegistrarPagoInscripcion
+    @IdAlumno INT,
+    @IdSolicitudInscripcion INT,
+    @IdCuota INT,
+    @MetodoPago NVARCHAR(30),
+    @MontoRecibido DECIMAL(18,2),
+    @NumeroReferencia NVARCHAR(100),
+    @FechaPago DATETIME
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @StartedTransaction BIT = 0, @IdPago INT;
+    DECLARE @NumeroCuota INT, @BalanceAdeudado DECIMAL(18,2);
+
+    IF @FechaPago IS NULL THROW 52606, N'Errores.PagoFechaObligatoria', 1;
+    IF CONVERT(date,@FechaPago)>CONVERT(date,GETDATE()) THROW 52607, N'Errores.PagoFechaFutura', 1;
+
+    IF @@TRANCOUNT = 0 BEGIN SET @StartedTransaction = 1; BEGIN TRANSACTION; END
+
+    BEGIN TRY
+        SELECT @BalanceAdeudado = BalanceAdeudado, @NumeroCuota = NumeroCuota
+        FROM dbo.Cuota WITH (UPDLOCK, HOLDLOCK)
+        WHERE IdCuota = @IdCuota AND IdSolicitudInscripcion = @IdSolicitudInscripcion AND TipoConcepto=N'matricula';
+
+        IF @BalanceAdeudado IS NULL
+            THROW 52601, N'Errores.PagoCuotaNoPendiente', 1;
+
+        IF @BalanceAdeudado = 0 OR EXISTS (SELECT 1 FROM dbo.Cuota WITH (UPDLOCK, HOLDLOCK) WHERE IdCuota = @IdCuota AND Estado <> N'pendiente')
+            THROW 52601, N'Errores.PagoCuotaNoPendiente', 1;
+
+        IF @MontoRecibido <> @BalanceAdeudado
+            THROW 52602, N'Errores.PagoMontoNoCoincide', 1;
+
+        IF @MetodoPago NOT IN (N'transferencia', N'tarjeta', N'billetera virtual')
+            THROW 52603, N'Errores.PagoMetodoInvalido', 1;
+
+        IF EXISTS (
+            SELECT 1 FROM dbo.PagoInscripcion WITH (UPDLOCK, HOLDLOCK)
+            WHERE NumeroReferencia = @NumeroReferencia
+        )
+            THROW 52604, N'Errores.PagoReferenciaDuplicada', 1;
+
+        IF NOT EXISTS (
+            SELECT 1 FROM dbo.SolicitudInscripcion WITH (UPDLOCK, HOLDLOCK)
+            WHERE IdSolicitudInscripcion = @IdSolicitudInscripcion
+              AND IdAlumno = @IdAlumno
+              AND Estado IN (N'pendiente', N'confirmada', N'activa')
+        )
+            THROW 52605, N'Errores.PagoSolicitudNoActivatable', 1;
+
+        INSERT INTO dbo.PagoInscripcion (IdAlumno, IdSolicitudInscripcion, IdCuota, MetodoPago, MontoPagado, NumeroReferencia, FechaPago, DVH)
+        VALUES (@IdAlumno, @IdSolicitudInscripcion, @IdCuota, @MetodoPago, @MontoRecibido, @NumeroReferencia, @FechaPago, N'');
+
+        SET @IdPago = SCOPE_IDENTITY();
+
+        UPDATE dbo.Cuota
+        SET BalanceAdeudado = 0, Estado = N'pagada', DVH = N''
+        WHERE IdCuota = @IdCuota;
+
+        IF EXISTS(SELECT 1 FROM dbo.Cuota WHERE IdCuota=@IdCuota AND TipoConcepto=N'matricula')
+        BEGIN
+            UPDATE dbo.SolicitudInscripcion
+            SET Estado = N'activa', DVH = N''
+            WHERE IdSolicitudInscripcion = @IdSolicitudInscripcion
+              AND Estado IN (N'pendiente', N'confirmada');
+        END
+
+        IF @StartedTransaction = 1 COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @StartedTransaction = 1 AND XACT_STATE() <> 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH;
+
+    SELECT
+        p.IdPagoInscripcion,
+        p.IdAlumno,
+        p.IdSolicitudInscripcion,
+        p.IdCuota,
+        p.MetodoPago,
+        p.MontoPagado,
+        p.NumeroReferencia,
+        p.FechaPago,
+        p.DVH AS PagoDVH,
+        a.DNI AS AlumnoDNI,
+        a.Nombre AS AlumnoNombre,
+        a.Apellido AS AlumnoApellido,
+        a.Email AS AlumnoEmail,
+        a.Telefono AS AlumnoTelefono,
+        a.FechaAlta AS AlumnoFechaAlta,
+        a.Estado AS AlumnoEstado,
+        a.DVH AS AlumnoDVH,
+        si.Codigo AS CodigoSolicitud,
+        si.IdLeadOrigen,
+        si.IdComision,
+        si.IdPlanDePago,
+        si.RecargoPlanSnapshot,
+        si.FechaSolicitud AS FechaSolicitudInscripcion,
+        si.Estado AS SolicitudEstado,
+        si.Observaciones AS SolicitudObservaciones,
+        si.DVH AS SolicitudDVH,
+        cu.NumeroCuota,
+        cu.TipoConcepto,
+        cu.Periodo,
+        cu.MontoOriginal,
+        cu.BalanceAdeudado,
+        cu.FechaVencimiento,
+        cu.Estado AS CuotaEstado,
+        cu.DVH AS CuotaDVH,
+        c.Codigo AS CodigoComision,
+        cur.Nombre AS Curso
+    FROM dbo.PagoInscripcion p
+    INNER JOIN dbo.Alumno a ON a.IdAlumno = p.IdAlumno
+    INNER JOIN dbo.SolicitudInscripcion si ON si.IdSolicitudInscripcion = p.IdSolicitudInscripcion
+    INNER JOIN dbo.Cuota cu ON cu.IdCuota = p.IdCuota
+    INNER JOIN dbo.Comision c ON c.IdComision = si.IdComision
+    INNER JOIN dbo.Curso cur ON cur.IdCurso = c.IdCurso
+    WHERE p.IdPagoInscripcion = @IdPago;
+END
+GO
+
+PRINT 'CUN05 migration applied. Recalculate integrity from the application after running it.';
+GO
+GO
+
+-- ============================================================================
+-- Migracion (siempre) - origen: Scripts\Sql\cun06\001_migracion.sql
+-- ============================================================================
+SET NOCOUNT ON;
+GO
+
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+GO
+
+IF OBJECT_ID(N'dbo.Comision', N'U') IS NULL OR OBJECT_ID(N'dbo.SolicitudInscripcion', N'U') IS NULL OR OBJECT_ID(N'dbo.Cuota', N'U') IS NULL
+BEGIN
+    RAISERROR(N'Tablas base CUN01/CUN03 no disponibles: aplique el esquema completo antes de CUN06.', 16, 1);
+    RETURN;
+END
+GO
+
+IF OBJECT_ID(N'dbo.AltaOficialComision', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.AltaOficialComision(
+        IdAltaOficialComision INT IDENTITY(1,1) NOT NULL,
+        IdComision INT NOT NULL,
+        FechaAlta DATE NOT NULL,
+        NumeroActa NVARCHAR(50) NOT NULL,
+        Observaciones NVARCHAR(500) NOT NULL CONSTRAINT DF_AltaOficialComision_Observaciones DEFAULT (N''),
+        UsuarioRegistro NVARCHAR(100) NOT NULL,
+        FechaRegistro DATETIME NOT NULL CONSTRAINT DF_AltaOficialComision_FechaRegistro DEFAULT (GETDATE()),
+        DVH VARCHAR(64) NOT NULL CONSTRAINT DF_AltaOficialComision_DVH DEFAULT (''),
+        CONSTRAINT PK_AltaOficialComision PRIMARY KEY CLUSTERED (IdAltaOficialComision),
+        CONSTRAINT FK_AltaOficialComision_Comision FOREIGN KEY (IdComision) REFERENCES dbo.Comision(IdComision),
+        CONSTRAINT UQ_AltaOficialComision_Comision UNIQUE (IdComision),
+        CONSTRAINT UQ_AltaOficialComision_NumeroActa UNIQUE (NumeroActa)
+    );
+END
+GO
+
+IF OBJECT_ID(N'dbo.ActaCierreComision', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.ActaCierreComision(
+        IdActaCierreComision INT IDENTITY(1,1) NOT NULL,
+        IdComision INT NOT NULL,
+        FechaCierre DATE NOT NULL,
+        NumeroActa NVARCHAR(50) NOT NULL,
+        Motivo NVARCHAR(250) NOT NULL,
+        Observaciones NVARCHAR(500) NOT NULL CONSTRAINT DF_ActaCierreComision_Observaciones DEFAULT (N''),
+        UsuarioRegistro NVARCHAR(100) NOT NULL,
+        FechaRegistro DATETIME NOT NULL CONSTRAINT DF_ActaCierreComision_FechaRegistro DEFAULT (GETDATE()),
+        DVH VARCHAR(64) NOT NULL CONSTRAINT DF_ActaCierreComision_DVH DEFAULT (''),
+        CONSTRAINT PK_ActaCierreComision PRIMARY KEY CLUSTERED (IdActaCierreComision),
+        CONSTRAINT FK_ActaCierreComision_Comision FOREIGN KEY (IdComision) REFERENCES dbo.Comision(IdComision),
+        CONSTRAINT UQ_ActaCierreComision_Comision UNIQUE (IdComision),
+        CONSTRAINT UQ_ActaCierreComision_NumeroActa UNIQUE (NumeroActa)
+    );
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_AltaOficialComision_Comision' AND object_id = OBJECT_ID(N'dbo.AltaOficialComision'))
+    CREATE INDEX IX_AltaOficialComision_Comision ON dbo.AltaOficialComision(IdComision);
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_ActaCierreComision_Comision' AND object_id = OBJECT_ID(N'dbo.ActaCierreComision'))
+    CREATE INDEX IX_ActaCierreComision_Comision ON dbo.ActaCierreComision(IdComision);
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'AltaOficialComision')
+    INSERT INTO dbo.DigitoVerificador_83KI (NombreTabla, DVV, FechaActualizacion) VALUES (N'AltaOficialComision', '', GETDATE());
+IF NOT EXISTS (SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla = N'ActaCierreComision')
+    INSERT INTO dbo.DigitoVerificador_83KI (NombreTabla, DVV, FechaActualizacion) VALUES (N'ActaCierreComision', '', GETDATE());
+GO
+
+UPDATE p SET Nombre = N'Registrar estado definitivo de comisión' FROM dbo.Patentes p WHERE p.CodigoPatente = 67 AND p.Nombre <> N'Registrar estado definitivo de comisión';
+SET IDENTITY_INSERT dbo.Patentes ON;
+INSERT INTO dbo.Patentes (CodigoPatente, Nombre, DVH)
+SELECT 67, N'Registrar estado definitivo de comisión', ''
+WHERE NOT EXISTS (SELECT 1 FROM dbo.Patentes WHERE CodigoPatente = 67);
+SET IDENTITY_INSERT dbo.Patentes OFF;
+
+INSERT INTO dbo.RolPatente (CodigoRol, CodigoPatente, DVH)
+SELECT 1, 67, ''
+WHERE EXISTS (SELECT 1 FROM dbo.Roles WHERE CodigoRol = 1)
+  AND NOT EXISTS (SELECT 1 FROM dbo.RolPatente WHERE CodigoRol = 1 AND CodigoPatente = 67);
+GO
+
+-- Recalculate integrity metadata for CUN06-protected additions and permission seeds.
+-- This keeps startup verification healthy immediately after running the migration,
+-- before any manual integrity recovery action is available.
+UPDATE dbo.Patentes
+SET DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+    N'CodigoPatente=', CONVERT(NVARCHAR(128), CodigoPatente), N'|',
+    N'Nombre=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Nombre), N'∅')))
+)), 2))
+WHERE CodigoPatente = 67;
+
+UPDATE dbo.RolPatente
+SET DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+    N'CodigoPatente=', CONVERT(NVARCHAR(128), CodigoPatente), N'|',
+    N'CodigoRol=', CONVERT(NVARCHAR(128), CodigoRol)
+)), 2))
+WHERE CodigoRol = 1 AND CodigoPatente = 67;
+
+UPDATE dbo.AltaOficialComision
+SET DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+    N'FechaAlta=', ISNULL(CONVERT(NVARCHAR(23), CAST(FechaAlta AS DATETIME), 126), N'∅'), N'|',
+    N'FechaRegistro=', ISNULL(CONVERT(NVARCHAR(23), FechaRegistro, 126), N'∅'), N'|',
+    N'IdAltaOficialComision=', CONVERT(NVARCHAR(128), IdAltaOficialComision), N'|',
+    N'IdComision=', CONVERT(NVARCHAR(128), IdComision), N'|',
+    N'NumeroActa=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), NumeroActa), N'∅'))), N'|',
+    N'Observaciones=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Observaciones), N'∅'))), N'|',
+    N'UsuarioRegistro=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), UsuarioRegistro), N'∅')))
+)), 2));
+
+UPDATE dbo.ActaCierreComision
+SET DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+    N'FechaCierre=', ISNULL(CONVERT(NVARCHAR(23), CAST(FechaCierre AS DATETIME), 126), N'∅'), N'|',
+    N'FechaRegistro=', ISNULL(CONVERT(NVARCHAR(23), FechaRegistro, 126), N'∅'), N'|',
+    N'IdActaCierreComision=', CONVERT(NVARCHAR(128), IdActaCierreComision), N'|',
+    N'IdComision=', CONVERT(NVARCHAR(128), IdComision), N'|',
+    N'Motivo=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Motivo), N'∅'))), N'|',
+    N'NumeroActa=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), NumeroActa), N'∅'))), N'|',
+    N'Observaciones=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Observaciones), N'∅'))), N'|',
+    N'UsuarioRegistro=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), UsuarioRegistro), N'∅')))
+)), 2));
+
+UPDATE dbo.DigitoVerificador_83KI
+SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.Patentes ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)),
+    FechaActualizacion = GETDATE()
+WHERE NombreTabla = N'Patentes';
+
+UPDATE dbo.DigitoVerificador_83KI
+SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.RolPatente ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)),
+    FechaActualizacion = GETDATE()
+WHERE NombreTabla = N'RolPatente';
+
+UPDATE dbo.DigitoVerificador_83KI
+SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.AltaOficialComision ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)),
+    FechaActualizacion = GETDATE()
+WHERE NombreTabla = N'AltaOficialComision';
+
+UPDATE dbo.DigitoVerificador_83KI
+SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.ActaCierreComision ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)),
+    FechaActualizacion = GETDATE()
+WHERE NombreTabla = N'ActaCierreComision';
+GO
+
+IF OBJECT_ID(N'dbo.sp_CUN06_ListarComisionesVencidas', N'P') IS NOT NULL DROP PROCEDURE dbo.sp_CUN06_ListarComisionesVencidas;
+GO
+CREATE PROCEDURE dbo.sp_CUN06_ListarComisionesVencidas
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT c.IdComision, c.Codigo, cur.Nombre AS Curso, CONCAT(p.Apellido, N', ', p.Nombre) AS Profesor,
+           c.CupoMinimo, c.CupoMaximo, c.FechaLimitePago, c.Estado,
+           ISNULL(v.VacantesRegularizadas, 0) AS VacantesRegularizadas
+    FROM dbo.Comision c
+    INNER JOIN dbo.Curso cur ON cur.IdCurso = c.IdCurso
+    INNER JOIN dbo.Profesor p ON p.IdProfesor = c.IdProfesor
+    OUTER APPLY (
+        SELECT COUNT(1) AS VacantesRegularizadas
+        FROM dbo.SolicitudInscripcion si
+        INNER JOIN dbo.Cuota cu ON cu.IdSolicitudInscripcion = si.IdSolicitudInscripcion AND cu.TipoConcepto = N'matricula' AND cu.Estado = N'pagada'
+        WHERE si.IdComision = c.IdComision AND si.Estado = N'activa'
+    ) v
+    WHERE c.Estado = N'preapertura'
+      AND c.FechaLimitePago < CONVERT(date, GETDATE())
+    ORDER BY c.FechaLimitePago, c.Codigo;
+END
+GO
+
+IF OBJECT_ID(N'dbo.sp_CUN06_EvaluarQuorum', N'P') IS NOT NULL DROP PROCEDURE dbo.sp_CUN06_EvaluarQuorum;
+GO
+CREATE PROCEDURE dbo.sp_CUN06_EvaluarQuorum @IdComision INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT c.IdComision, c.Codigo, c.CupoMinimo, c.Estado,
+           ISNULL(v.VacantesRegularizadas, 0) AS VacantesRegularizadas
+    FROM dbo.Comision c
+    OUTER APPLY (
+        SELECT COUNT(1) AS VacantesRegularizadas
+        FROM dbo.SolicitudInscripcion si
+        INNER JOIN dbo.Cuota cu ON cu.IdSolicitudInscripcion = si.IdSolicitudInscripcion AND cu.TipoConcepto = N'matricula' AND cu.Estado = N'pagada'
+        WHERE si.IdComision = c.IdComision AND si.Estado = N'activa'
+    ) v
+    WHERE c.IdComision = @IdComision
+      AND c.Estado = N'preapertura'
+      AND c.FechaLimitePago < CONVERT(date, GETDATE());
+END
+GO
+
+IF OBJECT_ID(N'dbo.sp_CUN06_RegistrarAltaOficial', N'P') IS NOT NULL DROP PROCEDURE dbo.sp_CUN06_RegistrarAltaOficial;
+GO
+CREATE PROCEDURE dbo.sp_CUN06_RegistrarAltaOficial
+    @IdComision INT, @FechaAlta DATE, @NumeroActa NVARCHAR(50), @Observaciones NVARCHAR(500), @UsuarioRegistro NVARCHAR(100)
+AS
+BEGIN
+    SET NOCOUNT ON; SET XACT_ABORT ON;
+    DECLARE @Started BIT = 0, @IdActa INT, @CupoMinimo INT, @Regularizadas INT, @Codigo NVARCHAR(30);
+    IF @@TRANCOUNT = 0 BEGIN SET @Started = 1; BEGIN TRANSACTION; END
+    BEGIN TRY
+        SELECT @CupoMinimo = CupoMinimo, @Codigo = Codigo FROM dbo.Comision WITH (UPDLOCK, HOLDLOCK)
+        WHERE IdComision = @IdComision AND Estado = N'preapertura' AND FechaLimitePago < CONVERT(date, GETDATE());
+        IF @CupoMinimo IS NULL THROW 52701, N'Errores.ComisionPreaperturaNoDisponible', 1;
+
+        SELECT @Regularizadas = COUNT(1)
+        FROM dbo.SolicitudInscripcion si WITH (UPDLOCK, HOLDLOCK)
+        INNER JOIN dbo.Cuota cu WITH (UPDLOCK, HOLDLOCK) ON cu.IdSolicitudInscripcion = si.IdSolicitudInscripcion AND cu.TipoConcepto = N'matricula' AND cu.Estado = N'pagada'
+        WHERE si.IdComision = @IdComision AND si.Estado = N'activa';
+
+        IF @Regularizadas < @CupoMinimo THROW 52702, N'Errores.EstadoDefinitivoQuorumInsuficiente', 1;
+
+        INSERT INTO dbo.AltaOficialComision (IdComision, FechaAlta, NumeroActa, Observaciones, UsuarioRegistro, DVH)
+        VALUES (@IdComision, @FechaAlta, @NumeroActa, ISNULL(@Observaciones, N''), @UsuarioRegistro, N'');
+        SET @IdActa = SCOPE_IDENTITY();
+
+        UPDATE dbo.Comision SET Estado = N'confirmada', DVH = N'' WHERE IdComision = @IdComision;
+
+        IF @Started = 1 COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @Started = 1 AND XACT_STATE() <> 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH;
+
+    SELECT @IdComision AS IdComision, @Codigo AS CodigoComision, N'confirmada' AS EstadoDefinitivo,
+           @Regularizadas AS VacantesRegularizadas, @CupoMinimo AS CupoMinimo, @IdActa AS IdActa,
+           @NumeroActa AS NumeroActa, 0 AS SolicitudesCanceladas, 0 AS CuotasReintegroPendiente;
+END
+GO
+
+IF OBJECT_ID(N'dbo.sp_CUN06_RegistrarActaCierre', N'P') IS NOT NULL DROP PROCEDURE dbo.sp_CUN06_RegistrarActaCierre;
+GO
+CREATE PROCEDURE dbo.sp_CUN06_RegistrarActaCierre
+    @IdComision INT, @FechaCierre DATE, @NumeroActa NVARCHAR(50), @Motivo NVARCHAR(250), @Observaciones NVARCHAR(500), @UsuarioRegistro NVARCHAR(100)
+AS
+BEGIN
+    SET NOCOUNT ON; SET XACT_ABORT ON;
+    DECLARE @Started BIT = 0, @IdActa INT, @CupoMinimo INT, @Regularizadas INT, @Codigo NVARCHAR(30), @Canceladas INT = 0, @Reintegro INT = 0;
+    IF @@TRANCOUNT = 0 BEGIN SET @Started = 1; BEGIN TRANSACTION; END
+    BEGIN TRY
+        SELECT @CupoMinimo = CupoMinimo, @Codigo = Codigo FROM dbo.Comision WITH (UPDLOCK, HOLDLOCK)
+        WHERE IdComision = @IdComision AND Estado = N'preapertura' AND FechaLimitePago < CONVERT(date, GETDATE());
+        IF @CupoMinimo IS NULL THROW 52701, N'Errores.ComisionPreaperturaNoDisponible', 1;
+
+        SELECT @Regularizadas = COUNT(1)
+        FROM dbo.SolicitudInscripcion si WITH (UPDLOCK, HOLDLOCK)
+        INNER JOIN dbo.Cuota cu WITH (UPDLOCK, HOLDLOCK) ON cu.IdSolicitudInscripcion = si.IdSolicitudInscripcion AND cu.TipoConcepto = N'matricula' AND cu.Estado = N'pagada'
+        WHERE si.IdComision = @IdComision AND si.Estado = N'activa';
+
+        IF @Regularizadas >= @CupoMinimo THROW 52703, N'Errores.EstadoDefinitivoQuorumAlcanzado', 1;
+
+        INSERT INTO dbo.ActaCierreComision (IdComision, FechaCierre, NumeroActa, Motivo, Observaciones, UsuarioRegistro, DVH)
+        VALUES (@IdComision, @FechaCierre, @NumeroActa, @Motivo, ISNULL(@Observaciones, N''), @UsuarioRegistro, N'');
+        SET @IdActa = SCOPE_IDENTITY();
+
+        UPDATE dbo.Cuota SET Estado = N'reintegro_pendiente', DVH = N''
+        WHERE Estado = N'pagada' AND IdSolicitudInscripcion IN (SELECT IdSolicitudInscripcion FROM dbo.SolicitudInscripcion WHERE IdComision = @IdComision AND Estado IN (N'pendiente', N'confirmada', N'activa'));
+        SET @Reintegro = @@ROWCOUNT;
+
+        UPDATE dbo.SolicitudInscripcion SET Estado = N'cancelada', DVH = N'' WHERE IdComision = @IdComision AND Estado IN (N'pendiente', N'confirmada', N'activa');
+        SET @Canceladas = @@ROWCOUNT;
+
+        UPDATE dbo.Comision SET Estado = N'cancelada_falta_quorum', DVH = N'' WHERE IdComision = @IdComision;
+
+        IF @Started = 1 COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @Started = 1 AND XACT_STATE() <> 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH;
+
+    SELECT @IdComision AS IdComision, @Codigo AS CodigoComision, N'cancelada_falta_quorum' AS EstadoDefinitivo,
+           @Regularizadas AS VacantesRegularizadas, @CupoMinimo AS CupoMinimo, @IdActa AS IdActa,
+           @NumeroActa AS NumeroActa, @Canceladas AS SolicitudesCanceladas, @Reintegro AS CuotasReintegroPendiente;
+END
+GO
+
+PRINT 'CUN06 migration applied.';
+GO
+GO
+
+-- ============================================================================
+-- Migracion (siempre) - origen: Scripts\Sql\reporte-ocupacion-comisiones\001_migracion.sql
+-- ============================================================================
+SET NOCOUNT ON;
+GO
+
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+GO
+
+-- Reporte de ocupacion y quorum de comisiones
+-- Requiere CUN01, CUN03, CUN05 y CUN06 aplicados.
+
+IF OBJECT_ID(N'dbo.AltaOficialComision', N'U') IS NULL OR OBJECT_ID(N'dbo.ActaCierreComision', N'U') IS NULL OR OBJECT_ID(N'dbo.PagoInscripcion', N'U') IS NULL
+BEGIN
+    RAISERROR(N'Faltan tablas de CUN05/CUN06: aplique esas migraciones antes del reporte.', 16, 1);
+    RETURN;
+END
+GO
+
+-- Permiso 70
+IF EXISTS (SELECT 1 FROM dbo.Patentes WHERE CodigoPatente = 70 AND Nombre <> N'Ver reporte de ocupación de comisiones')
+BEGIN
+    RAISERROR(N'El código de permiso 70 ya existe con otro nombre.', 16, 1);
+    RETURN;
+END
+
+SET IDENTITY_INSERT dbo.Patentes ON;
+INSERT INTO dbo.Patentes (CodigoPatente, Nombre, DVH)
+SELECT 70, N'Ver reporte de ocupación de comisiones', ''
+WHERE NOT EXISTS (SELECT 1 FROM dbo.Patentes WHERE CodigoPatente = 70);
+SET IDENTITY_INSERT dbo.Patentes OFF;
+
+INSERT INTO dbo.RolPatente (CodigoRol, CodigoPatente, DVH)
+SELECT 1, 70, ''
+WHERE EXISTS (SELECT 1 FROM dbo.Roles WHERE CodigoRol = 1)
+  AND NOT EXISTS (SELECT 1 FROM dbo.RolPatente WHERE CodigoRol = 1 AND CodigoPatente = 70);
+
+UPDATE dbo.Patentes
+SET DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+    N'CodigoPatente=', CONVERT(NVARCHAR(128), CodigoPatente), N'|',
+    N'Nombre=', LTRIM(RTRIM(ISNULL(CONVERT(NVARCHAR(MAX), Nombre), N'∅')))
+)), 2))
+WHERE CodigoPatente = 70;
+
+UPDATE dbo.RolPatente
+SET DVH = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+    N'CodigoPatente=', CONVERT(NVARCHAR(128), CodigoPatente), N'|',
+    N'CodigoRol=', CONVERT(NVARCHAR(128), CodigoRol)
+)), 2))
+WHERE CodigoRol = 1 AND CodigoPatente = 70;
+
+UPDATE dbo.DigitoVerificador_83KI
+SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.Patentes ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)),
+    FechaActualizacion = GETDATE()
+WHERE NombreTabla = N'Patentes';
+
+UPDATE dbo.DigitoVerificador_83KI
+SET DVV = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', ISNULL(CAST((SELECT CAST(N'' AS NVARCHAR(MAX)) + DVH FROM dbo.RolPatente ORDER BY DVH FOR XML PATH(N'')) AS NVARCHAR(MAX)), N'')), 2)),
+    FechaActualizacion = GETDATE()
+WHERE NombreTabla = N'RolPatente';
+GO
+
+IF OBJECT_ID(N'dbo.sp_Reporte_OcupacionComisiones', N'P') IS NOT NULL DROP PROCEDURE dbo.sp_Reporte_OcupacionComisiones;
+GO
+CREATE PROCEDURE dbo.sp_Reporte_OcupacionComisiones
+    @Estado NVARCHAR(30) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT c.IdComision,
+           c.Codigo,
+           cur.Nombre AS Curso,
+           CONCAT(p.Apellido, N', ', p.Nombre) AS Profesor,
+           c.FechaLimitePago,
+           c.CupoMinimo,
+           c.CupoMaximo,
+           c.Estado,
+           ISNULL(ins.Inscriptos, 0) AS Inscriptos,
+           ISNULL(ins.Pagaron, 0) AS Pagaron,
+           ISNULL(rei.CuotasReintegro, 0) AS CuotasReintegro,
+           ISNULL(rei.MontoReintegro, 0) AS MontoReintegro,
+           COALESCE(alta.NumeroActa, cierre.NumeroActa, N'') AS NumeroActa
+    FROM dbo.Comision c
+    INNER JOIN dbo.Curso cur ON cur.IdCurso = c.IdCurso
+    INNER JOIN dbo.Profesor p ON p.IdProfesor = c.IdProfesor
+    -- Inscriptions and paid enrollment fees, independently of course installments.
+    -- (si la comision se cancelo, las solicitudes quedan 'cancelada' y la cuota en 'reintegro_pendiente')
+    OUTER APPLY (
+        SELECT COUNT(1) AS Inscriptos,
+               SUM(CASE WHEN cu.Estado IN (N'pagada', N'reintegro_pendiente') THEN 1 ELSE 0 END) AS Pagaron
+        FROM dbo.SolicitudInscripcion si
+        LEFT JOIN dbo.Cuota cu ON cu.IdSolicitudInscripcion = si.IdSolicitudInscripcion AND cu.TipoConcepto = N'matricula'
+        WHERE si.IdComision = c.IdComision
+          AND si.Estado IN (N'pendiente', N'confirmada', N'activa', N'cancelada')
+    ) ins
+    -- lo que hay que devolver: lo efectivamente pagado de las cuotas marcadas por CUN06
+    OUTER APPLY (
+        SELECT COUNT(DISTINCT cu.IdCuota) AS CuotasReintegro,
+               SUM(pg.MontoPagado) AS MontoReintegro
+        FROM dbo.Cuota cu
+        INNER JOIN dbo.SolicitudInscripcion si ON si.IdSolicitudInscripcion = cu.IdSolicitudInscripcion
+        LEFT JOIN dbo.PagoInscripcion pg ON pg.IdCuota = cu.IdCuota
+        WHERE si.IdComision = c.IdComision
+          AND cu.Estado = N'reintegro_pendiente'
+    ) rei
+    OUTER APPLY (
+        SELECT TOP 1 a.NumeroActa FROM dbo.AltaOficialComision a
+        WHERE a.IdComision = c.IdComision ORDER BY a.IdAltaOficialComision DESC
+    ) alta
+    OUTER APPLY (
+        SELECT TOP 1 ac.NumeroActa FROM dbo.ActaCierreComision ac
+        WHERE ac.IdComision = c.IdComision ORDER BY ac.IdActaCierreComision DESC
+    ) cierre
+    WHERE c.Estado <> N'eliminada'
+      AND (@Estado IS NULL OR c.Estado = @Estado)
+    ORDER BY c.FechaLimitePago, c.Codigo;
+END
+GO
+
+PRINT 'Reporte de ocupacion de comisiones aplicado.';
+GO
+GO
+
+-- ============================================================================
+-- Migracion (siempre) - origen: Scripts\Sql\cun07\001_migracion.sql
+-- ============================================================================
+SET NOCOUNT ON;
+-- Ejecutar todos los lotes en una misma conexión y detenerse ante el primer error (sqlcmd -b).
+SET XACT_ABORT ON;
+BEGIN TRANSACTION;
+GO
+
+IF OBJECT_ID(N'dbo.CUN07_Migraciones',N'U') IS NULL
+    CREATE TABLE dbo.CUN07_Migraciones(Version INT NOT NULL PRIMARY KEY, FechaAplicacion DATETIME NOT NULL);
+GO
+
+IF OBJECT_ID(N'dbo.PagoInscripcion', N'U') IS NULL
+    THROW 52700, N'CUN07 requiere dbo.PagoInscripcion; aplicar EsquemaCompleto/CUN05 primero.', 1;
+GO
+
+IF OBJECT_ID(N'dbo.SolicitudInscripcion', N'U') IS NOT NULL AND OBJECT_ID(N'dbo.Cuota', N'U') IS NOT NULL
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_SolicitudInscripcion_AlumnoComision' AND object_id = OBJECT_ID(N'dbo.SolicitudInscripcion'))
+        CREATE INDEX IX_SolicitudInscripcion_AlumnoComision ON dbo.SolicitudInscripcion (IdAlumno, IdComision) INCLUDE (Estado, IdSolicitudInscripcion);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Cuota_SolicitudEstadoBalance' AND object_id = OBJECT_ID(N'dbo.Cuota'))
+        CREATE INDEX IX_Cuota_SolicitudEstadoBalance ON dbo.Cuota (IdSolicitudInscripcion, Estado, BalanceAdeudado);
+END
+GO
+
+IF COL_LENGTH(N'dbo.PagoInscripcion', N'FechaAcreditacion') IS NULL
+    ALTER TABLE dbo.PagoInscripcion ADD FechaAcreditacion DATETIME NULL;
+IF COL_LENGTH(N'dbo.PagoInscripcion', N'NumeroReciboInstitucional') IS NULL
+    ALTER TABLE dbo.PagoInscripcion ADD NumeroReciboInstitucional NVARCHAR(40) NULL;
+GO
+
+CREATE TABLE #Cun07ChangedPayments(IdPagoInscripcion INT NOT NULL);
+DECLARE @legacyBase BIGINT, @missing BIGINT;
+-- Serializar la asignación con las operaciones de escritura; nunca reutilizar un número histórico ya asignado.
+SELECT @legacyBase=COALESCE(MAX(TRY_CONVERT(BIGINT,SUBSTRING(NumeroReciboInstitucional,11,12))),0)
+FROM dbo.PagoInscripcion WITH(TABLOCKX,HOLDLOCK)
+WHERE NumeroReciboInstitucional LIKE N'CUN07-LEG-%' AND LEN(NumeroReciboInstitucional)=22
+  AND SUBSTRING(NumeroReciboInstitucional,11,12) COLLATE Latin1_General_100_BIN2 NOT LIKE N'%[^0-9]%';
+SELECT @missing=COUNT_BIG(*) FROM dbo.PagoInscripcion WHERE NumeroReciboInstitucional IS NULL;
+IF @legacyBase+@missing>999999999999
+    THROW 52710,N'CUN07: espacio de recibos historicos agotado; no se modificaron los recibos.',1;
+;WITH faltantes AS (
+    SELECT IdPagoInscripcion, ROW_NUMBER() OVER(ORDER BY IdPagoInscripcion) AS rn
+    FROM dbo.PagoInscripcion WHERE NumeroReciboInstitucional IS NULL
+)
+UPDATE p SET FechaAcreditacion=COALESCE(p.FechaAcreditacion,p.FechaPago),
+    NumeroReciboInstitucional=CONCAT(N'CUN07-LEG-',RIGHT(REPLICATE(N'0',12)+CONVERT(NVARCHAR(20),@legacyBase+f.rn),12))
+OUTPUT inserted.IdPagoInscripcion INTO #Cun07ChangedPayments
+FROM dbo.PagoInscripcion p JOIN faltantes f ON f.IdPagoInscripcion=p.IdPagoInscripcion;
+UPDATE dbo.PagoInscripcion SET FechaAcreditacion=COALESCE(FechaAcreditacion,FechaPago)
+OUTPUT inserted.IdPagoInscripcion INTO #Cun07ChangedPayments
+WHERE FechaAcreditacion IS NULL AND FechaPago IS NOT NULL;
+IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.PagoInscripcion') AND name=N'UX_PagoInscripcion_ReciboInstitucional')
+    CREATE UNIQUE INDEX UX_PagoInscripcion_ReciboInstitucional ON dbo.PagoInscripcion(NumeroReciboInstitucional) WHERE NumeroReciboInstitucional IS NOT NULL;
+GO
+
+IF OBJECT_ID(N'dbo.FacturaCUN07', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.FacturaCUN07(
+        IdFactura INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_FacturaCUN07 PRIMARY KEY,
+        IdPagoInscripcion INT NOT NULL CONSTRAINT UQ_FacturaCUN07_Pago UNIQUE,
+        NumeroReciboInstitucional NVARCHAR(40) NOT NULL CONSTRAINT UQ_FacturaCUN07_Recibo UNIQUE,
+        Concepto NVARCHAR(200) NOT NULL,
+        Total DECIMAL(18,2) NOT NULL,
+        FechaTransaccion DATETIME NOT NULL,
+        DVH VARCHAR(64) NOT NULL CONSTRAINT DF_FacturaCUN07_DVH DEFAULT(''),
+        CONSTRAINT FK_FacturaCUN07_Pago FOREIGN KEY(IdPagoInscripcion) REFERENCES dbo.PagoInscripcion(IdPagoInscripcion)
+    );
+END
+GO
+
+IF OBJECT_ID(N'dbo.SeqReciboInstitucionalCUN07', N'SO') IS NULL
+    EXEC(N'CREATE SEQUENCE dbo.SeqReciboInstitucionalCUN07 AS BIGINT START WITH 1 INCREMENT BY 1 NO CYCLE');
+GO
+
+IF OBJECT_ID(N'dbo.DigitoVerificador_83KI', N'U') IS NOT NULL AND NOT EXISTS(SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla=N'FacturaCUN07')
+    INSERT dbo.DigitoVerificador_83KI(NombreTabla,DVV,FechaActualizacion) VALUES(N'FacturaCUN07','',GETDATE());
+GO
+
+-- Los nuevos datos de entrada para el hash de pagos requieren recalcular todos los hashes de pagos históricos antes del DVV.
+DECLARE @firstApplication BIT=CASE WHEN NOT EXISTS(SELECT 1 FROM dbo.CUN07_Migraciones WHERE Version=1) THEN 1 ELSE 0 END;
+IF @firstApplication=1 OR EXISTS(SELECT 1 FROM #Cun07ChangedPayments)
+BEGIN
+UPDATE p SET DVH=LOWER(CONVERT(VARCHAR(64),HASHBYTES('SHA2_256',CONVERT(NVARCHAR(MAX),
+    N'FechaAcreditacion='+REPLACE(CONVERT(NVARCHAR(23),p.FechaAcreditacion,121),N' ',N'T')+N'|FechaPago='+REPLACE(CONVERT(NVARCHAR(23),p.FechaPago,121),N' ',N'T')+
+    N'|IdAlumno='+CONVERT(NVARCHAR(20),p.IdAlumno)+N'|IdCuota='+CONVERT(NVARCHAR(20),p.IdCuota)+
+    N'|IdPagoInscripcion='+CONVERT(NVARCHAR(20),p.IdPagoInscripcion)+N'|IdSolicitudInscripcion='+CONVERT(NVARCHAR(20),p.IdSolicitudInscripcion)+
+    N'|MetodoPago='+LTRIM(RTRIM(p.MetodoPago))+N'|MontoPagado='+CONVERT(NVARCHAR(40),p.MontoPagado)+
+    N'|NumeroReciboInstitucional='+LTRIM(RTRIM(p.NumeroReciboInstitucional))+N'|NumeroReferencia='+LTRIM(RTRIM(p.NumeroReferencia)))),2))
+FROM dbo.PagoInscripcion p
+WHERE @firstApplication=1 OR EXISTS(SELECT 1 FROM #Cun07ChangedPayments c WHERE c.IdPagoInscripcion=p.IdPagoInscripcion);
+IF @firstApplication=1
+UPDATE f SET DVH=LOWER(CONVERT(VARCHAR(64),HASHBYTES('SHA2_256',CONVERT(NVARCHAR(MAX),
+    N'Concepto='+LTRIM(RTRIM(f.Concepto))+N'|FechaTransaccion='+REPLACE(CONVERT(NVARCHAR(23),f.FechaTransaccion,121),N' ',N'T')+
+    N'|IdFactura='+CONVERT(NVARCHAR(20),f.IdFactura)+N'|IdPagoInscripcion='+CONVERT(NVARCHAR(20),f.IdPagoInscripcion)+
+    N'|NumeroReciboInstitucional='+LTRIM(RTRIM(f.NumeroReciboInstitucional))+N'|Total='+CONVERT(NVARCHAR(40),f.Total))),2))
+FROM dbo.FacturaCUN07 f;
+DECLARE @paymentHashes NVARCHAR(MAX),@invoiceHashes NVARCHAR(MAX);
+SELECT @paymentHashes=COALESCE((SELECT CONVERT(NVARCHAR(MAX),DVH) AS [text()] FROM dbo.PagoInscripcion ORDER BY DVH FOR XML PATH(''),TYPE).value('.','NVARCHAR(MAX)'),N'');
+SELECT @invoiceHashes=COALESCE((SELECT CONVERT(NVARCHAR(MAX),DVH) AS [text()] FROM dbo.FacturaCUN07 ORDER BY DVH FOR XML PATH(''),TYPE).value('.','NVARCHAR(MAX)'),N'');
+UPDATE dbo.DigitoVerificador_83KI SET DVV=LOWER(CONVERT(VARCHAR(64),HASHBYTES('SHA2_256',@paymentHashes),2)),FechaActualizacion=GETDATE() WHERE NombreTabla=N'PagoInscripcion';
+IF @firstApplication=1
+BEGIN
+    UPDATE dbo.DigitoVerificador_83KI SET DVV=LOWER(CONVERT(VARCHAR(64),HASHBYTES('SHA2_256',@invoiceHashes),2)),FechaActualizacion=GETDATE() WHERE NombreTabla=N'FacturaCUN07';
+    INSERT dbo.CUN07_Migraciones(Version,FechaAplicacion) VALUES(1,GETDATE());
+END
+END
+DROP TABLE #Cun07ChangedPayments;
+GO
+
+IF OBJECT_ID(N'dbo.sp_CUN03_RegistrarSolicitudInscripcion', N'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_CUN03_RegistrarSolicitudInscripcion;
+GO
+CREATE PROCEDURE dbo.sp_CUN03_RegistrarSolicitudInscripcion
+    @DNI VARCHAR(20), @Nombre NVARCHAR(80), @Apellido NVARCHAR(80), @Email NVARCHAR(200), @Telefono NVARCHAR(50),
+    @IdLead INT = NULL, @IdAlumno INT = NULL, @IdComision INT, @IdPlanDePago INT, @Observaciones NVARCHAR(500) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @StartedTransaction BIT = 0, @IdSolicitud INT, @IdCuota INT, @Codigo NVARCHAR(30),
+            @MontoMatricula DECIMAL(18,2), @Recargo DECIMAL(9,4), @VacantesDisponibles INT;
+    IF @@TRANCOUNT = 0 BEGIN SET @StartedTransaction = 1; BEGIN TRANSACTION; END
+    BEGIN TRY
+        SELECT @MontoMatricula = c.MontoMatricula FROM dbo.Comision c WITH (UPDLOCK, HOLDLOCK)
+        WHERE c.IdComision = @IdComision AND c.Estado <> N'eliminada'
+          AND c.FechaLimitePago >= CONVERT(date, GETDATE()) AND c.MontoMatricula > 0;
+        IF @MontoMatricula IS NULL THROW 52001, N'Errores.ComisionElegibleNoDisponible', 1;
+        SELECT @Recargo = pp.RecargoPorcentaje FROM dbo.Comision c
+        INNER JOIN dbo.PlanesDePago pp WITH(HOLDLOCK) ON pp.IdPlanDePago = c.IdPlanDePago
+        WHERE c.IdComision = @IdComision AND pp.IdPlanDePago = @IdPlanDePago AND pp.EstadoActivo = 1;
+        IF @Recargo IS NULL THROW 52002, N'Errores.PlanDePagoNoDisponible', 1;
+        IF @IdAlumno IS NULL SELECT @IdAlumno = IdAlumno FROM dbo.Alumno WITH (UPDLOCK, HOLDLOCK) WHERE DNI = @DNI;
+        IF @IdAlumno IS NULL
+        BEGIN
+            INSERT dbo.Alumno (DNI, Nombre, Apellido, Email, Telefono, FechaAlta, Estado, DVH)
+            VALUES (@DNI, @Nombre, @Apellido, @Email, @Telefono, GETDATE(), N'activo', N'');
+            SET @IdAlumno = SCOPE_IDENTITY();
+        END
+        IF EXISTS (SELECT 1 FROM dbo.SolicitudInscripcion WITH (UPDLOCK, HOLDLOCK)
+                   WHERE IdAlumno = @IdAlumno AND IdComision = @IdComision
+                     AND Estado IN (N'pendiente', N'confirmada', N'activa'))
+            THROW 52003, N'Errores.InscripcionDuplicada', 1;
+        IF EXISTS (
+            SELECT 1 FROM dbo.SolicitudInscripcion si WITH (UPDLOCK, HOLDLOCK, INDEX(IX_SolicitudInscripcion_AlumnoComision))
+            INNER JOIN dbo.Cuota cu WITH (UPDLOCK, HOLDLOCK, INDEX(IX_Cuota_SolicitudEstadoBalance))
+                ON cu.IdSolicitudInscripcion = si.IdSolicitudInscripcion
+            WHERE si.IdAlumno = @IdAlumno AND si.IdComision = @IdComision
+              AND cu.Estado = N'pendiente' AND cu.BalanceAdeudado > 0
+        ) THROW 52005, N'Errores.InscripcionPendienteDeuda', 1;
+        SELECT @VacantesDisponibles = c.CupoMaximo - COUNT(si.IdSolicitudInscripcion)
+        FROM dbo.Comision c WITH (UPDLOCK, HOLDLOCK)
+        LEFT JOIN dbo.SolicitudInscripcion si ON si.IdComision = c.IdComision
+            AND si.Estado IN (N'pendiente', N'confirmada', N'activa')
+        WHERE c.IdComision = @IdComision GROUP BY c.CupoMaximo;
+        IF ISNULL(@VacantesDisponibles, 0) <= 0 THROW 52004, N'Errores.SinVacantesComision', 1;
+        INSERT dbo.SolicitudInscripcion
+            (Codigo, IdAlumno, IdLeadOrigen, IdComision, IdPlanDePago, RecargoPlanSnapshot, FechaSolicitud, Estado, Observaciones, DVH)
+        VALUES (N'', @IdAlumno, @IdLead, @IdComision, @IdPlanDePago, @Recargo, GETDATE(), N'pendiente', ISNULL(@Observaciones, N''), N'');
+        SET @IdSolicitud = SCOPE_IDENTITY();
+        SET @Codigo = CONCAT(N'SI-', RIGHT(CONCAT(N'000000', @IdSolicitud), 6));
+        UPDATE dbo.SolicitudInscripcion SET Codigo = @Codigo WHERE IdSolicitudInscripcion = @IdSolicitud;
+        INSERT dbo.Cuota (IdSolicitudInscripcion, NumeroCuota, MontoOriginal, BalanceAdeudado, FechaVencimiento, Estado, DVH)
+        VALUES (@IdSolicitud, 1, @MontoMatricula, @MontoMatricula, DATEADD(day, 7, CONVERT(date, GETDATE())), N'pendiente', N'');
+        SET @IdCuota = SCOPE_IDENTITY();
+        EXEC dbo.sp_Financiacion_GenerarCuotas @IdSolicitud;
+        SET @VacantesDisponibles = @VacantesDisponibles - 1;
+        IF @StartedTransaction = 1 COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @StartedTransaction = 1 AND XACT_STATE() <> 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH;
+    SELECT a.IdAlumno, a.DNI AS AlumnoDNI, a.Nombre AS AlumnoNombre, a.Apellido AS AlumnoApellido,
+           a.Email AS AlumnoEmail, a.Telefono AS AlumnoTelefono, a.FechaAlta AS AlumnoFechaAlta, a.Estado AS AlumnoEstado, a.DVH AS AlumnoDVH,
+           si.IdSolicitudInscripcion, si.Codigo, si.IdLeadOrigen, si.IdComision, si.IdPlanDePago, si.RecargoPlanSnapshot,
+           si.FechaSolicitud, si.Estado AS SolicitudEstado, si.Observaciones, si.DVH AS SolicitudDVH,
+           si.ArancelCursoSnapshot,si.CantidadCuotasSnapshot,si.TotalCursoSnapshot,si.FechaPrimerVencimientoSnapshot,si.NombrePlanSnapshot,
+           cu.IdCuota, cu.NumeroCuota, cu.MontoOriginal, cu.BalanceAdeudado, cu.FechaVencimiento, cu.Estado AS CuotaEstado,
+           cu.DVH AS CuotaDVH, @VacantesDisponibles AS VacantesDisponibles
+    FROM dbo.SolicitudInscripcion si
+    INNER JOIN dbo.Alumno a ON a.IdAlumno = si.IdAlumno
+    INNER JOIN dbo.Cuota cu ON cu.IdSolicitudInscripcion = si.IdSolicitudInscripcion AND cu.TipoConcepto = N'matricula'
+    WHERE si.IdSolicitudInscripcion = @IdSolicitud;
+END
+GO
+
+IF OBJECT_ID(N'dbo.sp_CUN07_BuscarCuotasPendientes', N'P') IS NOT NULL DROP PROCEDURE dbo.sp_CUN07_BuscarCuotasPendientes;
+GO
+IF OBJECT_ID(N'dbo.sp_CUN07_ListarComisionesPago', N'P') IS NOT NULL DROP PROCEDURE dbo.sp_CUN07_ListarComisionesPago;
+GO
+CREATE PROCEDURE dbo.sp_CUN07_ListarComisionesPago @DNI VARCHAR(20)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT DISTINCT c.Codigo CodigoComision, c.Codigo + N' - ' + cur.Nombre Descripcion
+    FROM dbo.Alumno a
+    JOIN dbo.SolicitudInscripcion si ON si.IdAlumno=a.IdAlumno
+    JOIN dbo.Comision c ON c.IdComision=si.IdComision
+    JOIN dbo.Curso cur ON cur.IdCurso=c.IdCurso
+    WHERE a.DNI=LTRIM(RTRIM(@DNI))
+      AND si.Estado IN(N'pendiente',N'confirmada',N'activa')
+      AND EXISTS(SELECT 1 FROM dbo.Cuota cu WHERE cu.IdSolicitudInscripcion=si.IdSolicitudInscripcion AND cu.TipoConcepto=N'curso')
+    ORDER BY CodigoComision;
+END
+GO
+CREATE PROCEDURE dbo.sp_CUN07_BuscarCuotasPendientes @DNI VARCHAR(20), @CodigoComision NVARCHAR(30)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT a.IdAlumno,a.DNI AlumnoDNI,a.Nombre AlumnoNombre,a.Apellido AlumnoApellido,a.Email AlumnoEmail,a.Telefono AlumnoTelefono,a.FechaAlta AlumnoFechaAlta,a.Estado AlumnoEstado,a.DVH AlumnoDVH,
+      si.IdSolicitudInscripcion,si.Codigo CodigoSolicitud,si.IdLeadOrigen,si.IdComision,si.IdPlanDePago,si.RecargoPlanSnapshot,si.FechaSolicitud FechaSolicitudInscripcion,si.Estado SolicitudEstado,si.Observaciones SolicitudObservaciones,si.DVH SolicitudDVH,
+      si.ArancelCursoSnapshot,si.CantidadCuotasSnapshot,si.TotalCursoSnapshot,si.FechaPrimerVencimientoSnapshot,si.NombrePlanSnapshot,
+      CONVERT(bit,CASE WHEN EXISTS(SELECT 1 FROM dbo.Cuota m WHERE m.IdSolicitudInscripcion=si.IdSolicitudInscripcion AND m.TipoConcepto=N'matricula' AND m.Estado=N'pagada') THEN 1 ELSE 0 END) MatriculaPagada,
+      cu.IdCuota,cu.NumeroCuota,cu.TipoConcepto,cu.Periodo,cu.MontoOriginal,cu.BalanceAdeudado,cu.FechaVencimiento,cu.Estado CuotaEstado,cu.DVH CuotaDVH,c.Codigo CodigoComision,cur.Nombre Curso,si.NombrePlanSnapshot NombrePlanDePago
+    FROM dbo.Alumno a JOIN dbo.SolicitudInscripcion si ON si.IdAlumno=a.IdAlumno JOIN dbo.Comision c ON c.IdComision=si.IdComision JOIN dbo.Curso cur ON cur.IdCurso=c.IdCurso
+      JOIN dbo.Cuota cu ON cu.IdSolicitudInscripcion=si.IdSolicitudInscripcion
+      JOIN dbo.PlanesDePago pp ON pp.IdPlanDePago=si.IdPlanDePago
+    WHERE a.DNI=LTRIM(RTRIM(@DNI)) AND c.Codigo=LTRIM(RTRIM(@CodigoComision)) AND cu.TipoConcepto=N'curso'
+      AND si.Estado IN(N'pendiente',N'confirmada',N'activa') ORDER BY cu.NumeroCuota,cu.FechaVencimiento;
+END
+GO
+
+IF OBJECT_ID(N'dbo.sp_CUN07_RegistrarPago', N'P') IS NOT NULL DROP PROCEDURE dbo.sp_CUN07_RegistrarPago;
+GO
+CREATE PROCEDURE dbo.sp_CUN07_RegistrarPago
+ @IdAlumno INT,@IdSolicitudInscripcion INT,@IdCuota INT,@CodigoComision NVARCHAR(30),@MetodoPago NVARCHAR(30),@MontoRecibido DECIMAL(18,2),
+ @NumeroReferencia NVARCHAR(100),@FechaPago DATETIME,@FechaAcreditacion DATETIME
+AS
+BEGIN
+ SET NOCOUNT ON;
+  DECLARE @balance DECIMAL(18,2),@numeroCuota INT,@codigo NVARCHAR(40),@idPago INT,@concepto NVARCHAR(200);
+ IF @IdAlumno<=0 OR @IdSolicitudInscripcion<=0 OR @IdCuota<=0 OR @MontoRecibido<=0 OR NULLIF(LTRIM(RTRIM(@NumeroReferencia)),N'') IS NULL OR @FechaPago IS NULL OR @FechaAcreditacion IS NULL
+   THROW 52701,N'Errores.PagoDatosInvalidos',1;
+ BEGIN TRY
+ BEGIN TRANSACTION;
+ SELECT @balance=cu.BalanceAdeudado,@numeroCuota=cu.NumeroCuota FROM dbo.Cuota cu WITH(UPDLOCK,HOLDLOCK)
+   JOIN dbo.SolicitudInscripcion si WITH(UPDLOCK,HOLDLOCK) ON si.IdSolicitudInscripcion=cu.IdSolicitudInscripcion
+   JOIN dbo.Comision c WITH(UPDLOCK,HOLDLOCK) ON c.IdComision=si.IdComision
+   WHERE cu.IdCuota=@IdCuota AND cu.IdSolicitudInscripcion=@IdSolicitudInscripcion AND si.IdAlumno=@IdAlumno AND c.Codigo=@CodigoComision
+      AND cu.TipoConcepto=N'curso' AND cu.Estado=N'pendiente' AND cu.BalanceAdeudado>0 AND si.Estado IN(N'activa');
+  IF @balance IS NULL THROW 52702,N'Errores.PagoCuotaNoPendiente',1;
+  IF NOT EXISTS(SELECT 1 FROM dbo.Cuota WITH(UPDLOCK,HOLDLOCK)
+                WHERE IdSolicitudInscripcion=@IdSolicitudInscripcion AND TipoConcepto=N'matricula' AND Estado=N'pagada')
+    THROW 52709,N'Errores.PagoMatriculaPendiente',1;
+  IF EXISTS(SELECT 1 FROM dbo.Cuota WITH(UPDLOCK,HOLDLOCK)
+            WHERE IdSolicitudInscripcion=@IdSolicitudInscripcion AND TipoConcepto=N'curso' AND NumeroCuota<@numeroCuota AND BalanceAdeudado>0)
+    THROW 52708,N'Errores.PagoCuotaAnteriorPendiente',1;
+  IF @MontoRecibido<>@balance THROW 52703,N'Errores.PagoMontoNoCoincide',1;
+   IF CONVERT(date,@FechaPago)>CONVERT(date,GETDATE()) OR CONVERT(date,@FechaAcreditacion)>CONVERT(date,GETDATE())
+     THROW 52707,N'Errores.PagoFechaFutura',1;
+   IF CONVERT(date,@FechaAcreditacion)<CONVERT(date,@FechaPago) THROW 52706,N'Errores.PagoFechaAcreditacionAnterior',1;
+ IF @MetodoPago NOT IN(N'transferencia',N'tarjeta',N'billetera virtual') THROW 52704,N'Errores.PagoMetodoInvalido',1;
+ IF EXISTS(SELECT 1 FROM dbo.PagoInscripcion WITH(UPDLOCK,HOLDLOCK) WHERE NumeroReferencia=@NumeroReferencia) THROW 52705,N'Errores.PagoReferenciaDuplicada',1;
+ SET @codigo=N'CUN07-' + RIGHT(REPLICATE(N'0',12)+CONVERT(NVARCHAR(20),NEXT VALUE FOR dbo.SeqReciboInstitucionalCUN07),12);
+  SET @concepto=N'Pago cuota del curso ' + CONVERT(NVARCHAR(12),@numeroCuota-1);
+ INSERT dbo.PagoInscripcion(IdAlumno,IdSolicitudInscripcion,IdCuota,MetodoPago,MontoPagado,NumeroReferencia,FechaPago,FechaAcreditacion,NumeroReciboInstitucional,DVH)
+ VALUES(@IdAlumno,@IdSolicitudInscripcion,@IdCuota,@MetodoPago,@MontoRecibido,@NumeroReferencia,@FechaPago,@FechaAcreditacion,@codigo,'');
+ SET @idPago=SCOPE_IDENTITY();
+ UPDATE dbo.Cuota SET BalanceAdeudado=0,Estado=N'pagada',DVH='' WHERE IdCuota=@IdCuota;
+  -- La situación financiera es independiente del estado académico de inscripción utilizado para el cupo mínimo y la cancelación.
+ INSERT dbo.FacturaCUN07(IdPagoInscripcion,NumeroReciboInstitucional,Concepto,Total,FechaTransaccion,DVH) VALUES(@idPago,@codigo,@concepto,@MontoRecibido,@FechaPago,'');
+ COMMIT TRANSACTION;
+  SELECT p.IdPagoInscripcion,p.IdAlumno,p.IdSolicitudInscripcion,p.IdCuota,p.MetodoPago,p.MontoPagado,p.NumeroReferencia,p.FechaPago,p.FechaAcreditacion,p.DVH PagoDVH,
+ a.DNI AlumnoDNI,a.Nombre AlumnoNombre,a.Apellido AlumnoApellido,a.Email AlumnoEmail,a.Telefono AlumnoTelefono,a.FechaAlta AlumnoFechaAlta,a.Estado AlumnoEstado,a.DVH AlumnoDVH,
+  si.Codigo CodigoSolicitud,si.IdLeadOrigen,si.IdComision,si.IdPlanDePago,si.RecargoPlanSnapshot,si.FechaSolicitud FechaSolicitudInscripcion,si.Estado SolicitudEstado,si.Observaciones SolicitudObservaciones,si.DVH SolicitudDVH,
+  si.ArancelCursoSnapshot,si.CantidadCuotasSnapshot,si.TotalCursoSnapshot,si.FechaPrimerVencimientoSnapshot,si.NombrePlanSnapshot,
+  cu.NumeroCuota,cu.TipoConcepto,cu.Periodo,cu.MontoOriginal,cu.BalanceAdeudado,cu.FechaVencimiento,cu.Estado CuotaEstado,cu.DVH CuotaDVH,c.Codigo CodigoComision,cur.Nombre Curso,
+ @codigo NumeroReciboInstitucional,@concepto ConceptoFactura,@MontoRecibido TotalFactura,@FechaPago FechaTransaccion,(SELECT IdFactura FROM dbo.FacturaCUN07 WHERE IdPagoInscripcion=@idPago) IdFactura
+ FROM dbo.PagoInscripcion p JOIN dbo.Alumno a ON a.IdAlumno=p.IdAlumno JOIN dbo.SolicitudInscripcion si ON si.IdSolicitudInscripcion=p.IdSolicitudInscripcion
+ JOIN dbo.Cuota cu ON cu.IdCuota=p.IdCuota JOIN dbo.Comision c ON c.IdComision=si.IdComision JOIN dbo.Curso cur ON cur.IdCurso=c.IdCurso WHERE p.IdPagoInscripcion=@idPago;
+ END TRY
+ BEGIN CATCH
+ IF XACT_STATE()<>0 ROLLBACK TRANSACTION;
+ THROW;
+ END CATCH
+END
+GO
+COMMIT TRANSACTION;
+GO
+GO
+
+-- ============================================================================
+-- Migracion (siempre) - origen: Scripts\Sql\financiacion-cuotas\002_completar_inscripciones.sql
+-- ============================================================================
+-- Existing enrollment fees and payment rows are never rewritten.
+-- Legacy enrollments have no historical course price: use the current commission price
+-- with their already stored surcharge, then freeze all financing conditions.
+SET NOCOUNT ON;
+SET XACT_ABORT ON;
+IF OBJECT_ID(N'dbo.FinanciacionMigraciones',N'U') IS NULL
+    CREATE TABLE dbo.FinanciacionMigraciones(Version INT NOT NULL PRIMARY KEY,FechaAplicacion DATETIME NOT NULL);
+GO
+BEGIN TRANSACTION;
+BEGIN TRY
+    DECLARE @id INT;
+    CREATE TABLE #afectadas(IdSolicitudInscripcion INT NOT NULL);
+    INSERT #afectadas SELECT IdSolicitudInscripcion FROM dbo.SolicitudInscripcion
+        WHERE Estado IN(N'pendiente',N'confirmada',N'activa',N'Al día',N'Con deuda') AND ArancelCursoSnapshot IS NULL;
+    DECLARE pendientes CURSOR LOCAL FAST_FORWARD FOR
+        SELECT IdSolicitudInscripcion FROM #afectadas;
+    OPEN pendientes;
+    FETCH NEXT FROM pendientes INTO @id;
+    WHILE @@FETCH_STATUS=0
+    BEGIN
+        EXEC dbo.sp_Financiacion_GenerarCuotas @id;
+        FETCH NEXT FROM pendientes INTO @id;
+    END;
+    CLOSE pendientes;
+    DEALLOCATE pendientes;
+
+    -- Restore the academic state previously overwritten by CUN07 financial standing.
+    UPDATE si SET Estado=N'activa'
+    OUTPUT inserted.IdSolicitudInscripcion INTO #afectadas
+    FROM dbo.SolicitudInscripcion si
+    WHERE si.Estado IN(N'Al día',N'Con deuda')
+        AND EXISTS(SELECT 1 FROM dbo.Cuota m WHERE m.IdSolicitudInscripcion=si.IdSolicitudInscripcion
+            AND m.TipoConcepto=N'matricula' AND m.Estado=N'pagada');
+
+    -- Add the new protected columns to the original hashes once; do not hide later changes.
+    DECLARE @primera BIT=CASE WHEN EXISTS(SELECT 1 FROM dbo.FinanciacionMigraciones WHERE Version=1) THEN 0 ELSE 1 END;
+    IF @primera=1 OR EXISTS(SELECT 1 FROM #afectadas)
+    BEGIN
+        UPDATE dbo.Cuota SET DVH=LOWER(CONVERT(VARCHAR(64),HASHBYTES('SHA2_256',CONVERT(NVARCHAR(MAX),
+            N'BalanceAdeudado='+CONVERT(NVARCHAR(40),BalanceAdeudado)+N'|Estado='+LTRIM(RTRIM(Estado))+
+            N'|FechaVencimiento='+REPLACE(CONVERT(NVARCHAR(23),CAST(FechaVencimiento AS DATETIME),121),N' ',N'T')+
+            N'|IdCuota='+CONVERT(NVARCHAR(20),IdCuota)+N'|IdSolicitudInscripcion='+CONVERT(NVARCHAR(20),IdSolicitudInscripcion)+
+            N'|MontoOriginal='+CONVERT(NVARCHAR(40),MontoOriginal)+N'|NumeroCuota='+CONVERT(NVARCHAR(20),NumeroCuota)+
+            N'|Periodo='+COALESCE(REPLACE(CONVERT(NVARCHAR(23),CAST(Periodo AS DATETIME),121),N' ',N'T'),N'∅')+
+            N'|TipoConcepto='+LTRIM(RTRIM(TipoConcepto)))),2))
+        WHERE @primera=1 OR IdSolicitudInscripcion IN(SELECT IdSolicitudInscripcion FROM #afectadas);
+        UPDATE dbo.SolicitudInscripcion SET DVH=LOWER(CONVERT(VARCHAR(64),HASHBYTES('SHA2_256',CONVERT(NVARCHAR(MAX),
+            N'ArancelCursoSnapshot='+COALESCE(CONVERT(NVARCHAR(40),ArancelCursoSnapshot),N'∅')+
+            N'|CantidadCuotasSnapshot='+COALESCE(CONVERT(NVARCHAR(20),CantidadCuotasSnapshot),N'∅')+
+            N'|Codigo='+LTRIM(RTRIM(Codigo))+N'|Estado='+LTRIM(RTRIM(Estado))+
+            N'|FechaPrimerVencimientoSnapshot='+COALESCE(REPLACE(CONVERT(NVARCHAR(23),CAST(FechaPrimerVencimientoSnapshot AS DATETIME),121),N' ',N'T'),N'∅')+
+            N'|FechaSolicitud='+REPLACE(CONVERT(NVARCHAR(23),FechaSolicitud,121),N' ',N'T')+N'|IdAlumno='+CONVERT(NVARCHAR(20),IdAlumno)+
+            N'|IdComision='+CONVERT(NVARCHAR(20),IdComision)+N'|IdLeadOrigen='+COALESCE(CONVERT(NVARCHAR(20),IdLeadOrigen),N'∅')+
+            N'|IdPlanDePago='+CONVERT(NVARCHAR(20),IdPlanDePago)+N'|IdSolicitudInscripcion='+CONVERT(NVARCHAR(20),IdSolicitudInscripcion)+
+            N'|NombrePlanSnapshot='+COALESCE(LTRIM(RTRIM(NombrePlanSnapshot)),N'∅')+
+            N'|Observaciones='+LTRIM(RTRIM(Observaciones))+N'|RecargoPlanSnapshot='+CONVERT(NVARCHAR(40),RecargoPlanSnapshot)+
+            N'|TotalCursoSnapshot='+COALESCE(CONVERT(NVARCHAR(40),TotalCursoSnapshot),N'∅'))),2))
+        WHERE @primera=1 OR IdSolicitudInscripcion IN(SELECT IdSolicitudInscripcion FROM #afectadas);
+        DECLARE @cuotas NVARCHAR(MAX),@solicitudes NVARCHAR(MAX);
+        SELECT @cuotas=COALESCE((SELECT CONVERT(NVARCHAR(MAX),DVH) AS [text()] FROM dbo.Cuota ORDER BY DVH FOR XML PATH(''),TYPE).value('.','NVARCHAR(MAX)'),N'');
+        SELECT @solicitudes=COALESCE((SELECT CONVERT(NVARCHAR(MAX),DVH) AS [text()] FROM dbo.SolicitudInscripcion ORDER BY DVH FOR XML PATH(''),TYPE).value('.','NVARCHAR(MAX)'),N'');
+        UPDATE dbo.DigitoVerificador_83KI SET DVV=LOWER(CONVERT(VARCHAR(64),HASHBYTES('SHA2_256',@cuotas),2)),FechaActualizacion=GETDATE() WHERE NombreTabla=N'Cuota';
+        UPDATE dbo.DigitoVerificador_83KI SET DVV=LOWER(CONVERT(VARCHAR(64),HASHBYTES('SHA2_256',@solicitudes),2)),FechaActualizacion=GETDATE() WHERE NombreTabla=N'SolicitudInscripcion';
+        IF @primera=1 INSERT dbo.FinanciacionMigraciones VALUES(1,GETDATE());
+    END;
+    DROP TABLE #afectadas;
+    COMMIT TRANSACTION;
+END TRY
+BEGIN CATCH
+    IF @@TRANCOUNT>0 ROLLBACK TRANSACTION;
+    THROW;
+END CATCH;
+GO
+SELECT si.Codigo,si.NombrePlanSnapshot,si.ArancelCursoSnapshot,si.RecargoPlanSnapshot,
+    si.CantidadCuotasSnapshot,si.TotalCursoSnapshot,cu.TipoConcepto,
+    CASE WHEN cu.TipoConcepto=N'curso' THEN cu.NumeroCuota-1 END NumeroMensualidad,
+    cu.Periodo,cu.MontoOriginal,cu.BalanceAdeudado,cu.FechaVencimiento,cu.Estado
+FROM dbo.SolicitudInscripcion si JOIN dbo.Cuota cu ON cu.IdSolicitudInscripcion=si.IdSolicitudInscripcion
+ORDER BY si.IdSolicitudInscripcion,cu.NumeroCuota;
+GO
+GO
+
+-- ============================================================================
+-- Migracion (siempre) - origen: Scripts\Sql\cun08\001_migracion.sql
+-- ============================================================================
+-- Migración aditiva de CUN08. Crear una copia de seguridad de la base de datos y detener primero las operaciones de escritura de la aplicación.
+-- No se reescriben las asignaciones de permisos, las inscripciones, los pagos ni los hashes de resultados existentes.
+SET NOCOUNT ON;
+SET XACT_ABORT ON;
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+BEGIN TRY
+    BEGIN TRANSACTION;
+    IF OBJECT_ID(N'dbo.Comision',N'U') IS NULL OR OBJECT_ID(N'dbo.SolicitudInscripcion',N'U') IS NULL
+        OR OBJECT_ID(N'dbo.Profesor',N'U') IS NULL OR OBJECT_ID(N'dbo.Usuarios',N'U') IS NULL
+        OR OBJECT_ID(N'dbo.Patentes',N'U') IS NULL OR OBJECT_ID(N'dbo.DigitoVerificador_83KI',N'U') IS NULL
+        OR COL_LENGTH(N'dbo.Cuota',N'BalanceAdeudado') IS NULL OR COL_LENGTH(N'dbo.Cuota',N'TipoConcepto') IS NULL
+        THROW 52810,N'CUN08 prerequisites missing. Apply the base schema and financing installer first.',1;
+    IF EXISTS(SELECT 1 FROM dbo.Patentes WHERE CodigoPatente=71 AND Nombre COLLATE Latin1_General_100_BIN2<>N'Registrar resultados de evaluación')
+        THROW 52811,N'Patent 71 is already used by another capability.',1;
+
+    IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.SolicitudInscripcion') AND name=N'UX_CUN08_InscripcionComision')
+        CREATE UNIQUE INDEX UX_CUN08_InscripcionComision ON dbo.SolicitudInscripcion(IdSolicitudInscripcion,IdComision);
+    IF NOT EXISTS(SELECT 1 FROM sys.indexes i WHERE i.object_id=OBJECT_ID(N'dbo.SolicitudInscripcion') AND i.name=N'UX_CUN08_InscripcionComision'
+        AND i.is_unique=1 AND i.is_disabled=0 AND i.has_filter=0
+        AND (SELECT COUNT(*) FROM sys.index_columns ic WHERE ic.object_id=i.object_id AND ic.index_id=i.index_id AND ic.key_ordinal>0)=2
+        AND EXISTS(SELECT 1 FROM sys.index_columns ic JOIN sys.columns c ON c.object_id=ic.object_id AND c.column_id=ic.column_id
+            WHERE ic.object_id=i.object_id AND ic.index_id=i.index_id AND ic.key_ordinal=1 AND c.name=N'IdSolicitudInscripcion')
+        AND EXISTS(SELECT 1 FROM sys.index_columns ic JOIN sys.columns c ON c.object_id=ic.object_id AND c.column_id=ic.column_id
+            WHERE ic.object_id=i.object_id AND ic.index_id=i.index_id AND ic.key_ordinal=2 AND c.name=N'IdComision'))
+        THROW 52812,N'Incompatible CUN08 enrollment/commission index.',1;
+    IF OBJECT_ID(N'dbo.ResultadoEvaluacion',N'U') IS NULL
+    BEGIN
+        CREATE TABLE dbo.ResultadoEvaluacion(
+            IdResultadoEvaluacion INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_ResultadoEvaluacion PRIMARY KEY,
+            IdComision INT NOT NULL,
+            IdInscripcion INT NOT NULL,
+            FechaEvaluacion DATE NOT NULL,
+            Calificacion DECIMAL(4,2) NOT NULL,
+            Observaciones NVARCHAR(500) NOT NULL CONSTRAINT DF_ResultadoEvaluacion_Observaciones DEFAULT(N''),
+            CondicionFinal NVARCHAR(20) NOT NULL,
+            DVH VARCHAR(64) NOT NULL CONSTRAINT DF_ResultadoEvaluacion_DVH DEFAULT(''),
+            CONSTRAINT FK_ResultadoEvaluacion_Comision FOREIGN KEY(IdComision) REFERENCES dbo.Comision(IdComision),
+            CONSTRAINT FK_ResultadoEvaluacion_Inscripcion FOREIGN KEY(IdInscripcion,IdComision)
+                REFERENCES dbo.SolicitudInscripcion(IdSolicitudInscripcion,IdComision),
+            CONSTRAINT UQ_ResultadoEvaluacion_InscripcionFecha UNIQUE(IdInscripcion,FechaEvaluacion),
+            CONSTRAINT CK_ResultadoEvaluacion_Calificacion CHECK(Calificacion BETWEEN 1 AND 10),
+            CONSTRAINT CK_ResultadoEvaluacion_Condicion CHECK(
+                (Calificacion>=7 AND CondicionFinal COLLATE Latin1_General_100_BIN2=N'Aprobado') OR
+                (Calificacion<7 AND CondicionFinal COLLATE Latin1_General_100_BIN2=N'Desaprobado'))
+        );
+    END;
+    -- Rechazar los esquemas preexistentes incompatibles en lugar de aceptarlos silenciosamente o reescribirlos.
+    IF (SELECT COUNT(*) FROM sys.columns WHERE object_id=OBJECT_ID(N'dbo.ResultadoEvaluacion'))<>8
+        OR EXISTS(SELECT 1 FROM (VALUES
+            (N'IdResultadoEvaluacion',N'int',4,0,0),(N'IdComision',N'int',4,0,0),(N'IdInscripcion',N'int',4,0,0),
+            (N'FechaEvaluacion',N'date',3,0,0),(N'Calificacion',N'decimal',5,4,2),
+            (N'Observaciones',N'nvarchar',1000,0,0),(N'CondicionFinal',N'nvarchar',40,0,0),(N'DVH',N'varchar',64,0,0)
+        ) e(n,t,l,p,s) LEFT JOIN sys.columns c ON c.object_id=OBJECT_ID(N'dbo.ResultadoEvaluacion') AND c.name=e.n
+            WHERE c.column_id IS NULL OR TYPE_NAME(c.user_type_id)<>e.t OR c.max_length<>e.l OR c.is_nullable=1
+            OR (e.p>0 AND (c.precision<>e.p OR c.scale<>e.s)))
+        OR COLUMNPROPERTY(OBJECT_ID(N'dbo.ResultadoEvaluacion'),N'IdResultadoEvaluacion','IsIdentity')<>1
+        OR NOT EXISTS(SELECT 1 FROM sys.key_constraints WHERE parent_object_id=OBJECT_ID(N'dbo.ResultadoEvaluacion') AND name=N'UQ_ResultadoEvaluacion_InscripcionFecha')
+        OR (SELECT COUNT(*) FROM sys.foreign_keys WHERE parent_object_id=OBJECT_ID(N'dbo.ResultadoEvaluacion')
+            AND name IN(N'FK_ResultadoEvaluacion_Comision',N'FK_ResultadoEvaluacion_Inscripcion') AND is_disabled=0 AND is_not_trusted=0)<>2
+        OR (SELECT COUNT(*) FROM sys.check_constraints WHERE parent_object_id=OBJECT_ID(N'dbo.ResultadoEvaluacion')
+            AND name IN(N'CK_ResultadoEvaluacion_Calificacion',N'CK_ResultadoEvaluacion_Condicion') AND is_disabled=0 AND is_not_trusted=0)<>2
+        THROW 52812,N'Incompatible ResultadoEvaluacion schema. Review it before migration.',1;
+
+    IF NOT EXISTS(SELECT 1 FROM dbo.Patentes WHERE CodigoPatente=71)
+    BEGIN
+        SET IDENTITY_INSERT dbo.Patentes ON;
+        INSERT dbo.Patentes(CodigoPatente,Nombre,DVH)
+        VALUES(71,N'Registrar resultados de evaluación',LOWER(CONVERT(VARCHAR(64),HASHBYTES('SHA2_256',
+            CONVERT(NVARCHAR(MAX),N'CodigoPatente=71|Nombre=Registrar resultados de evaluación')),2)));
+        SET IDENTITY_INSERT dbo.Patentes OFF;
+        DECLARE @patentes NVARCHAR(MAX)=COALESCE((SELECT CONVERT(NVARCHAR(MAX),DVH) AS [text()]
+            FROM dbo.Patentes ORDER BY DVH FOR XML PATH(''),TYPE).value('.','nvarchar(max)'),N'');
+        UPDATE dbo.DigitoVerificador_83KI SET DVV=LOWER(CONVERT(VARCHAR(64),HASHBYTES('SHA2_256',@patentes),2)),FechaActualizacion=GETDATE()
+            WHERE NombreTabla=N'Patentes';
+        IF @@ROWCOUNT<>1 THROW 52813,N'Patent integrity registration missing.',1;
+    END;
+    IF NOT EXISTS(SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla=N'ResultadoEvaluacion')
+    BEGIN
+        IF EXISTS(SELECT 1 FROM dbo.ResultadoEvaluacion) THROW 52814,N'Existing results require an integrity audit, not a backfill.',1;
+        INSERT dbo.DigitoVerificador_83KI(NombreTabla,DVV,FechaActualizacion)
+        VALUES(N'ResultadoEvaluacion',LOWER(CONVERT(VARCHAR(64),HASHBYTES('SHA2_256',CONVERT(NVARCHAR(MAX),N'')),2)),GETDATE());
+    END;
+    -- No validar ni modificar filas históricas: solamente impedir nuevas altas por encima de dos.
+    -- AFTER conserva OUTPUT/IDENTITY y los valores predeterminados originales. Los bloqueos duran hasta la confirmación de la transacción.
+    EXEC(N'CREATE OR ALTER TRIGGER dbo.TR_ResultadoEvaluacion_MaximoDos
+        ON dbo.ResultadoEvaluacion AFTER INSERT, UPDATE AS
+        BEGIN
+            SET NOCOUNT ON;
+            IF NOT EXISTS(SELECT 1 FROM inserted) RETURN;
+            IF EXISTS(SELECT 1 FROM deleted) AND NOT UPDATE(IdInscripcion) RETURN;
+            DECLARE @id int, @lock int;
+            DECLARE inscripciones CURSOR LOCAL FAST_FORWARD FOR
+                SELECT DISTINCT IdInscripcion FROM inserted ORDER BY IdInscripcion;
+            OPEN inscripciones;
+            FETCH NEXT FROM inscripciones INTO @id;
+            WHILE @@FETCH_STATUS=0
+            BEGIN
+                SELECT @lock=IdSolicitudInscripcion FROM dbo.SolicitudInscripcion WITH(UPDLOCK,HOLDLOCK)
+                    WHERE IdSolicitudInscripcion=@id;
+                IF (SELECT COUNT(*) FROM dbo.ResultadoEvaluacion WITH(UPDLOCK,HOLDLOCK)
+                    WHERE IdInscripcion=@id)>2
+                    THROW 52815,N''CUN08: la inscripción ya tiene dos evaluaciones; no se admite una tercera.'',1;
+                FETCH NEXT FROM inscripciones INTO @id;
+            END;
+            CLOSE inscripciones;
+            DEALLOCATE inscripciones;
+        END;');
+    COMMIT TRANSACTION;
+END TRY
+BEGIN CATCH
+    IF @@TRANCOUNT>0 ROLLBACK TRANSACTION;
+    THROW;
+END CATCH;
+GO
+
+-- ============================================================================
+-- Migracion (siempre) - origen: Scripts\Sql\cun09\001_migracion.sql
+-- ============================================================================
+-- Migración aditiva. Detener las operaciones de escritura de la aplicación y crear una copia de seguridad antes de aplicarla manualmente.
+SET NOCOUNT ON;
+SET XACT_ABORT ON;
+BEGIN TRY
+ BEGIN TRANSACTION;
+ IF OBJECT_ID(N'dbo.ResultadoEvaluacion',N'U') IS NULL OR OBJECT_ID(N'dbo.DigitoVerificador_83KI',N'U') IS NULL
+     THROW 52910,N'CUN09 requires CUN08 and the financing/integrity schema.',1;
+ IF EXISTS(SELECT 1 FROM dbo.Patentes WHERE CodigoPatente=72 AND Nombre COLLATE Latin1_General_100_BIN2<>N'Generar certificado de finalización')
+     THROW 52911,N'Permission 72 is already in use.',1;
+ IF OBJECT_ID(N'dbo.CertificadoFinalizacion',N'U') IS NULL
+ BEGIN
+   CREATE TABLE dbo.CertificadoFinalizacion(
+     IdCertificado INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_CertificadoFinalizacion PRIMARY KEY,
+     IdInscripcion INT NOT NULL CONSTRAINT FK_Certificado_Inscripcion REFERENCES dbo.SolicitudInscripcion(IdSolicitudInscripcion),
+     Nombre NVARCHAR(200) NOT NULL, Apellido NVARCHAR(200) NOT NULL, Curso NVARCHAR(500) NOT NULL,
+     Promedio DECIMAL(28,16) NOT NULL, Firmante NVARCHAR(200) NOT NULL, Cargo NVARCHAR(200) NOT NULL,
+     Folio NVARCHAR(200) NOT NULL, Fecha DATE NOT NULL, Modalidad NVARCHAR(30) NOT NULL,
+     Email NVARCHAR(254) NOT NULL, Mencion NVARCHAR(200) NOT NULL, Observaciones NVARCHAR(500) NOT NULL,
+     DVH VARCHAR(64) NOT NULL,
+     CONSTRAINT UQ_Certificado_Inscripcion UNIQUE(IdInscripcion),
+     CONSTRAINT UQ_Certificado_Folio UNIQUE(Folio),
+     CONSTRAINT CK_Certificado_Promedio CHECK(Promedio>=7 AND Promedio<=10),
+     CONSTRAINT CK_Certificado_Modalidad CHECK(Modalidad IN(N'Solo digital',N'Digital e impresa')),
+     CONSTRAINT CK_Certificado_Requeridos CHECK(LEN(LTRIM(RTRIM(Folio)))>0 AND LEN(LTRIM(RTRIM(Firmante)))>0 AND LEN(LTRIM(RTRIM(Cargo)))>0)
+   );
+ END;
+ IF COL_LENGTH(N'dbo.CertificadoFinalizacion',N'Promedio') IS NULL OR
+    NOT EXISTS(SELECT 1 FROM sys.key_constraints WHERE parent_object_id=OBJECT_ID(N'dbo.CertificadoFinalizacion') AND name=N'UQ_Certificado_Inscripcion') OR
+    NOT EXISTS(SELECT 1 FROM sys.key_constraints WHERE parent_object_id=OBJECT_ID(N'dbo.CertificadoFinalizacion') AND name=N'UQ_Certificado_Folio')
+     THROW 52912,N'Incompatible certificate schema. Review manually.',1;
+ IF NOT EXISTS(SELECT 1 FROM dbo.Patentes WHERE CodigoPatente=72)
+ BEGIN
+   SET IDENTITY_INSERT dbo.Patentes ON;
+   INSERT dbo.Patentes(CodigoPatente,Nombre,DVH) VALUES(72,N'Generar certificado de finalización',
+     LOWER(CONVERT(VARCHAR(64),HASHBYTES('SHA2_256',CONVERT(NVARCHAR(MAX),N'CodigoPatente=72|Nombre=Generar certificado de finalización')),2)));
+   SET IDENTITY_INSERT dbo.Patentes OFF;
+   DECLARE @hashes NVARCHAR(MAX)=COALESCE((SELECT CONVERT(NVARCHAR(MAX),DVH) AS [text()] FROM dbo.Patentes ORDER BY DVH FOR XML PATH(''),TYPE).value('.','nvarchar(max)'),N'');
+   UPDATE dbo.DigitoVerificador_83KI SET DVV=LOWER(CONVERT(VARCHAR(64),HASHBYTES('SHA2_256',@hashes),2)),FechaActualizacion=GETDATE() WHERE NombreTabla=N'Patentes';
+   IF @@ROWCOUNT<>1 THROW 52913,N'Permission integrity registration missing.',1;
+ END;
+ IF NOT EXISTS(SELECT 1 FROM dbo.DigitoVerificador_83KI WHERE NombreTabla=N'CertificadoFinalizacion')
+ BEGIN
+   IF EXISTS(SELECT 1 FROM dbo.CertificadoFinalizacion) THROW 52914,N'Existing certificates require integrity review, not a backfill.',1;
+   INSERT dbo.DigitoVerificador_83KI(NombreTabla,DVV,FechaActualizacion) VALUES(N'CertificadoFinalizacion',
+      LOWER(CONVERT(VARCHAR(64),HASHBYTES('SHA2_256',CONVERT(NVARCHAR(MAX),N'')),2)),GETDATE());
+ END;
+ -- Se permite el mantenimiento del DVH; los datos de negocio al momento de emisión son inmutables incluso para el SQL de la aplicación.
+ EXEC(N'CREATE OR ALTER TRIGGER dbo.TR_Certificado_Inmutable ON dbo.CertificadoFinalizacion AFTER UPDATE,DELETE AS
+ BEGIN
+   SET NOCOUNT ON;
+   IF NOT EXISTS(SELECT 1 FROM inserted) OR UPDATE(IdInscripcion) OR UPDATE(Nombre) OR UPDATE(Apellido) OR UPDATE(Curso)
+      OR UPDATE(Promedio) OR UPDATE(Firmante) OR UPDATE(Cargo) OR UPDATE(Folio) OR UPDATE(Fecha) OR UPDATE(Modalidad)
+      OR UPDATE(Email) OR UPDATE(Mencion) OR UPDATE(Observaciones)
+       THROW 52915,N''Los certificados emitidos son inmutables.'',1;
+ END');
+ COMMIT TRANSACTION;
+END TRY
+BEGIN CATCH
+ IF @@TRANCOUNT>0 ROLLBACK TRANSACTION;
+ THROW;
+END CATCH;
+GO
+
+-- ============================================================================
+-- Migracion (siempre) - origen: Scripts\Sql\cun08\006_evaluaciones.sql
+-- ============================================================================
+-- Aplicar después de CUN08 y CUN09, con las escrituras detenidas y una copia de seguridad verificada.
+-- No concede permisos a ningún rol ni modifica resultados o certificados históricos.
+SET NOCOUNT ON;
+SET XACT_ABORT ON;
+BEGIN TRY
+    BEGIN TRANSACTION;
+    IF OBJECT_ID(N'dbo.ResultadoEvaluacion',N'U') IS NULL OR OBJECT_ID(N'dbo.CertificadoFinalizacion',N'U') IS NULL
+        THROW 52931,N'Evaluaciones requires the CUN08 and CUN09 migrations.',1;
+    IF EXISTS(SELECT 1 FROM dbo.Patentes WHERE
+        (CodigoPatente=73 AND Nombre COLLATE Latin1_General_100_BIN2<>N'Ver evaluaciones') OR
+        (CodigoPatente=74 AND Nombre COLLATE Latin1_General_100_BIN2<>N'Modificar evaluaciones'))
+        OR EXISTS(SELECT 1 FROM dbo.Patentes WHERE
+            (Nombre=N'Ver evaluaciones' AND CodigoPatente<>73) OR (Nombre=N'Modificar evaluaciones' AND CodigoPatente<>74))
+        THROW 52932,N'Evaluaciones permission ID/name collision. Review before deployment.',1;
+    DECLARE @nuevas TABLE(id int,nombre nvarchar(100));
+    INSERT @nuevas SELECT id,nombre FROM (VALUES(73,N'Ver evaluaciones'),(74,N'Modificar evaluaciones')) p(id,nombre)
+        WHERE NOT EXISTS(SELECT 1 FROM dbo.Patentes WHERE CodigoPatente=p.id);
+    IF EXISTS(SELECT 1 FROM @nuevas)
+    BEGIN
+        SET IDENTITY_INSERT dbo.Patentes ON;
+        INSERT dbo.Patentes(CodigoPatente,Nombre,DVH)
+        SELECT id,nombre,LOWER(CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(nvarchar(max),
+            N'CodigoPatente='+CONVERT(nvarchar(20),id)+N'|Nombre='+nombre)),2)) FROM @nuevas;
+        SET IDENTITY_INSERT dbo.Patentes OFF;
+        DECLARE @dv nvarchar(max)=COALESCE((SELECT CONVERT(nvarchar(max),DVH) AS [text()]
+            FROM dbo.Patentes ORDER BY DVH FOR XML PATH(''),TYPE).value('.','nvarchar(max)'),N'');
+        UPDATE dbo.DigitoVerificador_83KI SET DVV=LOWER(CONVERT(varchar(64),HASHBYTES('SHA2_256',@dv),2)),FechaActualizacion=GETDATE()
+            WHERE NombreTabla=N'Patentes';
+        IF @@ROWCOUNT<>1 THROW 52933,N'Patent integrity registration missing.',1;
+    END;
+    COMMIT TRANSACTION;
+END TRY
+BEGIN CATCH
+    IF @@TRANCOUNT>0 ROLLBACK TRANSACTION;
+    THROW;
+END CATCH;
+GO
+
+-- ============================================================================
+-- Migracion (siempre) - origen: Scripts\Sql\reporte-morosidad\001_migracion.sql
+-- ============================================================================
+-- RF2 - Informe de morosidad por alumno y comisión.
+-- Migración aditiva: crea la patente 75 "Ver reporte de morosidad" y actualiza el DVV de Patentes.
+-- No crea tablas ni procedimientos: el informe usa una consulta parametrizada en ReporteMorosidadDAL_83KI.
+-- No concede el permiso a ningún rol: asignarlo desde Admin > Gestión de roles y volver a iniciar sesión.
+-- Re-ejecutable: si la patente ya existe con el mismo nombre, no hace cambios.
+-- Ejecutar con copia de seguridad previa y con las escrituras de la aplicación detenidas.
+SET NOCOUNT ON;
+SET XACT_ABORT ON;
+BEGIN TRY
+    BEGIN TRANSACTION;
+    IF OBJECT_ID(N'dbo.Patentes',N'U') IS NULL OR OBJECT_ID(N'dbo.DigitoVerificador_83KI',N'U') IS NULL
+       OR OBJECT_ID(N'dbo.Cuota',N'U') IS NULL OR COL_LENGTH(N'dbo.Cuota',N'TipoConcepto') IS NULL
+        THROW 52950,N'El informe de morosidad requiere el esquema de financiación de cuotas (CUN03/CUN05/CUN07).',1;
+    IF EXISTS(SELECT 1 FROM dbo.Patentes WHERE CodigoPatente=75 AND Nombre COLLATE Latin1_General_100_BIN2<>N'Ver reporte de morosidad')
+       OR EXISTS(SELECT 1 FROM dbo.Patentes WHERE Nombre=N'Ver reporte de morosidad' AND CodigoPatente<>75)
+        THROW 52951,N'El permiso 75 o su nombre ya están en uso. Revisar antes de aplicar.',1;
+    IF NOT EXISTS(SELECT 1 FROM dbo.Patentes WHERE CodigoPatente=75)
+    BEGIN
+        SET IDENTITY_INSERT dbo.Patentes ON;
+        INSERT dbo.Patentes(CodigoPatente,Nombre,DVH)
+        VALUES(75,N'Ver reporte de morosidad',LOWER(CONVERT(VARCHAR(64),HASHBYTES('SHA2_256',
+            CONVERT(NVARCHAR(MAX),N'CodigoPatente=75|Nombre=Ver reporte de morosidad')),2)));
+        SET IDENTITY_INSERT dbo.Patentes OFF;
+        DECLARE @dvvPatentesMorosidad NVARCHAR(MAX)=COALESCE((SELECT CONVERT(NVARCHAR(MAX),DVH) AS [text()]
+            FROM dbo.Patentes ORDER BY DVH FOR XML PATH(''),TYPE).value('.','nvarchar(max)'),N'');
+        UPDATE dbo.DigitoVerificador_83KI
+        SET DVV=LOWER(CONVERT(VARCHAR(64),HASHBYTES('SHA2_256',@dvvPatentesMorosidad),2)),FechaActualizacion=GETDATE()
+        WHERE NombreTabla=N'Patentes';
+        IF @@ROWCOUNT<>1 THROW 52952,N'Falta el registro de integridad de Patentes.',1;
+    END;
+    COMMIT TRANSACTION;
+END TRY
+BEGIN CATCH
+    IF @@TRANCOUNT>0 ROLLBACK TRANSACTION;
+    THROW;
+END CATCH;
+GO
+
+-- ============================================================================
+-- Migracion (siempre) - origen: Scripts\Sql\pagos-cuotas\001_permiso.sql
+-- ============================================================================
+-- M-4: separar el permiso de pago de cuotas del permiso de pago de inscripción (permiso 66).
+-- No asigna el permiso a ningún rol; debe asignarse desde la gestión de roles.
+-- Se puede volver a ejecutar: si el permiso ya existe y coincide, no se modifica.
+SET NOCOUNT ON;
+SET XACT_ABORT ON;
+BEGIN TRY
+    BEGIN TRANSACTION;
+    IF OBJECT_ID(N'dbo.Patentes',N'U') IS NULL OR OBJECT_ID(N'dbo.DigitoVerificador_83KI',N'U') IS NULL
+        THROW 52960,N'La migración de pagos de cuotas requiere Patentes y DigitoVerificador_83KI.',1;
+    IF EXISTS(SELECT 1 FROM dbo.Patentes WHERE CodigoPatente=76 AND Nombre COLLATE Latin1_General_100_BIN2<>N'Registrar pago de cuotas')
+       OR EXISTS(SELECT 1 FROM dbo.Patentes WHERE Nombre=N'Registrar pago de cuotas' AND CodigoPatente<>76)
+        THROW 52961,N'El permiso 76 o su nombre ya están en uso. Revisar antes de aplicar.',1;
+    IF NOT EXISTS(SELECT 1 FROM dbo.Patentes WHERE CodigoPatente=76)
+    BEGIN
+        SET IDENTITY_INSERT dbo.Patentes ON;
+        INSERT dbo.Patentes(CodigoPatente,Nombre,DVH)
+        VALUES(76,N'Registrar pago de cuotas',LOWER(CONVERT(VARCHAR(64),HASHBYTES('SHA2_256',
+            CONVERT(NVARCHAR(MAX),N'CodigoPatente=76|Nombre=Registrar pago de cuotas')),2)));
+        SET IDENTITY_INSERT dbo.Patentes OFF;
+        DECLARE @dvvPatentes NVARCHAR(MAX)=COALESCE((SELECT CONVERT(NVARCHAR(MAX),DVH) AS [text()]
+            FROM dbo.Patentes ORDER BY DVH FOR XML PATH(''),TYPE).value('.','nvarchar(max)'),N'');
+        UPDATE dbo.DigitoVerificador_83KI
+        SET DVV=LOWER(CONVERT(VARCHAR(64),HASHBYTES('SHA2_256',@dvvPatentes),2)),FechaActualizacion=GETDATE()
+        WHERE NombreTabla=N'Patentes';
+        IF @@ROWCOUNT<>1 THROW 52962,N'Falta el registro de integridad de Patentes.',1;
+    END;
+    COMMIT TRANSACTION;
+END TRY
+BEGIN CATCH
+    IF @@TRANCOUNT>0 ROLLBACK TRANSACTION;
+    THROW;
+END CATCH;
+GO
+
+-- ============================================================================
+-- Migracion (siempre) - origen: Scripts\Sql\disponibilidad-profesor\001_auditoria.sql
+-- ============================================================================
+/* Auditoría histórica de disponibilidad de profesores. Ejecución repetible. */
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+GO
+
+/* Migra el nombre anterior de la tabla sin perder identificadores ni historial. */
+IF OBJECT_ID(N'dbo.DisponibilidadProfesor_C', N'U') IS NULL
+   AND OBJECT_ID(N'dbo.DisponibilidadProfesor_Historial', N'U') IS NOT NULL
+    EXEC sys.sp_rename N'dbo.DisponibilidadProfesor_Historial', N'DisponibilidadProfesor_C';
+GO
+IF OBJECT_ID(N'dbo.DisponibilidadProfesor_C', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.DisponibilidadProfesor_C
+    (
+        IdVersion BIGINT IDENTITY(1,1) NOT NULL CONSTRAINT PK_DisponibilidadProfesor_C PRIMARY KEY,
+        IdDisponibilidadProfesor INT NOT NULL,
+        IdProfesor INT NOT NULL,
+        DiaSemana NVARCHAR(20) NOT NULL,
+        HoraInicio TIME NOT NULL,
+        HoraFin TIME NOT NULL,
+        EstadoActivo BIT NOT NULL,
+        DVH VARCHAR(64) NOT NULL,
+        Act BIT NOT NULL CONSTRAINT DF_DisponibilidadProfesor_C_Act DEFAULT (1),
+        FechaRegistro DATETIME2(0) NOT NULL CONSTRAINT DF_DisponibilidadProfesor_C_Fecha DEFAULT (SYSDATETIME()),
+         CONSTRAINT FK_DisponibilidadProfesor_C_Profesor FOREIGN KEY (IdProfesor) REFERENCES dbo.Profesor(IdProfesor),
+         CONSTRAINT FK_DisponibilidadProfesor_C_Disponibilidad FOREIGN KEY (IdDisponibilidadProfesor) REFERENCES dbo.DisponibilidadProfesor(IdDisponibilidadProfesor),
+        CONSTRAINT CK_DisponibilidadProfesor_C_Horario CHECK (HoraInicio < HoraFin)
+    );
+END;
+GO
+/* Las versiones anteriores no registraban operación ni usuario; no se inventa su origen. */
+IF COL_LENGTH(N'dbo.DisponibilidadProfesor_C', N'TipoOperacion') IS NULL
+    ALTER TABLE dbo.DisponibilidadProfesor_C ADD TipoOperacion NVARCHAR(24) NOT NULL
+        CONSTRAINT DF_DisponibilidadProfesor_C_Operacion DEFAULT (N'SIN_CLASIFICAR') WITH VALUES;
+IF COL_LENGTH(N'dbo.DisponibilidadProfesor_C', N'Usuario') IS NULL
+    ALTER TABLE dbo.DisponibilidadProfesor_C ADD Usuario NVARCHAR(100) NULL;
+GO
+/* Actualiza tablas creadas por versiones anteriores de este script. */
+IF COL_LENGTH(N'dbo.DisponibilidadProfesor_C', N'DVH') IS NULL
+    ALTER TABLE dbo.DisponibilidadProfesor_C ADD DVH VARCHAR(64) NOT NULL CONSTRAINT DF_DisponibilidadProfesor_C_DVH DEFAULT ('');
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_DisponibilidadProfesor_C_Profesor' AND parent_object_id = OBJECT_ID(N'dbo.DisponibilidadProfesor_C'))
+    ALTER TABLE dbo.DisponibilidadProfesor_C WITH CHECK ADD CONSTRAINT FK_DisponibilidadProfesor_C_Profesor FOREIGN KEY (IdProfesor) REFERENCES dbo.Profesor(IdProfesor);
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_DisponibilidadProfesor_C_Disponibilidad' AND parent_object_id = OBJECT_ID(N'dbo.DisponibilidadProfesor_C'))
+    ALTER TABLE dbo.DisponibilidadProfesor_C WITH CHECK ADD CONSTRAINT FK_DisponibilidadProfesor_C_Disponibilidad FOREIGN KEY (IdDisponibilidadProfesor) REFERENCES dbo.DisponibilidadProfesor(IdDisponibilidadProfesor);
+IF NOT EXISTS (SELECT 1 FROM sys.check_constraints WHERE name = N'CK_DisponibilidadProfesor_C_Horario' AND parent_object_id = OBJECT_ID(N'dbo.DisponibilidadProfesor_C'))
+    ALTER TABLE dbo.DisponibilidadProfesor_C WITH CHECK ADD CONSTRAINT CK_DisponibilidadProfesor_C_Horario CHECK (HoraInicio < HoraFin);
+/* La activación desmarca la versión anterior antes de seleccionar su reemplazo. */
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_DisponibilidadProfesor_C_Activa' AND object_id = OBJECT_ID(N'dbo.DisponibilidadProfesor_C'))
+    CREATE UNIQUE INDEX UX_DisponibilidadProfesor_C_Activa ON dbo.DisponibilidadProfesor_C(IdDisponibilidadProfesor) WHERE Act = 1;
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_DisponibilidadProfesor_C_Filtro' AND object_id = OBJECT_ID(N'dbo.DisponibilidadProfesor_C'))
+    CREATE INDEX IX_DisponibilidadProfesor_C_Filtro ON dbo.DisponibilidadProfesor_C(IdProfesor, IdDisponibilidadProfesor, FechaRegistro);
+GO
+
+/* Conserva los campos de la tabla principal, incluido el valor de integridad almacenado. */
+DECLARE @FechaMigracionDisponibilidad DATETIME2(0) = SYSDATETIME();
+INSERT dbo.DisponibilidadProfesor_C
+    (IdDisponibilidadProfesor, IdProfesor, DiaSemana, HoraInicio, HoraFin, EstadoActivo, DVH, Act, FechaRegistro, TipoOperacion, Usuario)
+SELECT d.IdDisponibilidadProfesor, d.IdProfesor, d.DiaSemana, d.HoraInicio, d.HoraFin, d.EstadoActivo, d.DVH, 1, @FechaMigracionDisponibilidad, N'INICIALIZACION', NULL
+FROM dbo.DisponibilidadProfesor d
+WHERE NOT EXISTS (SELECT 1 FROM dbo.DisponibilidadProfesor_C h WHERE h.IdDisponibilidadProfesor = d.IdDisponibilidadProfesor AND h.Act = 1);
+GO
+
+CREATE OR ALTER TRIGGER dbo.TR_DisponibilidadProfesor_Auditoria
+ON dbo.DisponibilidadProfesor
+AFTER INSERT, UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @Profesores TABLE (IdProfesor INT PRIMARY KEY);
+    INSERT @Profesores SELECT IdProfesor FROM deleted UNION SELECT IdProfesor FROM inserted;
+    /* Bloquea los profesores en orden de clave para coordinar ambas clases de escritura. */
+    DECLARE @LockId INT;
+    DECLARE lock_cursor CURSOR LOCAL FAST_FORWARD FOR SELECT IdProfesor FROM @Profesores ORDER BY IdProfesor;
+    OPEN lock_cursor;
+    FETCH NEXT FROM lock_cursor INTO @LockId;
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        SELECT @LockId = IdProfesor FROM dbo.Profesor WITH (UPDLOCK, HOLDLOCK) WHERE IdProfesor = @LockId;
+        FETCH NEXT FROM lock_cursor INTO @LockId;
+    END;
+    CLOSE lock_cursor;
+    DEALLOCATE lock_cursor;
+
+    DECLARE @Afectadas TABLE (IdDisponibilidadProfesor INT PRIMARY KEY);
+    INSERT @Afectadas
+    SELECT i.IdDisponibilidadProfesor
+    FROM inserted i LEFT JOIN deleted d ON d.IdDisponibilidadProfesor = i.IdDisponibilidadProfesor
+    WHERE d.IdDisponibilidadProfesor IS NULL
+       OR i.IdProfesor <> d.IdProfesor OR i.DiaSemana <> d.DiaSemana
+       OR i.HoraInicio <> d.HoraInicio OR i.HoraFin <> d.HoraFin
+       OR i.EstadoActivo <> d.EstadoActivo;
+
+    /* Los cambios exclusivos de DVH y las actualizaciones sin diferencias no generan versiones. */
+    IF NOT EXISTS (SELECT 1 FROM @Afectadas) RETURN;
+
+    DECLARE @RestaurarVersion BIGINT = TRY_CONVERT(BIGINT, SESSION_CONTEXT(N'DisponibilidadProfesorVersionRestaurada'));
+    IF @RestaurarVersion IS NULL
+    BEGIN
+        UPDATE h SET Act = 0
+        FROM dbo.DisponibilidadProfesor_C h JOIN @Afectadas x ON x.IdDisponibilidadProfesor = h.IdDisponibilidadProfesor
+        WHERE h.Act = 1;
+
+        INSERT dbo.DisponibilidadProfesor_C
+            (IdDisponibilidadProfesor, IdProfesor, DiaSemana, HoraInicio, HoraFin, EstadoActivo, DVH, Act, FechaRegistro, TipoOperacion, Usuario)
+        SELECT i.IdDisponibilidadProfesor, i.IdProfesor, i.DiaSemana, i.HoraInicio, i.HoraFin, i.EstadoActivo,
+               LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(
+                   N'DiaSemana=', LTRIM(RTRIM(i.DiaSemana)), N'|', N'EstadoActivo=', CONVERT(NVARCHAR(1), i.EstadoActivo), N'|',
+                   N'HoraFin=', CONVERT(NVARCHAR(8), i.HoraFin), N'|', N'HoraInicio=', CONVERT(NVARCHAR(8), i.HoraInicio), N'|',
+                   N'IdDisponibilidadProfesor=', CONVERT(NVARCHAR(128), i.IdDisponibilidadProfesor), N'|',
+                     N'IdProfesor=', CONVERT(NVARCHAR(128), i.IdProfesor))), 2)), 1, SYSDATETIME(),
+               CASE WHEN d.IdDisponibilidadProfesor IS NULL THEN N'INSERT'
+                    WHEN d.EstadoActivo = 1 AND i.EstadoActivo = 0 THEN N'BAJA_LOGICA'
+                    WHEN d.EstadoActivo = 0 AND i.EstadoActivo = 1 THEN N'REACTIVACION'
+                    ELSE N'UPDATE' END,
+               NULLIF(CONVERT(NVARCHAR(100), SESSION_CONTEXT(N'DisponibilidadProfesorUsuario')), N'')
+        FROM inserted i JOIN @Afectadas x ON x.IdDisponibilidadProfesor = i.IdDisponibilidadProfesor
+        LEFT JOIN deleted d ON d.IdDisponibilidadProfesor = i.IdDisponibilidadProfesor;
+    END;
+
+    /* Valida el estado resultante completo, incluidas todas las filas modificadas. */
+    DECLARE @Codigo NVARCHAR(30), @Hora TIME, @Mensaje NVARCHAR(2048);
+    SELECT TOP (1) @Codigo = co.Codigo, @Hora = co.HoraInicio
+    FROM @Afectadas x
+    JOIN dbo.Comision co ON EXISTS (SELECT 1 FROM @Profesores p WHERE p.IdProfesor = co.IdProfesor)
+    WHERE co.Estado IN (N'preapertura', N'confirmada') AND co.FechaFin >= CONVERT(date, GETDATE())
+      AND NOT EXISTS
+      (SELECT 1 FROM dbo.DisponibilidadProfesor a
+       WHERE a.IdProfesor = co.IdProfesor AND a.EstadoActivo = 1 AND a.DiaSemana = co.DiaSemana
+           AND a.HoraInicio <= co.HoraInicio AND a.HoraFin >= co.HoraFin)
+    ORDER BY co.Codigo;
+    IF @Codigo IS NOT NULL
+    BEGIN
+        SET @Mensaje = CONCAT(N'Errores.DisponibilidadProfesorCompromisoComision: ', @Codigo, N' (', CONVERT(NVARCHAR(5), @Hora, 108), N').');
+        THROW 52801, @Mensaje, 1;
+    END;
+
+END;
+GO
+
+/* La activación histórica sincroniza una sola vez los datos de la disponibilidad vigente. */
+CREATE OR ALTER TRIGGER dbo.TR_DisponibilidadProfesor_C_Activar
+ON dbo.DisponibilidadProfesor_C
+AFTER UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF NOT UPDATE(Act) RETURN;
+    DECLARE @Seleccionada TABLE (IdVersion BIGINT PRIMARY KEY, IdDisponibilidadProfesor INT, IdProfesor INT,
+        DiaSemana NVARCHAR(20), HoraInicio TIME, HoraFin TIME, EstadoActivo BIT, DVH VARCHAR(64));
+    INSERT @Seleccionada
+    SELECT i.IdVersion, i.IdDisponibilidadProfesor, i.IdProfesor, i.DiaSemana, i.HoraInicio, i.HoraFin, i.EstadoActivo, i.DVH
+    FROM inserted i JOIN deleted d ON d.IdVersion=i.IdVersion
+    WHERE d.Act=0 AND i.Act=1;
+    IF NOT EXISTS (SELECT 1 FROM @Seleccionada) RETURN;
+    IF (SELECT COUNT(*) FROM @Seleccionada) <> 1
+        THROW 52802, N'Errores.DisponibilidadProfesorActivacionIndividual', 1;
+    DECLARE @Profesor INT = (SELECT IdProfesor FROM @Seleccionada);
+    SELECT @Profesor = IdProfesor FROM dbo.Profesor WITH (UPDLOCK, HOLDLOCK) WHERE IdProfesor = @Profesor;
+    IF EXISTS (SELECT 1 FROM @Seleccionada s JOIN dbo.DisponibilidadProfesor d
+               ON d.IdProfesor=s.IdProfesor AND d.IdDisponibilidadProfesor<>s.IdDisponibilidadProfesor
+               AND d.EstadoActivo=1 AND s.EstadoActivo=1 AND d.DiaSemana=s.DiaSemana
+               AND d.HoraInicio=s.HoraInicio AND d.HoraFin=s.HoraFin)
+        THROW 52803, N'Errores.DisponibilidadProfesorDuplicada', 1;
+    DECLARE @VersionSeleccionada BIGINT = (SELECT IdVersion FROM @Seleccionada);
+    EXEC sys.sp_set_session_context @key=N'DisponibilidadProfesorVersionRestaurada', @value=@VersionSeleccionada;
+    BEGIN TRY
+        UPDATE d SET IdProfesor=s.IdProfesor, DiaSemana=s.DiaSemana, HoraInicio=s.HoraInicio,
+            HoraFin=s.HoraFin, EstadoActivo=s.EstadoActivo, DVH=s.DVH
+        FROM dbo.DisponibilidadProfesor d JOIN @Seleccionada s ON s.IdDisponibilidadProfesor=d.IdDisponibilidadProfesor;
+        EXEC sys.sp_set_session_context @key=N'DisponibilidadProfesorVersionRestaurada', @value=NULL;
+    END TRY
+    BEGIN CATCH
+        EXEC sys.sp_set_session_context @key=N'DisponibilidadProfesorVersionRestaurada', @value=NULL;
+        THROW;
+    END CATCH;
+END;
+GO
+
+CREATE OR ALTER TRIGGER dbo.TR_Comision_DisponibilidadProfesor
+ON dbo.Comision
+AFTER INSERT, UPDATE, DELETE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @Profesores TABLE (IdProfesor INT PRIMARY KEY);
+    INSERT @Profesores SELECT IdProfesor FROM deleted UNION SELECT IdProfesor FROM inserted;
+    DECLARE @LockId INT;
+    DECLARE lock_cursor CURSOR LOCAL FAST_FORWARD FOR SELECT IdProfesor FROM @Profesores ORDER BY IdProfesor;
+    OPEN lock_cursor;
+    FETCH NEXT FROM lock_cursor INTO @LockId;
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        SELECT @LockId = IdProfesor FROM dbo.Profesor WITH (UPDLOCK, HOLDLOCK) WHERE IdProfesor = @LockId;
+        FETCH NEXT FROM lock_cursor INTO @LockId;
+    END;
+    CLOSE lock_cursor;
+    DEALLOCATE lock_cursor;
+
+    DECLARE @Codigo NVARCHAR(30), @Hora TIME, @Mensaje NVARCHAR(2048);
+    SELECT TOP (1) @Codigo = co.Codigo, @Hora = co.HoraInicio
+    FROM inserted co
+    WHERE co.Estado IN (N'preapertura', N'confirmada') AND co.FechaFin >= CONVERT(date, GETDATE())
+      AND NOT EXISTS (SELECT 1 FROM dbo.DisponibilidadProfesor a WHERE a.IdProfesor = co.IdProfesor AND a.EstadoActivo = 1
+        AND a.DiaSemana = co.DiaSemana AND a.HoraInicio <= co.HoraInicio AND a.HoraFin >= co.HoraFin)
+    ORDER BY co.Codigo;
+    IF @Codigo IS NOT NULL
+    BEGIN
+        SET @Mensaje = CONCAT(N'Errores.DisponibilidadProfesorCompromisoComision: ', @Codigo, N' (', CONVERT(NVARCHAR(5), @Hora, 108), N').');
+        THROW 52801, @Mensaje, 1;
+    END;
+END;
+GO
+
+IF OBJECT_ID(N'dbo.sp_DisponibilidadProfesor_ListarHistorial', N'P') IS NULL
+    EXEC(N'CREATE PROCEDURE dbo.sp_DisponibilidadProfesor_ListarHistorial AS RETURN 0;');
+GO
+ALTER PROCEDURE dbo.sp_DisponibilidadProfesor_ListarHistorial
+    @IdProfesor INT, @IdDisponibilidadProfesor INT = NULL, @FechaDesde DATE = NULL, @FechaHasta DATE = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT IdVersion, IdDisponibilidadProfesor, IdProfesor, DiaSemana, HoraInicio, HoraFin, EstadoActivo, DVH, Act, FechaRegistro, TipoOperacion, Usuario
+    FROM dbo.DisponibilidadProfesor_C
+    WHERE IdProfesor = @IdProfesor AND (@IdDisponibilidadProfesor IS NULL OR IdDisponibilidadProfesor = @IdDisponibilidadProfesor)
+      AND (@FechaDesde IS NULL OR FechaRegistro >= @FechaDesde)
+      AND (@FechaHasta IS NULL OR FechaRegistro < DATEADD(day, 1, @FechaHasta))
+    ORDER BY IdDisponibilidadProfesor, FechaRegistro DESC, IdVersion DESC;
+END;
+GO
+
+IF OBJECT_ID(N'dbo.sp_DisponibilidadProfesor_ActivarVersion', N'P') IS NULL
+    EXEC(N'CREATE PROCEDURE dbo.sp_DisponibilidadProfesor_ActivarVersion AS RETURN 0;');
+GO
+ALTER PROCEDURE dbo.sp_DisponibilidadProfesor_ActivarVersion @IdVersion BIGINT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @InicioTran INT = @@TRANCOUNT, @IdDisponibilidadProfesor INT, @IdProfesor INT,
+            @DiaSemana NVARCHAR(20), @HoraInicio TIME, @HoraFin TIME, @EstadoActivo BIT, @DVH VARCHAR(64);
+    IF @InicioTran = 0 BEGIN TRANSACTION;
+    ELSE SAVE TRANSACTION ActivarDisponibilidad;
+    BEGIN TRY
+        SELECT @IdDisponibilidadProfesor = IdDisponibilidadProfesor, @IdProfesor = IdProfesor,
+               @DiaSemana = DiaSemana, @HoraInicio = HoraInicio, @HoraFin = HoraFin,
+               @EstadoActivo = EstadoActivo, @DVH = DVH
+        FROM dbo.DisponibilidadProfesor_C WITH (UPDLOCK, HOLDLOCK) WHERE IdVersion = @IdVersion;
+        IF @IdDisponibilidadProfesor IS NULL THROW 52802, N'Errores.DisponibilidadProfesorVersionNoEncontrada', 1;
+
+        /* El trigger histórico sincroniza la fila actual sin crear otra versión. */
+        UPDATE dbo.DisponibilidadProfesor_C SET Act = 0
+        WHERE IdDisponibilidadProfesor = @IdDisponibilidadProfesor AND Act = 1 AND IdVersion <> @IdVersion;
+        UPDATE dbo.DisponibilidadProfesor_C SET Act = 1 WHERE IdVersion = @IdVersion AND Act = 0;
+
+        IF @InicioTran = 0 COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        EXEC sys.sp_set_session_context @key=N'DisponibilidadProfesorVersionRestaurada', @value=NULL;
+        IF XACT_STATE() = 1
+        BEGIN
+            IF @InicioTran = 0 ROLLBACK TRANSACTION;
+            ELSE ROLLBACK TRANSACTION ActivarDisponibilidad;
+        END
+        ELSE IF XACT_STATE() = -1 AND @InicioTran = 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH;
+END;
+GO
+GO
+
+-- ============================================================================
+-- Migracion (siempre) - origen: Scripts\Sql\reporte-inteligente\001_modelo.sql
+-- ============================================================================
+-- Ejecutar sobre la base de la aplicación, con la aplicación cerrada.
+SET XACT_ABORT ON;
+IF OBJECT_ID(N'dbo.ResultadoEvaluacion',N'U') IS NULL OR COL_LENGTH(N'dbo.Comision',N'FechaFin') IS NULL
+    THROW 53010,N'Apply the existing CUN03/CUN06/CUN07/CUN08/CUN09 and financing migrations first.',1;
+IF COL_LENGTH(N'dbo.Curso',N'CupoMinimoReferencia') IS NULL
+    ALTER TABLE dbo.Curso ADD CupoMinimoReferencia int NULL;
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.check_constraints WHERE name=N'CK_Curso_CupoReferencia')
+    ALTER TABLE dbo.Curso ADD CONSTRAINT CK_Curso_CupoReferencia CHECK(CupoMinimoReferencia IS NULL OR CupoMinimoReferencia>0);
+IF OBJECT_ID(N'dbo.RecorridoCurso',N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.RecorridoCurso(
+        IdRecorridoCurso int IDENTITY(1,1) NOT NULL CONSTRAINT PK_RecorridoCurso PRIMARY KEY,
+        IdCursoPrevio int NOT NULL CONSTRAINT FK_Recorrido_Previo REFERENCES dbo.Curso(IdCurso),
+        IdCursoRecomendado int NOT NULL CONSTRAINT FK_Recorrido_Recomendado REFERENCES dbo.Curso(IdCurso),
+        Orden int NOT NULL, DVH varchar(64) NOT NULL CONSTRAINT DF_Recorrido_DVH DEFAULT(''),
+        CONSTRAINT UQ_Recorrido_Par UNIQUE(IdCursoPrevio,IdCursoRecomendado),
+        CONSTRAINT CK_Recorrido_Distinto CHECK(IdCursoPrevio<>IdCursoRecomendado),
+        CONSTRAINT CK_Recorrido_Orden CHECK(Orden>0));
+END;
+GO
+-- Hashes canónicos UTF-16 compatibles con IntegridadTablaConfig_83KI e IntegridadDAL_83KI.
+-- El procedimiento admite únicamente las tablas previstas, no identificadores SQL arbitrarios.
+CREATE OR ALTER PROCEDURE dbo.sp_Inteligente_ActualizarIntegridad @Tabla sysname,@SoloVacios bit=0
+AS
+BEGIN
+    SET NOCOUNT ON; SET XACT_ABORT ON;
+    DECLARE @expr nvarchar(max),@sql nvarchar(max),@all nvarchar(max),@dvv varchar(64);
+    SET @expr=CASE @Tabla
+    WHEN N'Curso' THEN N'N''CargaHoraria=''+CONVERT(nvarchar(20),CargaHoraria)+N''|CupoMinimoReferencia=''+COALESCE(CONVERT(nvarchar(20),CupoMinimoReferencia),N''∅'')+N''|Descripcion=''+COALESCE(LTRIM(RTRIM(Descripcion)),N''∅'')+N''|EstadoActivo=''+CONVERT(nvarchar(1),EstadoActivo)+N''|IdCurso=''+CONVERT(nvarchar(20),IdCurso)+N''|Nombre=''+LTRIM(RTRIM(Nombre))'
+    WHEN N'RecorridoCurso' THEN N'N''IdCursoPrevio=''+CONVERT(nvarchar(20),IdCursoPrevio)+N''|IdCursoRecomendado=''+CONVERT(nvarchar(20),IdCursoRecomendado)+N''|IdRecorridoCurso=''+CONVERT(nvarchar(20),IdRecorridoCurso)+N''|Orden=''+CONVERT(nvarchar(20),Orden)'
+    WHEN N'Patentes' THEN N'N''CodigoPatente=''+CONVERT(nvarchar(20),CodigoPatente)+N''|Nombre=''+LTRIM(RTRIM(Nombre))'
+    WHEN N'RolPatente' THEN N'N''CodigoPatente=''+CONVERT(nvarchar(20),CodigoPatente)+N''|CodigoRol=''+CONVERT(nvarchar(20),CodigoRol)'
+    END;
+    IF @expr IS NULL AND @Tabla IN(N'Profesor',N'DisponibilidadProfesor',N'Comision',N'Alumno',N'SolicitudInscripcion',N'Cuota',N'PagoInscripcion',N'ResultadoEvaluacion',N'Lead',N'ConsultaLead')
+    BEGIN
+        SELECT @expr=STUFF((SELECT N'+N''|'+c.name+N'=''+COALESCE('+CASE
+            WHEN TYPE_NAME(c.user_type_id) IN(N'date',N'datetime',N'datetime2',N'smalldatetime') THEN N'CONVERT(nvarchar(23),CONVERT(datetime,'+QUOTENAME(c.name)+N'),126)'
+            WHEN TYPE_NAME(c.user_type_id)=N'time' THEN N'CONVERT(nvarchar(8),'+QUOTENAME(c.name)+N')'
+            ELSE N'LTRIM(RTRIM(CONVERT(nvarchar(max),'+QUOTENAME(c.name)+N')))'
+            END+N',N''∅'')'
+            FROM sys.columns c WHERE c.object_id=OBJECT_ID(N'dbo.'+@Tabla) AND c.name<>N'DVH'
+            ORDER BY c.name COLLATE Latin1_General_100_BIN2 FOR XML PATH(''),TYPE).value('.','nvarchar(max)'),1,1,N'');
+        SET @expr=STUFF(@expr,3,1,N'');
+        -- El estilo 126 puede omitir .000; se explicita el formato con milisegundos fijos.
+        SELECT @expr=REPLACE(@expr,N'CONVERT(nvarchar(23),CONVERT(datetime,'+QUOTENAME(c.name)+N'),126)',
+            N'REPLACE(CONVERT(nvarchar(23),CONVERT(datetime,'+QUOTENAME(c.name)+N'),121),N'' '',N''T'')')
+        FROM sys.columns c WHERE c.object_id=OBJECT_ID(N'dbo.'+@Tabla) AND TYPE_NAME(c.user_type_id) IN(N'date',N'datetime',N'datetime2',N'smalldatetime');
+    END;
+    IF @expr IS NULL THROW 53011,N'Unsupported integrity table.',1;
+    SET @sql=N'UPDATE dbo.'+QUOTENAME(@Tabla)+N' WITH(TABLOCKX) SET DVH=LOWER(CONVERT(varchar(64),HASHBYTES(''SHA2_256'',CONVERT(nvarchar(max),'+@expr+N')),2))'+CASE WHEN @SoloVacios=1 THEN N' WHERE DVH=''''' ELSE N'' END+N';
+        SELECT @all=COALESCE((SELECT DVH AS [text()] FROM dbo.'+QUOTENAME(@Tabla)+N' ORDER BY DVH COLLATE Latin1_General_100_BIN2 FOR XML PATH(''''),TYPE).value(''.'',''nvarchar(max)''),N'''');';
+    EXEC sys.sp_executesql @sql,N'@all nvarchar(max) OUTPUT',@all OUTPUT;
+    SET @dvv=LOWER(CONVERT(varchar(64),HASHBYTES('SHA2_256',@all),2));
+    UPDATE dbo.DigitoVerificador_83KI SET DVV=@dvv,FechaActualizacion=GETDATE() WHERE NombreTabla=@Tabla;
+    IF @@ROWCOUNT=0 INSERT dbo.DigitoVerificador_83KI(NombreTabla,DVV,FechaActualizacion) VALUES(@Tabla,@dvv,GETDATE());
+END;
+GO
+BEGIN TRANSACTION;
+IF EXISTS(SELECT 1 FROM dbo.Patentes WHERE (CodigoPatente=77 AND Nombre<>N'Ver reporte inteligente') OR (CodigoPatente=78 AND Nombre<>N'Gestionar recorridos'))
+    THROW 53012,N'Permission codes 77/78 are already occupied. Review before installing.',1;
+SET IDENTITY_INSERT dbo.Patentes ON;
+INSERT dbo.Patentes(CodigoPatente,Nombre,DVH)
+SELECT v.Id,v.Nombre,'' FROM (VALUES(77,N'Ver reporte inteligente'),(78,N'Gestionar recorridos'))v(Id,Nombre)
+WHERE NOT EXISTS(SELECT 1 FROM dbo.Patentes p WHERE p.CodigoPatente=v.Id);
+SET IDENTITY_INSERT dbo.Patentes OFF;
+INSERT dbo.RolPatente(CodigoRol,CodigoPatente,DVH)
+SELECT r.CodigoRol,p.CodigoPatente,'' FROM dbo.Roles r CROSS JOIN dbo.Patentes p
+WHERE r.Nombre COLLATE Latin1_General_100_CI_AI LIKE N'%Coordinador%Acad%'
+AND p.CodigoPatente IN(77,78) AND NOT EXISTS(SELECT 1 FROM dbo.RolPatente rp WHERE rp.CodigoRol=r.CodigoRol AND rp.CodigoPatente=p.CodigoPatente);
+IF NOT EXISTS(SELECT 1 FROM dbo.Roles WHERE Nombre COLLATE Latin1_General_100_CI_AI LIKE N'%Coordinador%Acad%')
+    PRINT N'No academic coordinator role found. Assign permissions 77/78 through role management before opening the screens.';
+EXEC dbo.sp_Inteligente_ActualizarIntegridad N'Curso';
+EXEC dbo.sp_Inteligente_ActualizarIntegridad N'RecorridoCurso';
+EXEC dbo.sp_Inteligente_ActualizarIntegridad N'Patentes';
+EXEC dbo.sp_Inteligente_ActualizarIntegridad N'RolPatente';
+COMMIT;
+GO
+GO
+
+-- ============================================================================
+-- Migracion (siempre) - origen: Scripts\Sql\reporte-inteligente\002_reporte.sql
+-- ============================================================================
+CREATE OR ALTER PROCEDURE dbo.sp_Reporte_Inteligente
+    @Desde date=NULL,@Hasta date=NULL,@IdCurso int=NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF @Desde>@Hasta THROW 53013,N'Inteligente.FechasInvalidas',1;
+    DECLARE @Hoy date=CONVERT(date,GETDATE());
+    SELECT @Hoy FechaCenso;
+
+    -- Cada evento histórico usa su fecha; los rótulos no deben sugerir una reconstrucción de estados pasados.
+    SELECT c.IdCurso,c.Nombre Curso,
+        (SELECT COUNT(*) FROM dbo.SolicitudInscripcion si JOIN dbo.Comision co ON co.IdComision=si.IdComision
+         WHERE co.IdCurso=c.IdCurso AND si.Estado IN(N'pendiente',N'confirmada',N'activa')
+         AND (@Desde IS NULL OR si.FechaSolicitud>=@Desde) AND (@Hasta IS NULL OR CONVERT(date,si.FechaSolicitud)<=@Hasta)) Registradas,
+        (SELECT COUNT(*) FROM dbo.SolicitudInscripcion si JOIN dbo.Comision co ON co.IdComision=si.IdComision
+         WHERE co.IdCurso=c.IdCurso AND si.Estado IN(N'confirmada',N'activa')
+         AND (@Desde IS NULL OR si.FechaSolicitud>=@Desde) AND (@Hasta IS NULL OR CONVERT(date,si.FechaSolicitud)<=@Hasta)) Concretadas,
+        (SELECT COUNT(*) FROM dbo.SolicitudInscripcion si JOIN dbo.Comision co ON co.IdComision=si.IdComision
+         WHERE co.IdCurso=c.IdCurso AND si.Estado=N'cancelada'
+         AND (@Desde IS NULL OR si.FechaSolicitud>=@Desde) AND (@Hasta IS NULL OR CONVERT(date,si.FechaSolicitud)<=@Hasta)) Canceladas,
+        (SELECT COUNT(*) FROM dbo.SolicitudInscripcion si JOIN dbo.Comision co ON co.IdComision=si.IdComision
+         WHERE co.IdCurso=c.IdCurso AND si.Estado=N'anulada'
+         AND (@Desde IS NULL OR si.FechaSolicitud>=@Desde) AND (@Hasta IS NULL OR CONVERT(date,si.FechaSolicitud)<=@Hasta)) Anuladas,
+        (SELECT COUNT(DISTINCT l.IdLead) FROM dbo.Lead l JOIN dbo.ConsultaLead q ON q.IdLead=l.IdLead
+         JOIN dbo.Comision co ON co.IdComision=q.IdComision WHERE co.IdCurso=c.IdCurso
+         AND (@Desde IS NULL OR l.FechaAlta>=@Desde) AND (@Hasta IS NULL OR CONVERT(date,l.FechaAlta)<=@Hasta)) LeadsUnicos,
+        (SELECT COUNT(*) FROM dbo.ConsultaLead q JOIN dbo.Comision co ON co.IdComision=q.IdComision
+         WHERE co.IdCurso=c.IdCurso AND (@Desde IS NULL OR q.FechaConsulta>=@Desde) AND (@Hasta IS NULL OR CONVERT(date,q.FechaConsulta)<=@Hasta)) Consultas
+    FROM dbo.Curso c WHERE (@IdCurso IS NULL OR c.IdCurso=@IdCurso) ORDER BY c.Nombre;
+
+    -- Definición común de plazas ocupadas y matrículas regularizadas según CUN06.
+    SELECT co.IdComision,co.IdCurso,c.Nombre Curso,co.Codigo Comision,co.Estado,co.CupoMinimo,co.CupoMaximo,co.FechaInicio,
+        CONVERT(int,(SELECT COUNT(*) FROM dbo.SolicitudInscripcion si WHERE si.IdComision=co.IdComision AND si.Estado IN(N'pendiente',N'confirmada',N'activa'))) Ocupadas,
+        CONVERT(int,(SELECT COUNT(*) FROM dbo.SolicitudInscripcion si JOIN dbo.Cuota cu ON cu.IdSolicitudInscripcion=si.IdSolicitudInscripcion
+            AND cu.TipoConcepto=N'matricula' AND cu.Estado=N'pagada' WHERE si.IdComision=co.IdComision AND si.Estado=N'activa')) Regularizadas,
+        CAST(CASE WHEN co.Estado<>N'eliminada' AND co.FechaLimitePago>=@Hoy AND co.MontoMatricula>0
+            AND EXISTS(SELECT 1 FROM dbo.PlanesDePago pp WHERE pp.IdPlanDePago=co.IdPlanDePago AND pp.EstadoActivo=1)
+            AND co.CupoMaximo>(SELECT COUNT(*) FROM dbo.SolicitudInscripcion si WHERE si.IdComision=co.IdComision AND si.Estado IN(N'pendiente',N'confirmada',N'activa'))
+            THEN 1 ELSE 0 END AS bit) Disponible
+    INTO #Comisiones FROM dbo.Comision co JOIN dbo.Curso c ON c.IdCurso=co.IdCurso WHERE (@IdCurso IS NULL OR c.IdCurso=@IdCurso);
+
+    SELECT IdCurso,Curso,Comision,Estado,CupoMinimo,CupoMaximo,Ocupadas,Regularizadas,Disponible
+    FROM #Comisiones WHERE (@Desde IS NULL OR FechaInicio>=@Desde) AND (@Hasta IS NULL OR FechaInicio<=@Hasta)
+    ORDER BY Curso,Comision;
+
+    -- La oferta actual muestra todas las comisiones disponibles, no una comisión histórica arbitraria.
+    SELECT x.IdCurso,x.Curso,x.Comision,x.Estado,x.CupoMinimo,x.CupoMaximo,x.Ocupadas,x.Regularizadas,x.Disponible
+    FROM #Comisiones x JOIN dbo.Curso c ON c.IdCurso=x.IdCurso WHERE x.Disponible=1 AND c.EstadoActivo=1
+    UNION ALL
+    SELECT c.IdCurso,c.Nombre,CAST(NULL AS nvarchar(30)),CAST(NULL AS nvarchar(30)),c.CupoMinimoReferencia,0,0,0,CAST(0 AS bit)
+    FROM dbo.Curso c WHERE c.EstadoActivo=1 AND (@IdCurso IS NULL OR c.IdCurso=@IdCurso)
+        AND EXISTS(SELECT 1 FROM dbo.RecorridoCurso r JOIN dbo.Curso p ON p.IdCurso=r.IdCursoPrevio AND p.EstadoActivo=1 WHERE r.IdCursoRecomendado=c.IdCurso)
+        AND NOT EXISTS(SELECT 1 FROM #Comisiones x WHERE x.IdCurso=c.IdCurso AND x.Disponible=1)
+    ORDER BY Curso,Comision;
+
+    ;WITH Aprobados AS(
+        SELECT si.IdAlumno,co.IdCurso
+        FROM dbo.SolicitudInscripcion si JOIN dbo.Comision co ON co.IdComision=si.IdComision
+        JOIN dbo.ResultadoEvaluacion re ON re.IdInscripcion=si.IdSolicitudInscripcion AND re.IdComision=si.IdComision
+        WHERE co.FechaFin<=@Hoy AND co.Estado NOT IN(N'eliminada',N'cancelada_falta_quorum') AND si.Estado IN(N'pendiente',N'confirmada',N'activa')
+        GROUP BY si.IdAlumno,co.IdCurso,si.IdSolicitudInscripcion HAVING COUNT(*)=2 AND MIN(re.Calificacion)>=7
+    ), Candidatos AS(
+        SELECT a.IdAlumno,r.IdCursoPrevio,r.IdCursoRecomendado,
+            ROW_NUMBER() OVER(PARTITION BY a.IdAlumno,r.IdCursoRecomendado ORDER BY r.Orden,r.IdCursoPrevio) posicion
+        FROM Aprobados a JOIN dbo.RecorridoCurso r ON r.IdCursoPrevio=a.IdCurso
+        JOIN dbo.Curso p ON p.IdCurso=r.IdCursoPrevio AND p.EstadoActivo=1
+        JOIN dbo.Curso s ON s.IdCurso=r.IdCursoRecomendado AND s.EstadoActivo=1
+        WHERE (@IdCurso IS NULL OR r.IdCursoRecomendado=@IdCurso)
+        AND NOT EXISTS(SELECT 1 FROM dbo.SolicitudInscripcion si JOIN dbo.Comision co ON co.IdComision=si.IdComision
+            WHERE si.IdAlumno=a.IdAlumno AND co.IdCurso=r.IdCursoRecomendado AND si.Estado IN(N'pendiente',N'confirmada',N'activa'))
+    )
+    SELECT c.IdAlumno,c.IdCursoRecomendado,a.Apellido+N', '+a.Nombre Alumno,a.Email,a.Telefono,p.Nombre CursoAprobado,s.Nombre CursoRecomendado,
+        COALESCE(d.DeudaVencida,0) DeudaVencida,COALESCE(d.SaldoFuturo,0) SaldoFuturo,COALESCE(DATEDIFF(day,d.MasAntigua,@Hoy),0) DiasAtraso
+    FROM Candidatos c JOIN dbo.Alumno a ON a.IdAlumno=c.IdAlumno JOIN dbo.Curso p ON p.IdCurso=c.IdCursoPrevio
+    JOIN dbo.Curso s ON s.IdCurso=c.IdCursoRecomendado
+    OUTER APPLY(SELECT SUM(CASE WHEN cu.FechaVencimiento<@Hoy THEN cu.BalanceAdeudado ELSE 0 END) DeudaVencida,
+        SUM(CASE WHEN cu.FechaVencimiento>=@Hoy THEN cu.BalanceAdeudado ELSE 0 END) SaldoFuturo,
+        MIN(CASE WHEN cu.FechaVencimiento<@Hoy THEN cu.FechaVencimiento END) MasAntigua
+        FROM dbo.Cuota cu JOIN dbo.SolicitudInscripcion si ON si.IdSolicitudInscripcion=cu.IdSolicitudInscripcion
+        JOIN dbo.Comision co ON co.IdComision=si.IdComision WHERE si.IdAlumno=c.IdAlumno
+        AND si.Estado IN(N'pendiente',N'confirmada',N'activa') AND co.Estado NOT IN(N'cancelada_falta_quorum',N'eliminada')
+        AND cu.Estado<>N'reintegro_pendiente' AND cu.BalanceAdeudado>0) d
+    WHERE c.posicion=1 ORDER BY s.Nombre,a.Apellido,a.Nombre;
+
+    -- El período arancelario usa el vencimiento de la cuota. La puntualidad requiere un pago registrado.
+    SELECT c.IdCurso,c.Nombre Curso,
+        SUM(CASE WHEN cu.FechaVencimiento<@Hoy AND cu.BalanceAdeudado>0 THEN cu.BalanceAdeudado ELSE 0 END) DeudaVencida,
+        SUM(CASE WHEN cu.BalanceAdeudado>0 THEN cu.BalanceAdeudado ELSE 0 END) DeudaTotal,
+        SUM(CASE WHEN cu.FechaVencimiento<@Hoy AND cu.BalanceAdeudado>0 THEN 1 ELSE 0 END) CuotasVencidas,
+        MAX(CASE WHEN cu.FechaVencimiento<@Hoy AND cu.BalanceAdeudado>0 THEN DATEDIFF(day,cu.FechaVencimiento,@Hoy) ELSE 0 END) DiasAtrasoMaximo,
+        SUM(CASE WHEN cu.Estado=N'pagada' AND pago.FechaPago IS NOT NULL THEN 1 ELSE 0 END) Pagadas,
+        SUM(CASE WHEN cu.Estado=N'pagada' AND CONVERT(date,pago.FechaPago)<=cu.FechaVencimiento THEN 1 ELSE 0 END) PagadasEnTermino
+    FROM dbo.Curso c JOIN dbo.Comision co ON co.IdCurso=c.IdCurso
+    JOIN dbo.SolicitudInscripcion si ON si.IdComision=co.IdComision
+    JOIN dbo.Cuota cu ON cu.IdSolicitudInscripcion=si.IdSolicitudInscripcion
+    OUTER APPLY(SELECT MAX(p.FechaPago) FechaPago FROM dbo.PagoInscripcion p WHERE p.IdCuota=cu.IdCuota) pago
+    WHERE (@IdCurso IS NULL OR c.IdCurso=@IdCurso) AND si.Estado IN(N'pendiente',N'confirmada',N'activa')
+        AND co.Estado NOT IN(N'eliminada',N'cancelada_falta_quorum') AND cu.Estado<>N'reintegro_pendiente'
+        AND (@Desde IS NULL OR cu.FechaVencimiento>=@Desde) AND (@Hasta IS NULL OR cu.FechaVencimiento<=@Hasta)
+    GROUP BY c.IdCurso,c.Nombre ORDER BY c.Nombre;
+END;
+GO
+GO
+
+-- ============================================================================
+-- Cierre
+-- ============================================================================
+IF @@TRANCOUNT <> 1
+BEGIN
+    IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+    THROW 50000, N'El deploy termino con una cantidad inesperada de transacciones abiertas. No se aplico ningun cambio.', 1;
+END
+COMMIT TRANSACTION;
+GO
+IF CAST(SESSION_CONTEXT(N'EsInstalacionNueva') AS BIT) = 1 PRINT 'Resultado: instalacion nueva completada.';
+ELSE PRINT 'Resultado: actualizacion completada.';
+PRINT 'DEPLOY_OK';
+GO

@@ -69,3 +69,6 @@ SDD_INIT_ENVELOPE.json
 # Local documentation and diagram drafts
 docs/
 DC/
+
+# Salida del instalador (Inno Setup)
+Instalador/Salida/
