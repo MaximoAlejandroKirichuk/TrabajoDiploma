@@ -56,7 +56,6 @@ namespace UI.Modulos.Maestros
             _txtProfesor.Text = _idProfesor.ToString();
             _lblDisponibilidad.SetBounds(270, 18, 150, 25);
             _txtDisponibilidad.SetBounds(425, 15, 120, 25);
-            _txtDisponibilidad.Text = _idDisponibilidadInicial.HasValue ? _idDisponibilidadInicial.Value.ToString() : string.Empty;
             _lblDesde.SetBounds(16, 57, 125, 25);
             _chkDesde.SetBounds(145, 57, 20, 25);
             _dtpDesde.SetBounds(170, 54, 150, 25);
@@ -65,10 +64,9 @@ namespace UI.Modulos.Maestros
             _chkHasta.SetBounds(425, 57, 20, 25);
             _dtpHasta.SetBounds(450, 54, 150, 25);
             _dtpHasta.Format = DateTimePickerFormat.Short;
-            _dtpHasta.Value = DateTime.Today;
             _chkDesde.CheckedChanged += (s, e) => _dtpDesde.Enabled = _chkDesde.Checked;
             _chkHasta.CheckedChanged += (s, e) => _dtpHasta.Enabled = _chkHasta.Checked;
-            _dtpDesde.Enabled = _dtpHasta.Enabled = false;
+            RestablecerFiltrosIniciales();
 
             _grid.SetBounds(16, 95, 1000, 410);
             _grid.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
@@ -78,18 +76,18 @@ namespace UI.Modulos.Maestros
             _grid.AutoGenerateColumns = false;
             _grid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             _grid.MultiSelect = false;
-            AddColumn("IdVersion", "IdVersion", 75);
-            AddColumn("IdDisponibilidadProfesor", "IdDisponibilidadProfesor", 130);
-            AddColumn("IdProfesor", "IdProfesor", 90);
-            AddColumn("TipoOperacion", "TipoOperacion", 130);
-            AddColumn("Usuario", "Usuario", 140);
-            AddColumn("DiaSemana", "DiaSemana", 110);
-            AddColumn("HoraInicio", "HoraInicio", 90);
-            AddColumn("HoraFin", "HoraFin", 90);
-            AddColumn("EstadoActivo", "EstadoActivo", 90);
-            AddColumn("DVH", "DVH", 170);
-            AddColumn("Act", "Act", 65);
-            AddColumn("FechaRegistro", "FechaRegistro", 150);
+            AgregarColumna("IdVersion", "IdVersion", 75);
+            AgregarColumna("IdDisponibilidadProfesor", "IdDisponibilidadProfesor", 130);
+            AgregarColumna("IdProfesor", "IdProfesor", 90);
+            AgregarColumna("TipoOperacion", "TipoOperacion", 130);
+            AgregarColumna("Usuario", "Usuario", 140);
+            AgregarColumna("DiaSemana", "DiaSemana", 110);
+            AgregarColumna("HoraInicio", "HoraInicio", 90);
+            AgregarColumna("HoraFin", "HoraFin", 90);
+            AgregarColumna("EstadoActivo", "EstadoActivo", 90);
+            AgregarColumna("DVH", "DVH", 170);
+            AgregarColumna("Act", "Act", 65);
+            AgregarColumna("FechaRegistro", "FechaRegistro", 150);
 
             _btnAplicar.SetBounds(16, 520, 125, 34);
             _btnLimpiar.SetBounds(151, 520, 125, 34);
@@ -106,9 +104,9 @@ namespace UI.Modulos.Maestros
             Controls.AddRange(new Control[] { _lblProfesor, _txtProfesor, _lblDisponibilidad, _txtDisponibilidad, _lblDesde, _chkDesde, _dtpDesde, _lblHasta, _chkHasta, _dtpHasta, _grid, _btnAplicar, _btnLimpiar, _btnActivar, _btnSalir });
         }
 
-        private void AddColumn(string property, string header, int width)
+        private void AgregarColumna(string propiedad, string cabecera, int ancho)
         {
-            _grid.Columns.Add(new DataGridViewTextBoxColumn { Name = property, DataPropertyName = property, HeaderText = header, Width = width });
+            _grid.Columns.Add(new DataGridViewTextBoxColumn { Name = propiedad, DataPropertyName = propiedad, HeaderText = cabecera, Width = ancho });
         }
 
         protected override void OnLoad(EventArgs e)
@@ -124,24 +122,24 @@ namespace UI.Modulos.Maestros
                 int? idDisponibilidad = null;
                 if (!string.IsNullOrWhiteSpace(_txtDisponibilidad.Text))
                 {
-                    int parsed;
-                    if (!int.TryParse(_txtDisponibilidad.Text.Trim(), out parsed) || parsed <= 0)
+                    int idIngresado;
+                    if (!int.TryParse(_txtDisponibilidad.Text.Trim(), out idIngresado) || idIngresado <= 0)
                     {
-                        MessageBox.Show(this, T("InvalidAvailability"), T("Title"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        MessageBox.Show(this, T("FrmHistorialDisponibilidad.IdInvalido"), T("FrmHistorialDisponibilidad.Titulo"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return;
                     }
-                    idDisponibilidad = parsed;
+                    idDisponibilidad = idIngresado;
                 }
                 DateTime? desde = _chkDesde.Checked ? _dtpDesde.Value.Date : (DateTime?)null;
                 DateTime? hasta = _chkHasta.Checked ? _dtpHasta.Value.Date : (DateTime?)null;
                 if (desde.HasValue && hasta.HasValue && desde.Value > hasta.Value)
                 {
-                    MessageBox.Show(this, T("InvalidRange"), T("Title"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show(this, T("FrmHistorialDisponibilidad.RangoInvalido"), T("FrmHistorialDisponibilidad.Titulo"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
                 _grid.DataSource = _historial.ObtenerHistorial(_idProfesor, idDisponibilidad, desde, hasta)
                     .Select(x => new HistorialVista(x)).ToList();
-                ConfigureColumns();
+                ConfigurarColumnas();
             }
             catch (Exception ex)
             {
@@ -149,44 +147,63 @@ namespace UI.Modulos.Maestros
             }
         }
 
-        private void ConfigureColumns()
+        private void ConfigurarColumnas()
         {
-            SetHeader("IdVersion", T("Version"));
-            SetHeader("IdDisponibilidadProfesor", T("AvailabilityId"));
-            SetHeader("IdProfesor", T("Professor"));
-            SetHeader("TipoOperacion", T("Operation"));
-            SetHeader("Usuario", T("User"));
-            SetHeader("DiaSemana", T("Day"));
-            SetHeader("HoraInicio", T("Start"));
-            SetHeader("HoraFin", T("End"));
-            SetHeader("EstadoActivo", T("Active"));
-            SetHeader("DVH", T("Integrity"));
-            SetHeader("Act", T("Current"));
-            SetHeader("FechaRegistro", T("Registered"));
+            EstablecerCabecera("IdVersion", T("FrmHistorialDisponibilidad.Version"));
+            EstablecerCabecera("IdDisponibilidadProfesor", T("FrmHistorialDisponibilidad.Disponibilidad"));
+            EstablecerCabecera("IdProfesor", T("FrmHistorialDisponibilidad.Profesor"));
+            EstablecerCabecera("TipoOperacion", T("FrmHistorialDisponibilidad.Operacion"));
+            EstablecerCabecera("Usuario", T("FrmHistorialDisponibilidad.Usuario"));
+            EstablecerCabecera("DiaSemana", T("FrmGestionProfesores.DisponibilidadDia"));
+            EstablecerCabecera("HoraInicio", T("FrmGestionProfesores.DisponibilidadHoraInicio"));
+            EstablecerCabecera("HoraFin", T("FrmGestionProfesores.DisponibilidadHoraFin"));
+            EstablecerCabecera("EstadoActivo", T("FrmGestionProfesores.DisponibilidadActiva"));
+            EstablecerCabecera("DVH", T("FrmHistorialDisponibilidad.Integridad"));
+            EstablecerCabecera("Act", T("FrmHistorialDisponibilidad.VersionActual"));
+            EstablecerCabecera("FechaRegistro", T("FrmHistorialDisponibilidad.Registrada"));
         }
 
-        private void SetHeader(string column, string text) { _grid.Columns[column].HeaderText = text; }
+        private void EstablecerCabecera(string columna, string texto) { _grid.Columns[columna].HeaderText = texto; }
 
+        // Estado de arranque: la disponibilidad con la que se abrió la pantalla y sin filtro de fechas,
+        // para que se vean todas sus versiones (también las de más de un mes).
+        private void RestablecerFiltrosIniciales()
+        {
+            _txtDisponibilidad.Text = _idDisponibilidadInicial.HasValue ? _idDisponibilidadInicial.Value.ToString() : string.Empty;
+            QuitarFiltroFechas();
+        }
+
+        // Las fechas quedan sugeridas en el último mes, pero no filtran hasta que el usuario las tilda.
+        private void QuitarFiltroFechas()
+        {
+            _dtpDesde.Value = DateTime.Today.AddMonths(-1);
+            _dtpHasta.Value = DateTime.Today;
+            _chkDesde.Checked = false;
+            _chkHasta.Checked = false;
+            _dtpDesde.Enabled = false;
+            _dtpHasta.Enabled = false;
+        }
+
+        // Limpiar quita todos los filtros: muestra el historial completo del profesor.
         private void LimpiarFiltros()
         {
             _txtDisponibilidad.Clear();
-            _chkDesde.Checked = false;
-            _chkHasta.Checked = false;
+            QuitarFiltroFechas();
             CargarHistorial();
         }
 
         private void ActivarSeleccionada()
         {
-            var row = _grid.CurrentRow == null ? null : _grid.CurrentRow.DataBoundItem as HistorialVista;
-            if (row == null) return;
+            var fila = _grid.CurrentRow == null ? null : _grid.CurrentRow.DataBoundItem as HistorialVista;
+            if (fila == null) return;
             if (!PermisosUi_83KI.Tiene(PermisoSistema_83KI.ModificarProfesor))
             {
-                MessageBox.Show(this, T("NoPermission"), T("Title"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(this, T("Errores.SinPermisos"), T("FrmHistorialDisponibilidad.Titulo"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
             try
             {
-                _historial.ActivarVersion(row.IdVersion, _idProfesor);
+                _historial.ActivarVersion(fila.IdVersion, _idProfesor);
                 CargarHistorial();
             }
             catch (Exception ex)
@@ -197,49 +214,19 @@ namespace UI.Modulos.Maestros
 
         public void ActualizarIdioma(IIdioma idioma)
         {
-            Text = T("Title");
-            _lblProfesor.Text = T("Professor");
-            _lblDisponibilidad.Text = T("AvailabilityId");
-            _lblDesde.Text = T("From");
-            _lblHasta.Text = T("Through");
-            _btnAplicar.Text = T("Apply");
-            _btnLimpiar.Text = T("Clear");
-            _btnActivar.Text = T("Activate");
-            _btnSalir.Text = T("Exit");
-            ConfigureColumns();
+            Text = T("FrmHistorialDisponibilidad.Titulo");
+            _lblProfesor.Text = T("FrmHistorialDisponibilidad.Profesor");
+            _lblDisponibilidad.Text = T("FrmHistorialDisponibilidad.Disponibilidad");
+            _lblDesde.Text = T("FrmHistorialDisponibilidad.Desde");
+            _lblHasta.Text = T("FrmHistorialDisponibilidad.Hasta");
+            _btnAplicar.Text = T("Comun.Aplicar");
+            _btnLimpiar.Text = T("Comun.Limpiar");
+            _btnActivar.Text = T("FrmHistorialDisponibilidad.Activar");
+            _btnSalir.Text = T("FrmHistorialDisponibilidad.Salir");
+            ConfigurarColumnas();
         }
 
-        private string T(string key)
-        {
-            string translationKey;
-            switch (key)
-            {
-                case "Title": translationKey = "FrmHistorialDisponibilidad.Titulo"; break;
-                case "Professor": translationKey = "FrmHistorialDisponibilidad.Profesor"; break;
-                case "Operation": translationKey = "FrmHistorialDisponibilidad.Operacion"; break;
-                case "User": translationKey = "FrmHistorialDisponibilidad.Usuario"; break;
-                case "AvailabilityId": translationKey = "FrmHistorialDisponibilidad.Disponibilidad"; break;
-                case "From": translationKey = "FrmHistorialDisponibilidad.Desde"; break;
-                case "Through": translationKey = "FrmHistorialDisponibilidad.Hasta"; break;
-                case "Apply": translationKey = "Comun.Aplicar"; break;
-                case "Clear": translationKey = "Comun.Limpiar"; break;
-                case "Activate": translationKey = "FrmHistorialDisponibilidad.Activar"; break;
-                case "Exit": translationKey = "FrmHistorialDisponibilidad.Salir"; break;
-                case "Version": translationKey = "FrmHistorialDisponibilidad.Version"; break;
-                case "Day": translationKey = "FrmGestionProfesores.DisponibilidadDia"; break;
-                case "Start": translationKey = "FrmGestionProfesores.DisponibilidadHoraInicio"; break;
-                case "End": translationKey = "FrmGestionProfesores.DisponibilidadHoraFin"; break;
-                case "Active": translationKey = "FrmGestionProfesores.DisponibilidadActiva"; break;
-                case "Integrity": translationKey = "FrmHistorialDisponibilidad.Integridad"; break;
-                case "Current": translationKey = "FrmHistorialDisponibilidad.VersionActual"; break;
-                case "Registered": translationKey = "FrmHistorialDisponibilidad.Registrada"; break;
-                case "InvalidAvailability": translationKey = "FrmHistorialDisponibilidad.IdInvalido"; break;
-                case "InvalidRange": translationKey = "FrmHistorialDisponibilidad.RangoInvalido"; break;
-                case "NoPermission": translationKey = "Errores.SinPermisos"; break;
-                default: return key;
-            }
-            return IdiomaUiHelper_83KI.Texto(translationKey);
-        }
+        private static string T(string clave) { return IdiomaUiHelper_83KI.Texto(clave); }
 
         protected override void OnFormClosed(FormClosedEventArgs e)
         {
