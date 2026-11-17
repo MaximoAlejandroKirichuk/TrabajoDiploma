@@ -9,9 +9,10 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace UI.Modulos.Reportes
+namespace UI
 {
-    internal sealed class ReporteInteligentePdfExporter_83KI
+    // Exportación a PDF compartida por los reportes: recibe grillas ya cargadas y las imprime como tablas.
+    internal static class ExportadorTablasPdf_83KI
     {
         private const string NombreImpresoraPdf = "Microsoft Print to PDF";
 
@@ -22,15 +23,49 @@ namespace UI.Modulos.Reportes
             public List<string[]> Filas;
         }
 
-        public async Task ExportarAsync(string ruta, string titulo, string filtros, string nota, string textoSinDatos, TabPage[] paginas)
+        // Flujo completo desde una pantalla: pide dónde guardar, exporta y avisa el resultado.
+        // Cada tabla es el título de la sección y la grilla de donde se toman columnas visibles y filas.
+        public static async Task ExportarConDialogoAsync(Form pantalla, Button boton, string nombreArchivo, string titulo,
+            string filtros, string nota, params KeyValuePair<string, DataGridView>[] tablas)
+        {
+            try
+            {
+                using (var dialogo = new SaveFileDialog { Title = IdiomaUiHelper_83KI.Texto("Comun.ExportarPdf"),
+                    Filter = "PDF (*.pdf)|*.pdf", DefaultExt = "pdf", AddExtension = true,
+                    FileName = nombreArchivo + "_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".pdf" })
+                {
+                    if (dialogo.ShowDialog(pantalla) != DialogResult.OK) return;
+                    boton.Enabled = false;
+                    pantalla.UseWaitCursor = true;
+                    await ExportarAsync(dialogo.FileName, titulo, filtros, nota, IdiomaUiHelper_83KI.Texto("Comun.SinDatosPdf"), tablas);
+                    // Si la pantalla se cerró mientras se generaba el PDF, ya no hay ventana sobre la cual avisar.
+                    if (!pantalla.IsDisposed) IdiomaUiHelper_83KI.MostrarInformacion(pantalla, "Comun.PdfExportado", "Comun.Informacion");
+                }
+            }
+            catch (Exception ex)
+            {
+                if (!pantalla.IsDisposed) IdiomaUiHelper_83KI.MostrarError(pantalla, ex, "Comun.Validacion", MessageBoxIcon.Warning);
+            }
+            finally
+            {
+                if (!pantalla.IsDisposed)
+                {
+                    pantalla.UseWaitCursor = false;
+                    boton.Enabled = true;
+                }
+            }
+        }
+
+        public static async Task ExportarAsync(string ruta, string titulo, string filtros, string nota, string textoSinDatos,
+            IList<KeyValuePair<string, DataGridView>> tablas)
         {
             if (!PrinterSettings.InstalledPrinters.Cast<string>().Any(p =>
                 string.Equals(p, NombreImpresoraPdf, StringComparison.OrdinalIgnoreCase)))
-                throw new InvalidOperationException("Inteligente.ImpresoraPdfNoDisponible");
+                throw new InvalidOperationException("Errores.ImpresoraPdfNoDisponible");
             VerificarArchivoDisponible(ruta);
 
             // Las grillas se leen en el hilo de la pantalla; la impresión se hace aparte para no congelarla.
-            List<Seccion> secciones = CrearSecciones(paginas);
+            List<Seccion> secciones = CrearSecciones(tablas);
             var anterior = new FileInfo(ruta);
             DateTime? modificacionAnterior = anterior.Exists ? anterior.LastWriteTimeUtc : (DateTime?)null;
             await Task.Run(() => Imprimir(ruta, titulo, filtros, nota, textoSinDatos, secciones));
@@ -47,16 +82,16 @@ namespace UI.Modulos.Reportes
             }
             catch (IOException)
             {
-                throw new InvalidOperationException("Inteligente.ArchivoPdfEnUso");
+                throw new InvalidOperationException("Errores.ArchivoPdfEnUso");
             }
         }
 
-        private static List<Seccion> CrearSecciones(TabPage[] paginas)
+        private static List<Seccion> CrearSecciones(IList<KeyValuePair<string, DataGridView>> tablas)
         {
             var secciones = new List<Seccion>();
-            foreach (var pagina in paginas)
+            foreach (var tabla in tablas)
             {
-                var grilla = pagina.Controls.OfType<DataGridView>().Single();
+                var grilla = tabla.Value;
                 var columnas = grilla.Columns.Cast<DataGridViewColumn>().Where(c => c.Visible)
                     .OrderBy(c => c.DisplayIndex).ToArray();
                 // Las tablas anchas se parten en grupos de columnas y cada grupo repite la columna que identifica la fila.
@@ -65,7 +100,7 @@ namespace UI.Modulos.Reportes
                     var grupo = columnas.Take(1).Concat(columnas.Skip(inicio).Take(5)).ToArray();
                     secciones.Add(new Seccion
                     {
-                        Titulo = pagina.Text,
+                        Titulo = tabla.Key,
                         Cabeceras = grupo.Select(c => c.HeaderText).ToArray(),
                         Filas = grilla.Rows.Cast<DataGridViewRow>().Where(r => !r.IsNewRow)
                             .Select(r => grupo.Select(c => LimitarTexto(Convert.ToString(r.Cells[c.Index].FormattedValue))).ToArray()).ToList()
@@ -168,7 +203,7 @@ namespace UI.Modulos.Reportes
                 catch (IOException) { }
                 await Task.Delay(100).ConfigureAwait(false);
             }
-            throw new IOException("Inteligente.PdfNoGenerado");
+            throw new IOException("Errores.PdfNoGenerado");
         }
 
         private static void DibujarTexto(Graphics g, string texto, Font fuente, StringFormat formato, RectangleF area, ref float y)

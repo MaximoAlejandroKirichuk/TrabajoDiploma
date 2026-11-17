@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 
@@ -24,7 +25,14 @@ namespace UI.Modulos.CobrosMorosidadActas
         private List<ComisionListado_83KI> _comisiones = new List<ComisionListado_83KI>();
         private List<ReporteMorosidadFila_83KI> _filas = new List<ReporteMorosidadFila_83KI>();
         private bool _hayBusqueda;
+        private bool _exportandoPdf;
         private DateTime _fechaReporte;
+        // Valores de la última búsqueda; las etiquetas se traducen al exportar.
+        private FiltroReporteMorosidad_83KI _filtroAplicado;
+        private string _cursoAplicado;
+        private string _comisionAplicada;
+
+        private readonly Button btnExportarPdf = new Button { Location = new Point(12, 60), Size = new Size(110, 26), Anchor = AnchorStyles.Top | AnchorStyles.Left, TabIndex = 12, Enabled = false };
 
         // colores de la torta, de menor a mayor gravedad
         private static readonly Color Color1a30 = Color.FromArgb(242, 193, 78);
@@ -40,6 +48,15 @@ namespace UI.Modulos.CobrosMorosidadActas
             dgvMorosidad.KeyDown += dgvMorosidad_KeyDown;
             // los títulos de columna largos se parten en dos renglones en lugar de cortarse
             dgvMorosidad.ColumnHeadersDefaultCellStyle.WrapMode = DataGridViewTriState.True;
+            // La exportación y la fecha tienen su propia fila para no competir con los filtros.
+            lblFecha.SetBounds(134, 65, ClientSize.Width - 146, 15);
+            lblFecha.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            dgvMorosidad.Top += 34;
+            dgvMorosidad.Height -= 34;
+            chartAtraso.Top += 34;
+            chartAtraso.Height -= 34;
+            btnExportarPdf.Click += async (s, e) => await ExportarPdfAsync();
+            Controls.Add(btnExportarPdf);
             CargarFiltros();
             _gestorIdioma.Suscribir(this);
         }
@@ -105,9 +122,14 @@ namespace UI.Modulos.CobrosMorosidadActas
             try
             {
                 DateTime fecha = DateTime.Now;
-                _filas = _bll.Generar(LeerFiltro());
+                var filtro = LeerFiltro();
+                _filas = _bll.Generar(filtro);
                 _fechaReporte = fecha;
                 _hayBusqueda = true;
+                _filtroAplicado = filtro;
+                _cursoAplicado = cmbCurso.Text;
+                _comisionAplicada = cmbComision.Text;
+                btnExportarPdf.Enabled = !_exportandoPdf;
                 MostrarResultado();
             }
             catch (Exception ex)
@@ -126,6 +148,34 @@ namespace UI.Modulos.CobrosMorosidadActas
                 DiasAtrasoMinimo = nudDiasMinimos.Value > 0 ? (int?)nudDiasMinimos.Value : null,
                 DeudaVencidaMinima = nudDeudaMinima.Value > 0 ? (decimal?)nudDeudaMinima.Value : null
             };
+        }
+
+        private string DescribirFiltros()
+        {
+            string todos = IdiomaUiHelper_83KI.Texto("Comun.Todos");
+            return lblCurso.Text + ": " + (_filtroAplicado.IdCurso.HasValue ? _cursoAplicado : todos)
+                + " | " + lblComision.Text + ": " + (_filtroAplicado.IdComision.HasValue ? _comisionAplicada : todos)
+                + " | " + lblDni.Text + ": " + (!string.IsNullOrEmpty(_filtroAplicado.DNI) ? _filtroAplicado.DNI : todos)
+                + " | " + lblDiasMinimos.Text + ": " + (_filtroAplicado.DiasAtrasoMinimo ?? 0).ToString("0")
+                + " | " + lblDeudaMinima.Text + ": " + (_filtroAplicado.DeudaVencidaMinima ?? 0m).ToString("N2");
+        }
+
+        // Exporta la grilla de la última búsqueda; la lógica de impresión es la compartida por todos los reportes.
+        private async Task ExportarPdfAsync()
+        {
+            if (!_hayBusqueda || _exportandoPdf) return;
+            _exportandoPdf = true;
+            try
+            {
+                await ExportadorTablasPdf_83KI.ExportarConDialogoAsync(this, btnExportarPdf, "ReporteMorosidad", Text,
+                    DescribirFiltros(), lblTotales.Text + " | " + lblFecha.Text,
+                    new KeyValuePair<string, DataGridView>(Text, dgvMorosidad));
+            }
+            finally
+            {
+                _exportandoPdf = false;
+                if (!IsDisposed) btnExportarPdf.Enabled = _hayBusqueda;
+            }
         }
 
         private void MostrarResultado()
@@ -223,6 +273,7 @@ namespace UI.Modulos.CobrosMorosidadActas
 
             _filas = new List<ReporteMorosidadFila_83KI>();
             _hayBusqueda = false;
+            btnExportarPdf.Enabled = false;
             dgvMorosidad.Rows.Clear();
             chartAtraso.Series["SerieAtraso"].Points.Clear();
             chartAtraso.Titles["TituloAtraso"].Text = IdiomaUiHelper_83KI.Texto("ReporteMorosidad.GraficoTitulo");
@@ -244,6 +295,7 @@ namespace UI.Modulos.CobrosMorosidadActas
             lblDeudaMinima.Text = IdiomaUiHelper_83KI.Texto("ReporteMorosidad.DeudaMinima");
             btnBuscar.Text = IdiomaUiHelper_83KI.Texto("ReporteMorosidad.Buscar");
             btnLimpiar.Text = IdiomaUiHelper_83KI.Texto("Comun.Limpiar");
+            btnExportarPdf.Text = IdiomaUiHelper_83KI.Texto("Comun.ExportarPdf");
 
             colCodigoInscripcion.HeaderText = IdiomaUiHelper_83KI.Texto("ReporteMorosidad.ColInscripcion");
             colDni.HeaderText = IdiomaUiHelper_83KI.Texto("Comun.Dni");

@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace UI.Modulos.Reportes
@@ -23,12 +24,19 @@ namespace UI.Modulos.Reportes
         // datos para el grafico de torta
         private int _pagaron;
         private int _sinPagar;
+        // Estado de la última consulta exitosa; una recarga fallida conserva la grilla y su filtro.
+        private string _estadoAplicado;
+        private bool _exportandoPdf;
+
+        private readonly Button btnExportarPdf = new Button { Location = new Point(415, 10), Size = new Size(110, 25), TabIndex = 3, Enabled = false };
 
         public FrmReporteOcupacionComisiones_83KI(IReporteOcupacionComisionBLL_83KI bll)
         {
             _bll = bll;
             _gestorIdioma = ServiceFactory_83KI.GetGestorIdioma();
             InitializeComponent();
+            btnExportarPdf.Click += async (s, e) => await ExportarPdfAsync();
+            Controls.Add(btnExportarPdf);
             _gestorIdioma.Suscribir(this);
             Cargar();
         }
@@ -73,6 +81,8 @@ namespace UI.Modulos.Reportes
                 _pagaron = filas.Sum(x => x.Pagaron);
                 _sinPagar = filas.Sum(x => x.PendientesPago);
                 pnlGrafico.Invalidate();
+                _estadoAplicado = estado;
+                btnExportarPdf.Enabled = !_exportandoPdf;
             }
             catch (Exception ex)
             {
@@ -146,6 +156,24 @@ namespace UI.Modulos.Reportes
             Cargar();
         }
 
+        // Exporta la grilla tal como se ve; la lógica de impresión es la compartida por todos los reportes.
+        private async Task ExportarPdfAsync()
+        {
+            if (!btnExportarPdf.Enabled || _exportandoPdf) return;
+            _exportandoPdf = true;
+            try
+            {
+                await ExportadorTablasPdf_83KI.ExportarConDialogoAsync(this, btnExportarPdf, "ReporteOcupacionComisiones", Text,
+                    lblEstado.Text + ": " + (_estadoAplicado == null ? IdiomaUiHelper_83KI.Texto("Comun.Todos") : TextoEstado(_estadoAplicado)), lblTotales.Text + " | " + lblFecha.Text,
+                    new KeyValuePair<string, DataGridView>(Text, dgvReporte));
+            }
+            finally
+            {
+                _exportandoPdf = false;
+                if (!IsDisposed) btnExportarPdf.Enabled = true;
+            }
+        }
+
         private void cmbEstado_SelectionChangeCommitted(object sender, EventArgs e)
         {
             Cargar();
@@ -156,6 +184,7 @@ namespace UI.Modulos.Reportes
             Text = IdiomaUiHelper_83KI.Texto("FrmReporteOcupacionComisiones.Titulo");
             lblEstado.Text = IdiomaUiHelper_83KI.Texto("FrmReporteOcupacionComisiones.Estado");
             btnActualizar.Text = IdiomaUiHelper_83KI.Texto("Comun.Actualizar");
+            btnExportarPdf.Text = IdiomaUiHelper_83KI.Texto("Comun.ExportarPdf");
 
             int seleccionado = cmbEstado.SelectedIndex < 0 ? 0 : cmbEstado.SelectedIndex;
             cmbEstado.Items.Clear();
