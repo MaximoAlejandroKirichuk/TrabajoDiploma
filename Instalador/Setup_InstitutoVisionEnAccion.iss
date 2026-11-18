@@ -32,10 +32,10 @@
 ;   2) dotnet build "Solucion.sln" -c Release
 ;   3) "%LOCALAPPDATA%\Programs\Inno Setup 6\ISCC.exe" /Q Instalador\Setup_InstitutoVisionEnAccion.iss
 ;      (si Inno Setup se instalo para todos los usuarios: C:\Program Files (x86)\Inno Setup 6\ISCC.exe)
-;   El resultado queda en Instalador\Salida\Setup_InstitutoVisionEnAccion.exe
+;   El resultado queda en Instalador\Salida\Setup_InstitutoVisionEnAccion_v2.exe
 ;
 ;  INSTALACION DESATENDIDA (opcional, para pruebas o despliegues)
-;   Setup_InstitutoVisionEnAccion.exe /VERYSILENT /SUPPRESSMSGBOXES /Instancia="(localdb)\MSSQLLocalDB" /Base=MiBase
+;   Setup_InstitutoVisionEnAccion_v2.exe /VERYSILENT /SUPPRESSMSGBOXES /Instancia="(localdb)\MSSQLLocalDB" /Base=MiBase
 ;   /Instancia y /Base reemplazan a lo que se elige en la pagina "Base de datos".
 ;   /Restaurar="C:\ruta\copia.bak" (solo reinstalacion) restaura la base desde ese backup.
 ;   En modo silencioso no se ofrece desinstalar el instalador viejo.
@@ -43,7 +43,7 @@
 
 #define NombreVisible  "Instituto Visión en Acción"
 #define NombreInterno  "InstitutoVisionEnAccion"
-#define VersionApp     "1.0.0"
+#define VersionApp     "2.0.0"
 #define ExeApp         "UI.exe"
 #define CarpetaRelease "..\UI\bin\Release"
 #define BaseDefecto    "InstitutoVisionEnAccion"
@@ -56,7 +56,7 @@ AppPublisher={#NombreVisible}
 DefaultDirName={autopf}\{#NombreInterno}
 DefaultGroupName={#NombreVisible}
 OutputDir=Salida
-OutputBaseFilename=Setup_{#NombreInterno}
+OutputBaseFilename=Setup_{#NombreInterno}_v2
 PrivilegesRequired=admin
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
@@ -100,6 +100,7 @@ Root: HKLM; Subkey: "Software\{#NombreInterno}"; ValueType: string; ValueName: "
 Root: HKLM; Subkey: "Software\{#NombreInterno}"; ValueType: string; ValueName: "Version"; ValueData: "{#VersionApp}"
 Root: HKLM; Subkey: "Software\{#NombreInterno}"; ValueType: string; ValueName: "SqlInstance"; ValueData: "{code:ObtenerInstancia}"
 Root: HKLM; Subkey: "Software\{#NombreInterno}"; ValueType: string; ValueName: "SqlDatabase"; ValueData: "{code:ObtenerBase}"
+Root: HKLM; Subkey: "Software\{#NombreInterno}"; ValueType: string; ValueName: "InstallId"; ValueData: "{code:ObtenerIdInstalacion}"
 
 [Run]
 ; 1) Backup previo. Si la base no existe imprime BACKUP_SIN_BASE y no hace nada.
@@ -124,7 +125,7 @@ Filename: "{cmd}"; \
   Flags: runhidden waituntilterminated; Check: DebeEjecutarDeploy; AfterInstall: VerificarDeploy
 
 ; 4) Abrir la aplicacion al terminar
-Filename: "{app}\{#ExeApp}"; Description: "Abrir {#NombreVisible}"; Flags: postinstall nowait skipifsilent
+Filename: "{app}\{#ExeApp}"; Description: "Abrir {#NombreVisible}"; Flags: postinstall nowait skipifsilent; Check: PuedeAbrirAplicacion
 
 [UninstallDelete]
 ; Se borra toda la carpeta de la aplicacion. NUNCA se toca la base ni ProgramData (backups y logs).
@@ -143,10 +144,14 @@ const
 var
   SqlCmdEncontrado: Boolean;
   EsReinstalacion: Boolean;
+  EsActualizacionV1: Boolean;
   InstanciaAnterior: String;
+  UsarInstanciaGuardada: Boolean;   // False si la instancia guardada no responde: se pide de nuevo
   BaseAnterior: String;
   CarpetaAnterior: String;
   BackupOk: Boolean;
+  DeployOk: Boolean;
+  IntegridadOk: Boolean;
   MarcaTiempo: String;
   ParamInstancia: String;
   ParamBase: String;
@@ -168,7 +173,7 @@ var
 
 function ObtenerInstancia(Param: String): String;
 begin
-  if EsReinstalacion then
+  if UsarInstanciaGuardada then
     Result := InstanciaAnterior
   else
     Result := Trim(ComboInstancia.Text);
@@ -176,10 +181,16 @@ end;
 
 function ObtenerBase(Param: String): String;
 begin
-  if EsReinstalacion then
+  if UsarInstanciaGuardada then
     Result := BaseAnterior
   else
     Result := Trim(EditBase.Text);
+end;
+
+{ Cambia en cada instalacion: la aplicacion lo usa para tomar la conexion recien instalada. }
+function ObtenerIdInstalacion(Param: String): String;
+begin
+  Result := MarcaTiempo;
 end;
 
 function ObtenerCarpetaBackups(Param: String): String;
@@ -236,6 +247,18 @@ begin
   Result := SqlCmdEncontrado and BackupOk and QuiereRestaurar;
 end;
 
+function PuedeAbrirAplicacion: Boolean;
+begin
+  Result := not SqlCmdEncontrado or (DeployOk and IntegridadOk);
+end;
+
+function GetCustomSetupExitCode: Integer;
+begin
+  Result := 0;
+  if SqlCmdEncontrado and not (DeployOk and IntegridadOk) then
+    Result := 10;
+end;
+
 { ---------- utilidades ---------- }
 
 function LeerArchivo(Ruta: String): String;
@@ -278,7 +301,7 @@ begin
 end;
 
 { Prueba la conexion y devuelve la version del servidor en Salida. }
-function ProbarConexion(Instancia: String; var Salida: String): Boolean;
+function ProbarConexionConTiempo(Instancia: String; Segundos: Integer; var Salida: String): Boolean;
 var
   Codigo: Integer;
   ArchivoTmp: String;
@@ -286,9 +309,14 @@ begin
   ArchivoTmp := ExpandConstant('{tmp}\conexion.log');
   DeleteFile(ArchivoTmp);
   Result := Exec(ExpandConstant('{cmd}'),
-    '/C "sqlcmd -S "' + Instancia + '" -E -b -l 30 -h -1 -W -Q "SET NOCOUNT ON; SELECT CAST(SERVERPROPERTY(''ProductVersion'') AS VARCHAR(40)) + '' - '' + CAST(SERVERPROPERTY(''Edition'') AS VARCHAR(80))" > "' + ArchivoTmp + '" 2>&1"',
+    '/C "sqlcmd -S "' + Instancia + '" -E -b -l ' + IntToStr(Segundos) + ' -h -1 -W -Q "SET NOCOUNT ON; SELECT CAST(SERVERPROPERTY(''ProductVersion'') AS VARCHAR(40)) + '' - '' + CAST(SERVERPROPERTY(''Edition'') AS VARCHAR(80))" > "' + ArchivoTmp + '" 2>&1"',
     '', SW_HIDE, ewWaitUntilTerminated, Codigo) and (Codigo = 0);
   Salida := Trim(LeerArchivo(ArchivoTmp));
+end;
+
+function ProbarConexion(Instancia: String; var Salida: String): Boolean;
+begin
+  Result := ProbarConexionConTiempo(Instancia, 30, Salida);
 end;
 
 { La salida correcta empieza con la version, por ejemplo "15.0.4153.1 - Express Edition". }
@@ -352,11 +380,17 @@ end;
 
 function InitializeSetup: Boolean;
 var
+  SalidaProbe: String;
   Release: Cardinal;
   Codigo: Integer;
+  ProductoAnterior: String;
+  VersionAnterior: String;
 begin
   Result := True;
   BackupOk := False;
+  DeployOk := False;
+  IntegridadOk := False;
+  EsActualizacionV1 := BuscarInstaladorViejo(ProductoAnterior);
   RestoreOk := False;
   MarcaTiempo := GetDateTimeString('yyyymmdd_hhnnss', #0, #0);
 
@@ -389,11 +423,26 @@ begin
       InstanciaAnterior := '.';
     if not RegQueryStringValue(HKLM, ClaveRegistro, 'SqlDatabase', BaseAnterior) or not NombreBaseValido(BaseAnterior) then
       BaseAnterior := '{#BaseDefecto}';
+    if RegQueryStringValue(HKLM, ClaveRegistro, 'Version', VersionAnterior) and
+      (VersionAnterior = '1.0.8') then
+    begin
+      if not RegQueryStringValue(HKCU64, ClaveRegistro, 'V1SqlInstance', InstanciaAnterior) then
+        InstanciaAnterior := '';
+      if not RegQueryStringValue(HKCU64, ClaveRegistro, 'V1SqlDatabase', BaseAnterior) then
+        BaseAnterior := '';
+    end;
     if ParamInstancia <> '' then
       InstanciaAnterior := ParamInstancia;
     if ParamBase <> '' then
       BaseAnterior := ParamBase;
   end;
+
+  // La instancia guardada solo se reutiliza si responde (o si se indico /Instancia).
+  // Si no responde (por ejemplo '.' en una PC que solo tiene LocalDB), se vuelve a pedir en el asistente.
+  UsarInstanciaGuardada := EsReinstalacion and (Trim(InstanciaAnterior) <> '') and NombreBaseValido(BaseAnterior);
+  if EsReinstalacion and SqlCmdEncontrado and (ParamInstancia = '') then
+    if not (ProbarConexionConTiempo(InstanciaAnterior, 5, SalidaProbe) and VersionSqlSuficiente(SalidaProbe)) then
+      UsarInstanciaGuardada := False;
 end;
 
 procedure ProbarClick(Sender: TObject);
@@ -542,9 +591,11 @@ end;
 procedure InitializeWizard;
 var
   Etiqueta: TNewStaticText;
+  I: Integer;
+  SalidaProbe: String;
 begin
   // Pagina informativa de la reinstalacion (ShouldSkipPage la oculta en instalacion limpia)
-  PaginaInfo := CreateOutputMsgPage(wpWelcome, 'Actualizacion',
+   PaginaInfo := CreateOutputMsgPage(wpWelcome, 'Actualizacion / reinstalacion v2.0.0',
     'Ya hay una version instalada con este instalador.',
     'Se va a actualizar la aplicacion y la base de datos CONSERVANDO los datos:' + #13#10 + #13#10 +
     '  1. Se hace una copia de seguridad (backup) de la base.' + #13#10 +
@@ -554,6 +605,14 @@ begin
     'Carpeta anterior: ' + CarpetaAnterior + #13#10 +
     'Instancia de SQL Server: ' + InstanciaAnterior + #13#10 +
     'Base de datos: ' + BaseAnterior);
+
+  if EsActualizacionV1 and not EsReinstalacion then
+    PaginaInfo.MsgLabel.Caption :=
+      'Se detecto la version v1 (Solucion_83KI). Se instalara la version 2.0.0.' + #13#10 + #13#10 +
+      'En la pagina Base de datos indique la MISMA instancia y el MISMO nombre de base que utiliza v1.' + #13#10 +
+      'El esquema original de v1 usa GestionUsuarios; confirme el nombre en su configuracion actual.' + #13#10 + #13#10 +
+      'Se realizara un backup antes de actualizar el esquema. Los datos existentes se conservan.' + #13#10 +
+      'Si elige otro nombre, se creara otra base y no se migraran los datos de v1.';
 
   // Pagina de la reinstalacion: actualizar o restaurar
   CrearPaginaRestore;
@@ -576,6 +635,14 @@ begin
   AgregarInstancias(HKLM32);
   ComboInstancia.Items.Add('(localdb)\MSSQLLocalDB');
   ComboInstancia.ItemIndex := 0;
+  // Se propone la primera instancia que realmente responde (una puede estar instalada pero detenida).
+  if SqlCmdEncontrado and (ParamInstancia = '') then
+    for I := 0 to ComboInstancia.Items.Count - 1 do
+      if ProbarConexionConTiempo(ComboInstancia.Items[I], 4, SalidaProbe) and VersionSqlSuficiente(SalidaProbe) then
+      begin
+        ComboInstancia.ItemIndex := I;
+        Break;
+      end;
 
   BotonProbar := TNewButton.Create(PaginaBD);
   BotonProbar.Parent := PaginaBD.Surface;
@@ -596,6 +663,8 @@ begin
   EditBase.Top := Etiqueta.Top + Etiqueta.Height + ScaleY(6);
   EditBase.Width := ScaleX(280);
   EditBase.Text := '{#BaseDefecto}';
+  if EsReinstalacion and (BaseAnterior <> '') then
+    EditBase.Text := BaseAnterior;
 
   EtiquetaResultado := TNewStaticText.Create(PaginaBD);
   EtiquetaResultado.Parent := PaginaBD.Surface;
@@ -616,11 +685,11 @@ function ShouldSkipPage(PageID: Integer): Boolean;
 begin
   Result := False;
   if PageID = PaginaBD.ID then
-    Result := EsReinstalacion          // en la reinstalacion se reutiliza la instancia guardada
+    Result := UsarInstanciaGuardada    // en la reinstalacion se reutiliza la instancia guardada si responde
   else if PageID = PaginaRestore.ID then
     Result := not (EsReinstalacion and SqlCmdEncontrado)
   else if PageID = PaginaInfo.ID then
-    Result := not EsReinstalacion;     // la pagina informativa es solo para la reinstalacion
+    Result := not (EsReinstalacion or EsActualizacionV1);
 end;
 
 function NextButtonClick(CurPageID: Integer): Boolean;
@@ -697,7 +766,9 @@ begin
   if QuiereRestaurar then
     Modo := 'Reinstalacion: RESTAURAR la base desde ' + ObtenerArchivoRestore('')
   else if EsReinstalacion then
-    Modo := 'Reinstalacion / actualizacion (se conservan los datos)'
+    Modo := 'Reinstalacion / actualizacion v2.0.0 (se conservan los datos)'
+  else if EsActualizacionV1 then
+    Modo := 'Actualizacion v1 a v2.0.0 (confirme la base de v1)'
   else
     Modo := 'Instalacion (si la base ya existe, se actualiza conservando los datos)';
   if not SqlCmdEncontrado then
@@ -751,16 +822,26 @@ end;
 procedure VerificarDeploy;
 var
   Log: String;
+  Codigo: Integer;
 begin
   Log := LeerArchivo(ObtenerLogDeploy(''));
-  if Pos('DEPLOY_OK', Log) = 0 then
+  DeployOk := Pos('DEPLOY_OK', Log) > 0;
+  if not DeployOk then
     MsgBox('La base de datos no se pudo crear o actualizar. No se aplico ningun cambio en la base' + #13#10 +
       '(todo el script corre en una transaccion). La aplicacion queda instalada igual.' + #13#10 + #13#10 +
       UltimasLineas(Log) + #13#10 + #13#10 +
       'Log: ' + ObtenerLogDeploy('') + #13#10 +
       'Backup: ' + ObtenerCarpetaBackups('') + #13#10 + #13#10 +
       'Para volver a ejecutarlo a mano:' + #13#10 + ComandoManualDeploy,
-      mbError, MB_OK);
+      mbError, MB_OK)
+  else
+  begin
+    IntegridadOk := Exec(ExpandConstant('{app}\{#ExeApp}'), '/recalcular-integridad',
+      '', SW_HIDE, ewWaitUntilTerminated, Codigo) and (Codigo = 0);
+    if not IntegridadOk then
+      MsgBox('El esquema se actualizo, pero fallo el recalculo de integridad (codigo ' +
+        IntToStr(Codigo) + '). Ejecute nuevamente este instalador para reintentar.', mbError, MB_OK);
+  end;
 end;
 
 { ---------- pasos de la instalacion ---------- }

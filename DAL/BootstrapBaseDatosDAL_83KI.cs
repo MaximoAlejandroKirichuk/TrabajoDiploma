@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using DAL.interfaces;
 using Microsoft.Win32;
 using Service.DTOs;
@@ -187,7 +188,7 @@ namespace DAL
                     "cun05/001_migracion.sql", "cun06/001_migracion.sql", "reporte-ocupacion-comisiones/001_migracion.sql",
                     "cun07/001_migracion.sql", "financiacion-cuotas/002_completar_inscripciones.sql", "cun08/001_migracion.sql", "cun09/001_migracion.sql", "cun08/006_evaluaciones.sql",
                     "reporte-morosidad/001_migracion.sql", "pagos-cuotas/001_permiso.sql", "disponibilidad-profesor/001_auditoria.sql",
-                    "reporte-inteligente/001_modelo.sql", "reporte-inteligente/002_reporte.sql" })
+                    "reporte-inteligente/001_modelo.sql", "reporte-inteligente/002_reporte.sql", "datos-desarrollo/001_maestros_y_usuarios.sql", "permisos-admin/001_todas_las_patentes.sql" })
                 {
                     string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Scripts", "Sql", relative.Replace('/', Path.DirectorySeparatorChar));
                     if (!File.Exists(path)) return (false, "No se encontró el script de instalación: " + path);
@@ -199,8 +200,19 @@ namespace DAL
                 return (false, $"Error al leer el script de instalacion: {ex.Message}");
             }
 
-            // Reemplazar el nombre de base de datos del script por el provisto por el usuario.
-            scriptContent = scriptContent.Replace(ScriptDefaultDatabaseName, databaseName);
+            if (databaseName.Length > 128)
+                return (false, "El nombre de la base de datos no puede superar los 128 caracteres.");
+
+            // Reemplazar el nombre del script por el elegido, escapado segun cada contexto:
+            // [nombre] como identificador y N'nombre' como literal. Asi funcionan nombres con guiones o espacios.
+            string identificador = "[" + databaseName.Replace("]", "]]") + "]";
+            string literal = "N'" + databaseName.Replace("'", "''") + "'";
+            scriptContent = scriptContent
+                .Replace("[" + ScriptDefaultDatabaseName + "]", identificador)
+                .Replace("N'" + ScriptDefaultDatabaseName + "'", literal);
+
+            // AUTO_CLOSE ON hace que la base se cierre sola y la primera reapertura pueda fallar (LocalDB/Express).
+            scriptContent = Regex.Replace(scriptContent, @"AUTO_CLOSE\s+ON", "AUTO_CLOSE OFF", RegexOptions.IgnoreCase);
 
             // Dividir por separadores de lote GO (lineas que contienen solo "GO")
             string[] batches = Regex.Split(
@@ -225,10 +237,23 @@ namespace DAL
                         if (string.IsNullOrEmpty(trimmedBatch))
                             continue;
 
-                        using (var cmd = new SqlCommand(trimmedBatch, conn))
+                        // Las opciones de la base (ALTER DATABASE, fulltext, vardecimal) dependen de la version
+                        // de SQL Server: si alguna no existe en este servidor, se ignora y se sigue.
+                        bool esOpcionDeBase = Regex.IsMatch(trimmedBatch,
+                            @"ALTER\s+DATABASE|sp_db_vardecimal_storage_format|sp_fulltext_database",
+                            RegexOptions.IgnoreCase);
+
+                        try
                         {
-                            cmd.CommandTimeout = 60; // dar tiempo suficiente a las operaciones DDL
-                            cmd.ExecuteNonQuery();
+                            using (var cmd = new SqlCommand(trimmedBatch, conn))
+                            {
+                                cmd.CommandTimeout = 60; // dar tiempo suficiente a las operaciones DDL
+                                cmd.ExecuteNonQuery();
+                            }
+                        }
+                        catch (SqlException) when (esOpcionDeBase)
+                        {
+                            Debug.WriteLine("Opcion de base no soportada en este servidor, se omite.");
                         }
                     }
                 }
@@ -238,25 +263,55 @@ namespace DAL
                 return (false, $"Error al ejecutar el script de instalacion: {ex.Message}");
             }
 
-            // Verificar que la base de datos se creo correctamente
+            // El pool puede conservar conexiones con estado previo a la creacion de la base.
+            SqlConnection.ClearAllPools();
+
+            // Verificar que la base quedo ONLINE (desde master) y que se puede abrir; se reintenta
+            // unos segundos porque algunas instancias tardan en dejarla disponible.
             string targetConnectionString =
                 $"Data Source={serverInstance};" +
                 $"Initial Catalog={databaseName};" +
                 "Integrated Security=True;";
 
-            try
+            string ultimoError = "la base no quedo disponible.";
+            for (int intento = 1; intento <= 10; intento++)
             {
-                using (var conn = new SqlConnection(targetConnectionString))
+                try
                 {
-                    conn.Open();
+                    using (var conn = new SqlConnection(masterConnectionString))
+                    {
+                        conn.Open();
+                        using (var cmd = new SqlCommand("SELECT state_desc FROM sys.databases WHERE name = @nombre", conn))
+                        {
+                            cmd.Parameters.AddWithValue("@nombre", databaseName);
+                            object estado = cmd.ExecuteScalar();
+                            if (estado == null)
+                                return (false, $"El script termino pero la base '{databaseName}' no existe en '{serverInstance}'.");
+                            if (!string.Equals(estado.ToString(), "ONLINE", StringComparison.OrdinalIgnoreCase))
+                            {
+                                ultimoError = $"la base esta en estado {estado}.";
+                                Thread.Sleep(500);
+                                continue;
+                            }
+                        }
+                    }
+
+                    using (var conn = new SqlConnection(targetConnectionString))
+                    {
+                        conn.Open();
+                    }
+
+                    return (true, $"Base de datos '{databaseName}' instalada correctamente en '{serverInstance}'.");
+                }
+                catch (SqlException ex)
+                {
+                    ultimoError = ex.Message;
+                    SqlConnection.ClearAllPools();
+                    Thread.Sleep(500);
                 }
             }
-            catch (SqlException ex)
-            {
-                return (false, $"La base de datos se creo pero no se pudo conectar: {ex.Message}");
-            }
 
-            return (true, $"Base de datos '{databaseName}' instalada correctamente en '{serverInstance}'.");
+            return (false, $"La base de datos se creo pero no se pudo conectar: {ultimoError}");
         }
     }
 }

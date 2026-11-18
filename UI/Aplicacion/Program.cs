@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Windows.Forms;
 using Service;
 using Service.DTOs;
@@ -12,13 +13,17 @@ namespace UI
         /// Evalua la configuracion de base de datos antes de mostrar Login.
         /// </summary>
         [STAThread]
-        static void Main()
+        static int Main(string[] args)
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
             // registrar el proveedor de configuracion antes del bootstrap
             ServiceFactory_83KI.EstablecerProveedorConfiguracionConexion(new ProveedorConfiguracionBD_83KI());
+
+            // modo sin pantalla que usa el instalador: deja consistentes los hashes de integridad de la base recien instalada
+            if (args.Any(a => string.Equals(a, "/recalcular-integridad", StringComparison.OrdinalIgnoreCase)))
+                return RecalcularIntegridadSinPantalla();
 
             // puerta de bootstrap: evaluar configuracion antes de llegar a Login
             var bootstrapService = ServiceFactory_83KI.ObtenerServicioBootstrapBaseDatos();
@@ -28,7 +33,7 @@ namespace UI
             {
                 // configuracion valida — continuar normalmente
                 Application.Run(new Login());
-                return;
+                return 0;
             }
 
             // configuracion falta o es invalida — mostrar formulario de configuracion
@@ -47,7 +52,7 @@ namespace UI
                         {
                             setupCompletado = true;
                             Application.Run(new Login());
-                            return;
+                            return 0;
                         }
 
                         // la configuracion se guardo pero sigue sin ser valida — reabrir formulario
@@ -60,9 +65,24 @@ namespace UI
                     else
                     {
                         // usuario cancelo — salir limpiamente
-                        return;
+                        return 0;
                     }
                 }
+            }
+
+            return 0;
+        }
+
+        private static int RecalcularIntegridadSinPantalla()
+        {
+            try
+            {
+                var estado = ServiceFactory_83KI.GetIntegridadDatosService().RecalcularTodo("Instalador");
+                return estado != null && estado.EstaSano ? 0 : 2;
+            }
+            catch
+            {
+                return 1;
             }
         }
     }

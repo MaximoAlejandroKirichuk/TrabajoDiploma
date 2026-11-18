@@ -37,7 +37,7 @@
   .nota strong { color: #7a5c00; }
   .indice li { margin-bottom: 2pt; }
   figure { margin: 8pt 0 12pt 0; text-align: center; page-break-inside: avoid; }
-  figure img { max-width: 100%; border: 0.75pt solid #9aa5b1; }
+  figure img { max-width: 85%; border: 0.75pt solid #9aa5b1; }
   figcaption { font-size: 9pt; color: #44546a; margin-top: 3pt; }
 </style>
 </head>
@@ -47,9 +47,9 @@
   <h1>Instituto Visión en Acción</h1>
   <div class="sub">Manual del instalador y reinstalador</div>
   <table>
-    <tr><th>Programa</th><td>Setup_InstitutoVisionEnAccion.exe</td></tr>
+    <tr><th>Programa</th><td>Setup_InstitutoVisionEnAccion_v2.exe</td></tr>
     <tr><th>Versión del instalador</th><td>Segunda versión (Inno Setup 6)</td></tr>
-    <tr><th>Versión del sistema</th><td>1.0.0</td></tr>
+    <tr><th>Versión del sistema</th><td>2.0.0</td></tr>
     <tr><th>Fecha</th><td>Noviembre de 2026</td></tr>
   </table>
 </div>
@@ -60,7 +60,7 @@
   <li>Requisitos</li>
   <li>Qué instala y dónde</li>
   <li>Instalación por primera vez</li>
-  <li>Actualización desde la primera versión del instalador</li>
+  <li>La primera versión (v1) y la actualización a v2</li>
   <li>Reinstalación: actualizar o restaurar la base</li>
   <li>Cómo se prepara y se protege la base de datos</li>
   <li>Desinstalación</li>
@@ -71,9 +71,10 @@
 </ol>
 
 <h2>1. Introducción</h2>
-<p>Este documento explica cómo usar <code>Setup_InstitutoVisionEnAccion.exe</code>, la segunda versión del
-instalador del sistema Instituto Visión en Acción. La primera versión era un paquete MSI generado con el
-proyecto de instalación de Visual Studio (<code>Solucion_83KI</code>), que solo copiaba los archivos del programa.</p>
+<p>Este documento explica cómo usar <code>Setup_InstitutoVisionEnAccion_v2.exe</code>, la segunda versión (2.0.0) del
+instalador del sistema Instituto Visión en Acción. La primera versión (v1, 1.0.8) solo copiaba los archivos del programa:
+la base de datos se configuraba después, desde la propia aplicación (ver sección 5). De la v1 también existe un paquete MSI
+generado con el proyecto de instalación de Visual Studio (<code>Solucion_83KI</code>).</p>
 <p>La segunda versión es un único programa que cumple dos funciones:</p>
 <ul>
   <li><strong>Instalador (primera vez):</strong> copia la aplicación, prepara la base de datos con su esquema y
@@ -110,10 +111,12 @@ existentes.</p>
 archivo <code>.bak</code> lo escribe el servicio de SQL Server, que no tiene permiso para escribir en <code>Program Files</code>.</p>
 
 <h2>4. Instalación por primera vez</h2>
+<p>Este es el recorrido de <code>Setup_InstitutoVisionEnAccion_v2.exe</code> en una PC donde el sistema no estaba instalado.
+Las páginas «Carpeta de destino», «Tareas adicionales» y «Listo para instalar» son las mismas que en la v1
+(figuras 1 a 3 de la sección 5); la diferencia es que la v2 agrega la página «Base de datos».</p>
 <ol>
-  <li>Ejecutar <code>Setup_InstitutoVisionEnAccion.exe</code> y aceptar el aviso de administrador de Windows.</li>
+  <li>Ejecutar <code>Setup_InstitutoVisionEnAccion_v2.exe</code> y aceptar el aviso de administrador de Windows.</li>
   <li><strong>Carpeta de destino.</strong> Dejar la propuesta o elegir otra.</li>
-  <!-- CAPTURA: pagina "Base de datos" -->
   <li><strong>Base de datos.</strong>
     <ul>
       <li>Elegir la instancia de SQL Server en la lista. El instalador detecta las instancias instaladas:
@@ -125,21 +128,59 @@ archivo <code>.bak</code> lo escribe el servicio de SQL Server, que no tiene per
     Al pulsar Siguiente el instalador vuelve a probar la conexión. Si falla, muestra el error y pregunta si se desea continuar igual.
   </li>
   <li><strong>Accesos directos.</strong> Marcar si se quiere el acceso en el escritorio.</li>
-  <!-- CAPTURA: pagina "Listo para instalar" -->
   <li><strong>Resumen.</strong> Revisar el modo, la carpeta, la instancia, la base y la ruta del backup, y pulsar Instalar.</li>
   <li>El instalador copia los archivos, crea la base con su esquema y sus datos iniciales, y guarda la conexión.</li>
-  <li>Al finalizar, dejar marcada la opción para abrir la aplicación. Se abre directamente la pantalla de inicio de sesión.</li>
+  <li>Al finalizar, dejar marcada la opción para abrir la aplicación. Se abre directamente la pantalla de inicio de sesión (figura 7).</li>
 </ol>
 <div class="nota"><strong>Si la base ya existe</strong> en la instancia elegida, no se vuelve a crear: el instalador hace
 una copia de seguridad y la actualiza conservando todos sus datos (ver sección 7).</div>
 
-<h2>5. Actualización desde la primera versión del instalador</h2>
-<p>Si en la PC está instalada la primera versión (figura como <code>Solucion_83KI</code> en «Aplicaciones instaladas»),
-el instalador nuevo la detecta.</p>
+<h2>5. La primera versión (v1) y la actualización a v2</h2>
+<h3>Instalación de la v1 (1.0.8)</h3>
+<p>El instalador de la v1 solo copia la aplicación y crea los accesos directos. No prepara la base de datos.</p>
 <ol>
-  <li>Ejecutar <code>Setup_InstitutoVisionEnAccion.exe</code>.</li>
+  <li><strong>Carpeta de destino.</strong> Dejar la propuesta o elegir otra.
+    <figure><img src="captura-01-carpeta-destino.jpg" alt="v1: selección de la carpeta de destino"><figcaption>Figura 1 - v1: selección de la carpeta de destino</figcaption></figure>
+  </li>
+  <li><strong>Tareas adicionales.</strong> Marcar si se quiere el acceso en el escritorio.
+    <figure><img src="captura-02-tareas-adicionales.jpg" alt="v1: tareas adicionales"><figcaption>Figura 2 - v1: tareas adicionales</figcaption></figure>
+  </li>
+  <li><strong>Listo para instalar.</strong> El resumen solo muestra la carpeta y los accesos directos. Pulsar Instalar.
+    <figure><img src="captura-03-listo-para-instalar.jpg" alt="v1: resumen antes de instalar"><figcaption>Figura 3 - v1: resumen antes de instalar</figcaption></figure>
+  </li>
+  <li><strong>Finalizar.</strong> Dejar marcada la opción «Abrir v1 y configurar la base de datos».
+    <figure><img src="captura-04-finalizar.jpg" alt="v1: fin de la instalación"><figcaption>Figura 4 - v1: fin de la instalación</figcaption></figure>
+  </li>
+</ol>
+<h3>Configuración de la base desde la aplicación</h3>
+<p>Como la v1 no deja la conexión guardada, al abrir la aplicación aparece la pantalla «Configuración Inicial de Base de Datos».
+La misma pantalla aparece en la v2 si no se pudo guardar la conexión (ver sección 10).</p>
+<ol>
+  <li>Elegir la instancia de SQL Server en la lista (con <strong>Reintentar</strong> se vuelven a buscar las instancias)
+      y escribir el nombre de la base.</li>
+  <li>Pulsar <strong>Validar Conexión</strong>.
+    <figure><img src="captura-05-configuracion-base.jpg" alt="Pantalla de configuración inicial de la base de datos"><figcaption>Figura 5 - Pantalla de configuración inicial de la base de datos</figcaption></figure>
+  </li>
+  <li>Si la base no existe, la aplicación pregunta si se desea crearla. Responder <strong>Sí</strong> y luego pulsar <strong>Confirmar</strong>.
+    <figure><img src="captura-06-crear-base.jpg" alt="Aviso de base de datos no encontrada"><figcaption>Figura 6 - Aviso de base de datos no encontrada</figcaption></figure>
+  </li>
+  <li>Con la conexión configurada se abre la pantalla de inicio de sesión.
+    <figure><img src="captura-07-inicio-sesion.jpg" alt="Pantalla de inicio de sesión" style="max-width:55%"><figcaption>Figura 7 - Pantalla de inicio de sesión</figcaption></figure>
+  </li>
+</ol>
+<h3>Actualizar de v1 a v2</h3>
+<ol>
+  <li>Ejecutar <code>Setup_InstitutoVisionEnAccion_v2.exe</code>.</li>
+  <li>El instalador detecta la v1 y muestra la página «Actualización / reinstalación v2.0.0» con la carpeta,
+      la instancia y la base que se configuraron en la v1. Si la instancia no responde, la vuelve a pedir en la página «Base de datos».
+    <figure><img src="captura-08-actualizacion.jpg" alt="v2: página de actualización sobre la v1"><figcaption>Figura 8 - v2: página de actualización sobre la v1</figcaption></figure>
+  </li>
+  <li>A partir de acá el recorrido es el de la reinstalación (sección 6): se elige actualizar o restaurar,
+      se hace la copia de seguridad y se actualiza el esquema conservando los datos.</li>
+</ol>
+<h3>Si la v1 se instaló con el paquete MSI (<code>Solucion_83KI</code>)</h3>
+<ol>
   <li>En la página <strong>Base de datos</strong>, elegir la instancia y el nombre de la base que usaba la versión anterior.</li>
-  <!-- CAPTURA: aviso "Se encontro la version anterior..." -->
   <li>Al comenzar la instalación aparece el aviso «Se encontró la versión anterior instalada con el instalador viejo».
       Responder <strong>Sí</strong> para desinstalarla. La base de datos no se toca.</li>
   <li>El instalador hace una copia de seguridad de la base existente y actualiza su esquema: agrega las tablas,
@@ -151,10 +192,8 @@ el instalador nuevo la detecta.</p>
 <p>Cuando el sistema ya fue instalado con este instalador, al ejecutarlo de nuevo funciona como reinstalador.
 Reutiliza la carpeta, la instancia y la base de la instalación anterior, así que no vuelve a preguntarlas.</p>
 <ol>
-  <!-- CAPTURA: pagina "Actualizacion" -->
   <li><strong>Página «Actualización».</strong> Informa que ya hay una versión instalada y muestra la carpeta,
-      la instancia y la base que se van a usar.</li>
-  <!-- CAPTURA: pagina "Base de datos existente" con las dos opciones -->
+      la instancia y la base que se van a usar (figura 8).</li>
   <li><strong>Página «Base de datos existente».</strong> Elegir una de las dos opciones:
     <ul>
       <li><strong>Actualizar la base conservando los datos</strong> (recomendada, viene marcada).</li>
@@ -162,9 +201,15 @@ Reutiliza la carpeta, la instancia y la base de la instalación anterior, así q
           <code>C:\ProgramData\InstitutoVisionEnAccion\Backups</code>, de la más nueva a la más vieja. El nombre de cada
           archivo incluye la fecha y la hora en que se hizo. Con <strong>Examinar...</strong> se puede elegir un archivo de otra carpeta.</li>
     </ul>
+    <figure><img src="captura-09-base-existente.jpg" alt="Opciones para la base de datos existente"><figcaption>Figura 9 - Opciones para la base de datos existente</figcaption></figure>
   </li>
   <li>Si se eligió restaurar, el instalador pide confirmación porque se reemplazan los datos actuales.</li>
-  <li>Revisar el resumen y pulsar Instalar.</li>
+  <li>Revisar el resumen y pulsar Instalar. El resumen muestra el modo, la base y la ruta del backup previo.
+    <figure><img src="captura-10-listo-reinstalacion.jpg" alt="Resumen de la reinstalación"><figcaption>Figura 10 - Resumen de la reinstalación</figcaption></figure>
+  </li>
+  <li>El instalador hace la copia de seguridad y actualiza la base.
+    <figure><img src="captura-11-instalando.jpg" alt="Instalación en curso: actualización de la base de datos"><figcaption>Figura 11 - Instalación en curso: actualización de la base de datos</figcaption></figure>
+  </li>
 </ol>
 <div class="nota"><strong>Siempre hay vuelta atrás.</strong> En las dos opciones, lo primero que hace el instalador es
 una copia de seguridad de la base tal como está en ese momento. Si se restauró una copia equivocada, se puede
@@ -212,7 +257,7 @@ En ese caso el instalador muestra el error, la ruta del log y el comando para re
 
 <h2>9. Instalación desatendida</h2>
 <p>El instalador se puede ejecutar sin pantallas, por ejemplo para pruebas automáticas. Hay que abrir la consola como administrador.</p>
-<pre>Setup_InstitutoVisionEnAccion.exe /VERYSILENT /SUPPRESSMSGBOXES /Instancia="(localdb)\MSSQLLocalDB" /Base=InstitutoVisionEnAccion</pre>
+<pre>Setup_InstitutoVisionEnAccion_v2.exe /VERYSILENT /SUPPRESSMSGBOXES /Instancia="(localdb)\MSSQLLocalDB" /Base=InstitutoVisionEnAccion</pre>
 <table>
   <tr><th style="width:30%">Parámetro</th><th>Significado</th></tr>
   <tr><td><code>/Instancia="..."</code></td><td>Instancia de SQL Server. Reemplaza a la que se elige en la página «Base de datos».</td></tr>
@@ -266,9 +311,16 @@ En ese caso el instalador muestra el error, la ruta del log y el comando para re
   <tr><td>10</td><td>Restauración con un archivo que no es una copia</td><td>Correcto: falló sin modificar la base, que quedó accesible.</td></tr>
   <tr><td>11</td><td>Aplicación con la conexión escrita por el instalador</td><td>Correcto: abre directamente la pantalla de inicio de sesión.</td></tr>
 </table>
+<h3>Recorrido manual del asistente</h3>
+<table>
+  <tr><th style="width:5%">N.º</th><th style="width:30%">Caso</th><th>Resultado obtenido</th></tr>
+  <tr><td>12</td><td>Instalación de la v1 (1.0.8) y configuración de la base desde la aplicación</td><td>Recorrido completo hasta la pantalla de inicio de sesión, con una base nueva en LocalDB (figuras 1 a 7).</td></tr>
+  <tr><td>13</td><td>Actualización de v1 a v2 (2.0.0) actualizando la base</td><td>El instalador detectó la v1, reutilizó la instancia y la base configuradas, programó el backup previo y pasó a actualizar la base (figuras 8 a 11).</td></tr>
+</table>
 <h3>Pruebas pendientes</h3>
 <ul>
-  <li>Recorrido manual del asistente con sus pantallas, incluida la desinstalación de la primera versión.</li>
+  <li>Recorrido manual de una instalación limpia de la v2 (página «Base de datos»).</li>
+  <li>Desinstalación del paquete MSI de la primera versión (<code>Solucion_83KI</code>) desde el asistente.</li>
   <li>Instalación sobre un SQL Server completo (no LocalDB).</li>
 </ul>
 
@@ -282,7 +334,7 @@ En ese caso el instalador muestra el error, la ruta del log y el comando para re
   <li>Compilar el instalador:
     <pre>"%LOCALAPPDATA%\Programs\Inno Setup 6\ISCC.exe" /Q Instalador\Setup_InstitutoVisionEnAccion.iss</pre></li>
 </ol>
-<p>El resultado queda en <code>Instalador\Salida\Setup_InstitutoVisionEnAccion.exe</code>.</p>
+<p>El resultado queda en <code>Instalador\Salida\Setup_InstitutoVisionEnAccion_v2.exe</code>.</p>
 
 </body>
 </html>

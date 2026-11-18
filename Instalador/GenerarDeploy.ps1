@@ -31,7 +31,9 @@ $migraciones = @(
     'pagos-cuotas\001_permiso.sql',
     'disponibilidad-profesor\001_auditoria.sql',
     'reporte-inteligente\001_modelo.sql',
-    'reporte-inteligente\002_reporte.sql'
+    'reporte-inteligente\002_reporte.sql',
+    'datos-desarrollo\001_maestros_y_usuarios.sql',
+    'permisos-admin\001_todas_las_patentes.sql'
 )
 
 function Leer-Lineas([string]$ruta) {
