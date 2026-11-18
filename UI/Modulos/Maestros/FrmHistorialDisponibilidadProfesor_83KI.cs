@@ -165,30 +165,23 @@ namespace UI.Modulos.Maestros
 
         private void EstablecerCabecera(string columna, string texto) { _grid.Columns[columna].HeaderText = texto; }
 
-        // Estado de arranque: la disponibilidad con la que se abrió la pantalla y sin filtro de fechas,
-        // para que se vean todas sus versiones (también las de más de un mes).
+        // Estado de arranque que pide la consigna de la bitácora de cambios (T06b, prueba 2):
+        // la disponibilidad con la que se abrió la pantalla y los registros del último mes.
         private void RestablecerFiltrosIniciales()
         {
             _txtDisponibilidad.Text = _idDisponibilidadInicial.HasValue ? _idDisponibilidadInicial.Value.ToString() : string.Empty;
-            QuitarFiltroFechas();
-        }
-
-        // Las fechas quedan sugeridas en el último mes, pero no filtran hasta que el usuario las tilda.
-        private void QuitarFiltroFechas()
-        {
             _dtpDesde.Value = DateTime.Today.AddMonths(-1);
             _dtpHasta.Value = DateTime.Today;
-            _chkDesde.Checked = false;
+            _chkDesde.Checked = true;
             _chkHasta.Checked = false;
-            _dtpDesde.Enabled = false;
-            _dtpHasta.Enabled = false;
+            _dtpDesde.Enabled = _chkDesde.Checked;
+            _dtpHasta.Enabled = _chkHasta.Checked;
         }
 
-        // Limpiar quita todos los filtros: muestra el historial completo del profesor.
+        // Limpiar vuelve a los datos iniciales de arranque (T06b, prueba 6).
         private void LimpiarFiltros()
         {
-            _txtDisponibilidad.Clear();
-            QuitarFiltroFechas();
+            RestablecerFiltrosIniciales();
             CargarHistorial();
         }
 
