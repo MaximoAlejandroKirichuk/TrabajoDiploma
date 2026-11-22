@@ -20,6 +20,12 @@ namespace UI
         private string _pantalla;
         private bool _arbolInicializado;
 
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+            DisenoAdaptable_83KI.Aplicar(this, new Size(960, 620));
+        }
+
         public FrmAyuda_83KI(string pantalla)
         {
             _pantalla = pantalla;

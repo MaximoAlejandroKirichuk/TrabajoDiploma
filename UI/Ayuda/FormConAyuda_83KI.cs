@@ -11,14 +11,39 @@ namespace UI
     public class FormConAyuda_83KI : Form
     {
         private AccesoAyuda _acceso;
+        private Size _tamanoInicial;
+        private bool _disenoAdaptado;
+
+        protected override void SetBoundsCore(int x, int y, int width, int height, BoundsSpecified specified)
+        {
+            // Windows puede limitar la ventana al monitor antes de crear el handle.
+            // Guardar el tamaño solicitado evita perder el extremo del contenido.
+            if (!_disenoAdaptado && !IsHandleCreated)
+            {
+                var borde = SizeFromClientSize(Size.Empty);
+                if ((specified & BoundsSpecified.Width) != 0) _tamanoInicial.Width = Math.Max(1, width - borde.Width);
+                if ((specified & BoundsSpecified.Height) != 0) _tamanoInicial.Height = Math.Max(1, height - borde.Height);
+            }
+            base.SetBoundsCore(x, y, width, height, specified);
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            if (!_disenoAdaptado) _tamanoInicial = new Size(Math.Max(_tamanoInicial.Width, ClientSize.Width),
+                Math.Max(_tamanoInicial.Height, ClientSize.Height));
+            base.OnHandleCreated(e);
+        }
 
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
-            if (DesignMode || LicenseManager.UsageMode == LicenseUsageMode.Designtime || _acceso != null) return;
+            if (DesignMode || LicenseManager.UsageMode == LicenseUsageMode.Designtime || _disenoAdaptado) return;
             var tema = CatalogoAyuda_83KI.Buscar(GetType().Name);
-            if (tema == null) return;
-            _acceso = new AccesoAyuda(this, tema);
+            if (tema != null) _acceso = new AccesoAyuda(this, tema);
+            _disenoAdaptado = true;
+            var tamano = new Size(Math.Max(_tamanoInicial.Width, ClientSize.Width),
+                Math.Max(_tamanoInicial.Height + (_acceso != null ? _acceso.AltoBarra : 0), ClientSize.Height));
+            DisenoAdaptable_83KI.Aplicar(this, tamano);
         }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
@@ -44,6 +69,7 @@ namespace UI
             private readonly IGestorIdioma_83KI _idioma;
             private readonly ToolStrip _barra;
             private readonly ToolStripButton _boton;
+            public int AltoBarra { get { return _barra.Height; } }
 
             public AccesoAyuda(Form form, TemaAyuda_83KI tema)
             {

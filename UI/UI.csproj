@@ -35,6 +35,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Compartido\ExportadorTablasPdf_83KI.cs" />
+    <Compile Include="Compartido\DisenoAdaptable_83KI.cs" />
     <Compile Include="Modulos\Reportes\FrmReporteInteligente_83KI.cs">
       <SubType>Form</SubType>
     </Compile>
