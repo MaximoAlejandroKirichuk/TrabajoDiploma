@@ -26,6 +26,7 @@ namespace UI
             // dgvUsuarios
             // 
             this.dgvUsuarios.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvUsuarios.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
             this.dgvUsuarios.Location = new System.Drawing.Point(26, 44);
             this.dgvUsuarios.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
             this.dgvUsuarios.MultiSelect = false;
@@ -39,6 +40,7 @@ namespace UI
             // btnCrearUsuario
             // 
             this.btnCrearUsuario.Location = new System.Drawing.Point(601, 136);
+            this.btnCrearUsuario.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
             this.btnCrearUsuario.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
             this.btnCrearUsuario.Name = "btnCrearUsuario";
             this.btnCrearUsuario.Size = new System.Drawing.Size(187, 37);
@@ -50,6 +52,7 @@ namespace UI
             // btnCambiarEstadoUsuario
             // 
             this.btnCambiarEstadoUsuario.Location = new System.Drawing.Point(601, 227);
+            this.btnCambiarEstadoUsuario.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
             this.btnCambiarEstadoUsuario.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
             this.btnCambiarEstadoUsuario.Name = "btnCambiarEstadoUsuario";
             this.btnCambiarEstadoUsuario.Size = new System.Drawing.Size(187, 37);
@@ -61,6 +64,7 @@ namespace UI
             // btnModificarUsuario
             // 
             this.btnModificarUsuario.Location = new System.Drawing.Point(601, 182);
+            this.btnModificarUsuario.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
             this.btnModificarUsuario.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
             this.btnModificarUsuario.Name = "btnModificarUsuario";
             this.btnModificarUsuario.Size = new System.Drawing.Size(187, 37);
@@ -72,6 +76,7 @@ namespace UI
             // btnDesbloquearUsuario
             // 
             this.btnDesbloquearUsuario.Location = new System.Drawing.Point(601, 272);
+            this.btnDesbloquearUsuario.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
             this.btnDesbloquearUsuario.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
             this.btnDesbloquearUsuario.Name = "btnDesbloquearUsuario";
             this.btnDesbloquearUsuario.Size = new System.Drawing.Size(187, 37);

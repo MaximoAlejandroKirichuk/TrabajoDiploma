@@ -42,6 +42,7 @@ namespace UI.Modulos.Maestros
 
             dgvCursos = new DataGridView { Left = 12, Top = 12, Width = 620, Height = 490, ReadOnly = true, AutoGenerateColumns = true, SelectionMode = DataGridViewSelectionMode.FullRowSelect, MultiSelect = false };
             dgvCursos.SelectionChanged += (s, e) => ActualizarAccionEstado();
+            dgvCursos.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             Controls.Add(dgvCursos);
 
             int x = 660;
@@ -54,6 +55,7 @@ namespace UI.Modulos.Maestros
             btnCambiarEstado = new Button { Left = x, Top = 120, Width = 180, Height = 36 };
             btnCambiarEstado.Click += btnCambiarEstado_Click;
             Controls.Add(btnCambiarEstado);
+            btnCrear.Anchor = btnModificar.Anchor = btnCambiarEstado.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             ActualizarIdioma(null);
         }
 

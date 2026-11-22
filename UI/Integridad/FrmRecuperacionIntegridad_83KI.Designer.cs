@@ -102,6 +102,7 @@ namespace UI
             // lblRestoreDesc
             // 
             this.lblRestoreDesc.AutoSize = true;
+            this.lblRestoreDesc.MaximumSize = new System.Drawing.Size(550, 0);
             this.lblRestoreDesc.Font = new System.Drawing.Font("Segoe UI", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblRestoreDesc.ForeColor = System.Drawing.Color.Black;
             this.lblRestoreDesc.Location = new System.Drawing.Point(230, 167);

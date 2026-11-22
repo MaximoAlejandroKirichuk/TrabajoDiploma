@@ -59,6 +59,7 @@ namespace UI.Modulos.Maestros
 
             dgvProfesores = new DataGridView { Left = 12, Top = 12, Width = 620, Height = 540, ReadOnly = true, AutoGenerateColumns = true, SelectionMode = DataGridViewSelectionMode.FullRowSelect, MultiSelect = false };
             dgvProfesores.SelectionChanged += (s, e) => { ActualizarAccionEstado(); CargarDisponibilidadesProfesor(); };
+            dgvProfesores.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             Controls.Add(dgvProfesores);
 
             int x = 660;
@@ -140,6 +141,8 @@ namespace UI.Modulos.Maestros
                 CargarDisponibilidadesProfesor();
             };
             Controls.Add(btnHistorialDisponibilidad);
+            btnCrear.Anchor = btnModificar.Anchor = btnCambiarEstado.Anchor =
+                btnHistorialDisponibilidad.Anchor = grpDisponibilidad.Anchor = AnchorStyles.Top | AnchorStyles.Right;
 
             CargarDiasDisponibilidad();
             dtpHoraInicio.Value = DateTime.Today.AddHours(8);

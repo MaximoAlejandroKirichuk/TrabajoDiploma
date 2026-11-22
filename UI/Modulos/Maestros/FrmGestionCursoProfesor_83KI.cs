@@ -47,6 +47,7 @@ namespace UI.Modulos.Maestros
 
             dgvRelaciones = new DataGridView { Left = 12, Top = 12, Width = 600, Height = 445, ReadOnly = true, AutoGenerateColumns = true, SelectionMode = DataGridViewSelectionMode.FullRowSelect, MultiSelect = false };
             dgvRelaciones.SelectionChanged += (s, e) => CargarSeleccion();
+            dgvRelaciones.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             Controls.Add(dgvRelaciones);
 
             int x = 635;
@@ -71,6 +72,8 @@ namespace UI.Modulos.Maestros
             btnActualizar = new Button { Left = x, Top = 225, Width = 260, Height = 36 };
             btnActualizar.Click += (s, e) => { CargarCombos(); CargarRelaciones(); };
             Controls.Add(btnActualizar);
+            lblCurso.Anchor = cboCursos.Anchor = lblProfesor.Anchor = cboProfesores.Anchor =
+                btnHabilitar.Anchor = btnDeshabilitar.Anchor = btnActualizar.Anchor = AnchorStyles.Top | AnchorStyles.Right;
 
             ActualizarIdioma(null);
         }
