@@ -1,6 +1,6 @@
 using System;
 
-namespace BE.Entidades
+namespace Service.Entidades
 {
     public sealed class DisponibilidadProfesorHistorial_83KI
     {

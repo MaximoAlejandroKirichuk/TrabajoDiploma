@@ -1,4 +1,4 @@
-using BE.DTOs.Disponibilidades;
+using Service.DTOs;
 using Service.Entidades;
 using Service.Interfaces;
 using System;
@@ -229,8 +229,8 @@ namespace UI.Modulos.Maestros
 
         private sealed class HistorialVista
         {
-            private readonly BE.DTOs.Disponibilidades.DisponibilidadProfesorHistorial_83KI _item;
-            public HistorialVista(BE.DTOs.Disponibilidades.DisponibilidadProfesorHistorial_83KI item) { _item = item; }
+            private readonly Service.DTOs.DisponibilidadProfesorHistorial_83KI _item;
+            public HistorialVista(Service.DTOs.DisponibilidadProfesorHistorial_83KI item) { _item = item; }
             public long IdVersion { get { return _item.IdVersion; } }
             public int IdDisponibilidadProfesor { get { return _item.IdDisponibilidadProfesor; } }
             public int IdProfesor { get { return _item.IdProfesor; } }

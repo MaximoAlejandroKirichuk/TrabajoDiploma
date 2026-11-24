@@ -1,6 +1,6 @@
 using System;
 
-namespace BE.DTOs.Disponibilidades
+namespace Service.DTOs
 {
     public sealed class FiltroDisponibilidadProfesorHistorial_83KI
     {

@@ -1,5 +1,5 @@
 using BE.Entidades;
-using BE.DTOs.Disponibilidades;
+using Service.DTOs;
 using System;
 using System.Collections.Generic;
 
@@ -10,7 +10,7 @@ namespace Service.Interfaces
         IEnumerable<DisponibilidadProfesor_83KI> ObtenerPorProfesor(int idProfesor);
         int Insertar(DisponibilidadProfesor_83KI disponibilidad, string usuario = null);
         void Actualizar(DisponibilidadProfesor_83KI disponibilidad, string usuario = null);
-        IEnumerable<BE.Entidades.DisponibilidadProfesorHistorial_83KI> ListarHistorial(FiltroDisponibilidadProfesorHistorial_83KI filtro);
+        IEnumerable<Service.Entidades.DisponibilidadProfesorHistorial_83KI> ListarHistorial(FiltroDisponibilidadProfesorHistorial_83KI filtro);
         void ActivarVersion(long idVersion, string usuario = null);
     }
 }

@@ -1,5 +1,5 @@
 using BE.Entidades;
-using BE.DTOs.Disponibilidades;
+using Service.DTOs;
 using DAL.DAL;
 using Service;
 using Service.Interfaces;
@@ -47,7 +47,7 @@ namespace DAL
             });
         }
 
-        public IEnumerable<BE.Entidades.DisponibilidadProfesorHistorial_83KI> ListarHistorial(FiltroDisponibilidadProfesorHistorial_83KI filtro)
+        public IEnumerable<Service.Entidades.DisponibilidadProfesorHistorial_83KI> ListarHistorial(FiltroDisponibilidadProfesorHistorial_83KI filtro)
         {
             var parametros = new List<SqlParameter>
             {
@@ -57,10 +57,10 @@ namespace DAL
                 new SqlParameter("@FechaHasta", (object)filtro.FechaHasta ?? DBNull.Value)
             };
             var ds = _accesoDAL.LeerStoredProcedure("sp_DisponibilidadProfesor_ListarHistorial", parametros);
-            var resultado = new List<BE.Entidades.DisponibilidadProfesorHistorial_83KI>();
+            var resultado = new List<Service.Entidades.DisponibilidadProfesorHistorial_83KI>();
             if (ds == null || ds.Tables.Count == 0) return resultado;
             foreach (DataRow row in ds.Tables[0].Rows)
-                    resultado.Add(new BE.Entidades.DisponibilidadProfesorHistorial_83KI(Convert.ToInt64(row["IdVersion"]), Convert.ToInt32(row["IdDisponibilidadProfesor"]), Convert.ToInt32(row["IdProfesor"]), (DayOfWeek)Enum.Parse(typeof(DayOfWeek), row["DiaSemana"].ToString()), (TimeSpan)row["HoraInicio"], (TimeSpan)row["HoraFin"], Convert.ToBoolean(row["EstadoActivo"]), row["DVH"].ToString(), Convert.ToBoolean(row["Act"]), Convert.ToDateTime(row["FechaRegistro"]), row["TipoOperacion"].ToString(), row.IsNull("Usuario") ? null : row["Usuario"].ToString()));
+                    resultado.Add(new Service.Entidades.DisponibilidadProfesorHistorial_83KI(Convert.ToInt64(row["IdVersion"]), Convert.ToInt32(row["IdDisponibilidadProfesor"]), Convert.ToInt32(row["IdProfesor"]), (DayOfWeek)Enum.Parse(typeof(DayOfWeek), row["DiaSemana"].ToString()), (TimeSpan)row["HoraInicio"], (TimeSpan)row["HoraFin"], Convert.ToBoolean(row["EstadoActivo"]), row["DVH"].ToString(), Convert.ToBoolean(row["Act"]), Convert.ToDateTime(row["FechaRegistro"]), row["TipoOperacion"].ToString(), row.IsNull("Usuario") ? null : row["Usuario"].ToString()));
             return resultado;
         }
 

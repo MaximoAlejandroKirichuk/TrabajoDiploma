@@ -1,4 +1,4 @@
-using BE.DTOs.Disponibilidades;
+using Service.DTOs;
 using BE.Entidades;
 using Service.Entidades;
 using Service.Interfaces;
@@ -21,11 +21,11 @@ namespace BLL
             _bitacora = bitacora ?? throw new ArgumentNullException(nameof(bitacora));
         }
 
-        public IEnumerable<BE.DTOs.Disponibilidades.DisponibilidadProfesorHistorial_83KI> ObtenerHistorial(int idProfesor, int? idDisponibilidadProfesor, DateTime? fechaDesde, DateTime? fechaHasta)
+        public IEnumerable<Service.DTOs.DisponibilidadProfesorHistorial_83KI> ObtenerHistorial(int idProfesor, int? idDisponibilidadProfesor, DateTime? fechaDesde, DateTime? fechaHasta)
         {
             ValidarLectura();
             return _dal.ListarHistorial(new FiltroDisponibilidadProfesorHistorial_83KI(idProfesor, idDisponibilidadProfesor, fechaDesde, fechaHasta))
-                .Select(x => new BE.DTOs.Disponibilidades.DisponibilidadProfesorHistorial_83KI
+                .Select(x => new Service.DTOs.DisponibilidadProfesorHistorial_83KI
                 {
                     IdVersion = x.IdVersion,
                     IdDisponibilidadProfesor = x.IdDisponibilidadProfesor,
